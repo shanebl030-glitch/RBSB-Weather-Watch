@@ -5,6 +5,7 @@ import android.app.Activity
 import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.util.TypedValue
 import android.view.Gravity
 import android.widget.Button
@@ -18,6 +19,8 @@ import com.google.android.gms.wearable.MessageClient
 import com.google.android.gms.wearable.MessageEvent
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
+import org.json.JSONArray
+import org.json.JSONObject
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -74,17 +77,23 @@ class ProbeActivity : Activity(), MessageClient.OnMessageReceivedListener, DataC
     private fun describeSigning() {
         try {
             val info = packageManager.getPackageInfo(packageName, PackageManager.GET_SIGNING_CERTIFICATES).signingInfo
-            if (info == null) { say("Signing info: unavailable"); return }
-            val current = info.apkContentsSigners.map { sha(it.toByteArray()) }
-            say("Current signer SHA-256: ${current.joinToString()}")
-            if (info.hasPastSigningCertificates()) {
-                val history = info.signingCertificateHistory.map { sha(it.toByteArray()) }
-                say("Rotation history (oldest first): ${history.joinToString(" -> ")}")
-            } else {
-                say("Rotation history: none (single key)")
-            }
+            if (info == null) { say("Signing info: unavailable"); Log.i(TAG, "IDENTITY {\"error\":\"no signingInfo\"}"); return }
+            val current = info.apkContentsSigners.toList()
+            val history = if (info.hasPastSigningCertificates()) info.signingCertificateHistory.toList() else emptyList()
+            say("Current signer SHA-256: ${current.joinToString { short(sha(it.toByteArray())) }}")
+            say(if (history.isEmpty()) "Rotation history: none (single key)"
+                else "Rotation history (oldest first): ${history.joinToString(" -> ") { short(sha(it.toByteArray())) }}")
+            // Machine-readable line for CI (signing gate 1). "hash" is Signature.hashCode() in hex,
+            // which is how `dumpsys package` lists signatures, so the two can be compared directly.
+            val json = JSONObject()
+                .put("current_sha256", JSONArray(current.map { sha(it.toByteArray()) }))
+                .put("current_hash", JSONArray(current.map { Integer.toHexString(it.hashCode()) }))
+                .put("history_sha256", JSONArray(history.map { sha(it.toByteArray()) }))
+                .put("history_hash", JSONArray(history.map { Integer.toHexString(it.hashCode()) }))
+            Log.i(TAG, "IDENTITY $json")
         } catch (e: Exception) {
             say("Signing info error: ${e.message}")
+            Log.i(TAG, "IDENTITY {\"error\":\"${e.javaClass.simpleName}\"}")
         }
     }
 
@@ -155,11 +164,12 @@ class ProbeActivity : Activity(), MessageClient.OnMessageReceivedListener, DataC
     private fun now() = SimpleDateFormat("HH:mm:ss", Locale.US).format(Date())
     private fun dp(v: Int) = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, v.toFloat(), resources.displayMetrics).toInt()
     private fun sha(b: ByteArray) = MessageDigest.getInstance("SHA-256").digest(b).joinToString("") { "%02x".format(it) }
-        .let { it.take(8) + "…" + it.takeLast(8) }
+    private fun short(h: String) = h.take(8) + "…" + h.takeLast(8)
 
     companion object {
         const val PING = "/probe/ping"
         const val PONG = "/probe/pong"
         const val DATA = "/probe/data"
+        const val TAG = "RBSBProbe"
     }
 }

@@ -64,6 +64,28 @@ jobs:
           python3 scripts/lineage_check.py ref-lineage-file.txt --expect-old "$TEST_CERT" --expect-new "$PROD_CERT" --json ref-file-flags.json
           cmp <(python3 -c "import json;print(json.load(open('ref-flags.json')))") <(python3 -c "import json;print(json.load(open('ref-file-flags.json')))") && echo "0.7.2 LINEAGE EXTRACTS CLEANLY: same certificates and flags as in the APK"
 
+      - name: Self-test the identity comparison (it must fail on any disagreement)
+        run: |
+          set -e
+          T="$RUNNER_TEMP/selftest"; mkdir -p "$T"
+          echo '{"current":["f9bc5316"],"history":["be122133 flags: 5","f9bc5316 flags: 17"]}' > "$T/sys.json"
+          echo '{"certs":["aa","bb"]}' > "$T/exp.json"
+          ok='{"current_hash":["f9bc5316"],"history_hash":["be122133","f9bc5316"],"current_sha256":["bb"],"history_sha256":["aa","bb"]}'
+          echo "$ok" > "$T/app.json"
+          python3 scripts/identity_compare.py "$T/sys.json" "$T/app.json" "$T/exp.json" "$T/o.json"
+          for bad in \
+            '{"current_hash":["0000"],"history_hash":["be122133","f9bc5316"],"current_sha256":["bb"],"history_sha256":["aa","bb"]}' \
+            '{"current_hash":["f9bc5316"],"history_hash":["0000","f9bc5316"],"current_sha256":["bb"],"history_sha256":["aa","bb"]}' \
+            '{"current_hash":["f9bc5316"],"history_hash":["be122133","f9bc5316"],"current_sha256":["cc"],"history_sha256":["aa","bb"]}' \
+            '{"current_hash":["f9bc5316"],"history_hash":["be122133","f9bc5316"],"current_sha256":["bb"],"history_sha256":["xx","bb"]}' \
+            '{"error":"no signingInfo"}'; do
+            echo "$bad" > "$T/app.json"
+            if python3 scripts/identity_compare.py "$T/sys.json" "$T/app.json" "$T/exp.json" "$T/o.json" > /dev/null 2>&1; then
+              echo "SELF-TEST FAIL: a mismatch was accepted: $bad"; exit 1
+            fi
+          done
+          echo "SELF-TEST OK: the comparison passes on agreement and fails on all 5 kinds of disagreement"
+
       - name: Build the unsigned probe
         run: ./gradlew --no-daemon :signingprobe:assembleRelease
 
@@ -140,7 +162,10 @@ jobs:
           { echo "Signing gate 1 kit, run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA}"; echo "Throwaway keys, made in this run and deleted."; echo
             for f in probe-phone probe-watch; do echo "== $f"; cat "$f-lineage.txt"; echo; done; } > CERTS.txt
           sha256sum probe-phone.apk probe-watch.apk > SHA256SUMS && cat SHA256SUMS
-          rm -f ./*-verify.txt ./*-lineage.txt ./*-flags.json
+          # Keep apksigner's reading of each APK file: the identity each device must report
+          mv probe-phone-flags.json expected-probe-phone.json
+          mv probe-watch-flags.json expected-probe-watch.json
+          rm -f ./*-verify.txt ./*-lineage.txt
           cp ../docs/SIGNING_GATE_1.md .
       - uses: actions/upload-artifact@v4
         with:
@@ -209,24 +234,27 @@ jobs:
           grep -iE "signatures|signing|past" dumpsys.txt | head -20
           python3 scripts/identity_from_dumpsys.py dumpsys.txt > "identity-${{ matrix.tag }}.json"
           cat "identity-${{ matrix.tag }}.json"
-          # Also what the app itself sees (PackageManager.signingInfo), from its own screen
+          # What the app itself sees (PackageManager.signingInfo): the probe logs it as JSON
+          adb logcat -c || true
           adb shell svc power stayon true || true
           adb shell input keyevent KEYCODE_WAKEUP || true
           adb shell am start -W -n "$PKG/.ProbeActivity" > /dev/null
-          sleep 6
-          adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1; adb shell cat /sdcard/ui.xml > ui.xml
-          python3 - <<'PY'
-          import re, html
-          t = html.unescape(open("ui.xml").read())
-          for line in re.findall(r'text="([^"]*)"', t):
-              for l in line.split("\n"):
-                  if "signer" in l.lower() or "history" in l.lower():
-                      print("APP SEES:", l)
-          PY
+          for i in $(seq 1 15); do
+            adb logcat -d -s RBSBProbe:I > probe-log.txt
+            grep -q "IDENTITY " probe-log.txt && break
+            sleep 2
+          done
+          grep -m1 "IDENTITY " probe-log.txt | sed -E 's/.*IDENTITY //' > app-identity.json
+          [ -s app-identity.json ] || { echo "The probe did not log its identity"; cat probe-log.txt; exit 1; }
+          echo "App-reported identity: $(cat app-identity.json)"
+          # Gate 1 per-device check: system, app and APK file must agree (fails on any difference)
+          APKFILE="${{ matrix.apk }}"
+          python3 scripts/identity_compare.py "identity-${{ matrix.tag }}.json" app-identity.json \
+            "kit/expected-${APKFILE%.apk}.json" "device-${{ matrix.tag }}.json"
       - uses: actions/upload-artifact@v4
         with:
           name: identity-${{ matrix.tag }}
-          path: identity-${{ matrix.tag }}.json
+          path: device-${{ matrix.tag }}.json
           retention-days: 7
 
   compare:
@@ -240,13 +268,22 @@ jobs:
           merge-multiple: true
       - name: Compare
         run: |
-          cat identity-phone.json; echo; cat identity-watch.json; echo
+          cat device-phone.json; echo; cat device-watch.json; echo
           python3 - <<'PY'
           import json
-          p = json.load(open("identity-phone.json")); w = json.load(open("identity-watch.json"))
-          assert p["current"] and p["current"] == w["current"], "different current signer"
-          assert p["history"] == w["history"], "different signing history"
-          assert len(p["history"]) == 2, "expected a two-key history (A -> B)"
-          print("GATE 1 IDENTITY: PASS. Phone and watch systems report the same current signer",
-                p["current"], "and the same history", p["history"])
+          p = json.load(open("device-phone.json")); w = json.load(open("device-watch.json"))
+          checks = [
+              ("system current signer", p["system_current"], w["system_current"]),
+              ("system signing history and flags", p["system_history"], w["system_history"]),
+              ("app-reported current signer SHA-256", p["current_sha256"], w["current_sha256"]),
+              ("app-reported history SHA-256", p["history_sha256"], w["history_sha256"]),
+          ]
+          bad = [name for name, a, b in checks if not a or a != b]
+          for name, a, b in checks:
+              print(f"{'SAME' if a == b and a else 'DIFFERENT'}: {name}: phone {a} / watch {b}")
+          if bad:
+              raise SystemExit("GATE 1 IDENTITY: FAIL (" + ", ".join(bad) + ")")
+          assert len(p["history_sha256"]) == 2
+          print("GATE 1 IDENTITY: PASS. On each device the system, the app and the APK file agree;")
+          print("and the phone and watch report the same current signer and the same two-key history.")
           PY
