@@ -103,8 +103,11 @@ jobs:
           cmp "$K/lineage.bin" "$K/extracted.bin" || { echo "Extracted lineage differs from apksigner's"; od -A x -t x1 "$K/lineage.bin" | head -3; od -A x -t x1 "$K/extracted.bin" | head -3; exit 1; }
           echo "EXTRACTOR OK: the lineage extracted from the phone APK is byte-identical to apksigner's"
           rm -f "$K/A.p12" "$K/lineage.bin"
+          # v3 only: every supported watch (Wear OS 4+, API 33+) verifies the v3 signature, which
+          # carries the history. v1/v2 would need the old key's private key, so they are left out.
           "$AS" sign --ks "$K/B.p12" --ks-pass env:PW --ks-key-alias probeB \
             --lineage "$K/extracted.bin" --rotation-min-sdk-version 28 \
+            --v1-signing-enabled false --v2-signing-enabled false --v3-signing-enabled true \
             --out kit/probe-watch.apk "$K/aligned.apk"
           rm -f kit/*.idsig
 
