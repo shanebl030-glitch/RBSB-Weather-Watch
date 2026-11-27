@@ -19,6 +19,9 @@ jobs:
     name: ${{ matrix.label }}
     runs-on: ubuntu-latest
     timeout-minutes: 45
+    env:
+      # One AVD folder for both avdmanager and the emulator (they default to different places)
+      ANDROID_AVD_HOME: /home/runner/.android/avd
     strategy:
       fail-fast: false
       matrix:
@@ -64,10 +67,11 @@ jobs:
       - name: Create the watch emulator
         run: |
           AVDM="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
+          mkdir -p "$ANDROID_AVD_HOME"
           "$AVDM" list device -c | grep -i wear | tee devices.txt
           DEV=$(grep -m1 -i "wearos_large_round" devices.txt || grep -m1 -i "round" devices.txt)
           echo no | "$AVDM" create avd -n watch -k "$IMG" -d "$DEV" --force
-          AVD_DIR=$("$AVDM" list avd | grep -m1 "Path:" | awk '{print $2}')
+          AVD_DIR="$ANDROID_AVD_HOME/watch.avd"
           CFG="$AVD_DIR/config.ini"
           echo "AVD config: $CFG"
           sed -i '/^hw.lcd.width/d;/^hw.lcd.height/d;/^hw.lcd.density/d;/^hw.rotaryInput/d;/^hw.ramSize/d' "$CFG"
