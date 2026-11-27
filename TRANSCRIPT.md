@@ -19,5 +19,6 @@ A summary of decisions and work, newest last.
 - Built on the branch: the Gradle project and `wear` shell (About screen only), shared debug signing with the `.dev` package, CI (tests, lint, 64-bit, signing and package checks), the Wear OS emulator set, the signing gate 1 kit and checklist, and the docs.
 - CI runs found four harness problems, all fixed: a wrong `minSdk` check, Wear OS 6/7 images using the `android-wear-signed` tag, two different AVD folders, and the app sometimes not staying in front on a fresh emulator. One adb authorisation flake passed on re-run. Lint warnings for backup rules and the icon folder were fixed.
 - A further harness fix: on the production-signed Wear OS 6/7 images adb could stay unauthorised; adb's key is now created before the emulator boots.
-- Final results at `be34ecb`: all workflows green; 15 of 15 emulator tests passed over three full runs (Wear OS 4, 5, 6 ×2 and a Wear OS 7 beta image). Pull request #1 opened for Shane's review. The signing gate 1 pairing test is waiting for Shane.
+- Two runs hit Maven Central download errors before any emulator started; the five emulator jobs now share one APK build.
+- Final results at `6cb6fdc`: all workflows green; 15 of 15 emulator tests passed over three full runs, with no re-runs (Wear OS 4, 5, 6 ×2 and a Wear OS 7 beta image). Pull request #1 opened for Shane's review. The signing gate 1 pairing test is waiting for Shane.
 - Results are in TEST_REPORT.md. Neither existing RBSB repository, Android 0.7.2 or the 0.8.0 proposal was touched.

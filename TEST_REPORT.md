@@ -2,7 +2,7 @@
 
 RBSB-Weather for Galaxy Watch 0.1.0-dev. Created By Shane BlackbuRn
 
-Code tested: `be34ecb` on `claude/stage-0-foundation` (27–28 Nov 2026). Later commits change documentation only. Runs: Build and test `45996244685` and `45996255098`, Signing gate 1 kit `45996244379`, Wear OS emulators `45996244397`, `45996255045` and `45996286495` (three full runs of all five emulators).
+Code tested: `6cb6fdc` on `claude/stage-0-foundation` (27–28 Nov 2026). Later commits change documentation only. Runs: Build and test `45998461300` and `45998467459`, Signing gate 1 kit `45998461152`, Wear OS emulators `45998461144`, `45998467423` and `45998497079` (three full runs of all five emulators).
 
 Results are split into **tested** (run and passed), **inferred** (follows from what was tested, not run directly) and **not yet tested**.
 
@@ -20,7 +20,7 @@ Results are split into **tested** (run and passed), **inferred** (follows from w
 
 ### Wear OS emulators (x86_64, 64-bit images)
 
-**15 of 15 emulator tests passed** at `be34ecb` (five configurations, three runs each). One job first failed on a Maven Central download error while building, before any emulator started, and passed when re-run.
+**15 of 15 emulator tests passed** at `6cb6fdc` (five configurations, three runs each), with no re-runs.
 
 
 | Emulator | Image used | Install | App in front | About screen | Rotary | Crash |
@@ -39,7 +39,8 @@ Screenshots: [docs/stage0/emulator-about-screens.png](docs/stage0/emulator-about
 2. Wear OS 6 and 7 emulator images use the tag `android-wear-signed`, not `android-wear`. The workflow now finds any Wear OS tag.
 3. `avdmanager` and the emulator used different AVD folders. Now one folder is set for both.
 4. On fresh emulators the system sometimes returned to the watch face after launch. The test now keeps the screen on and confirms the app is in front.
-5. On the production-signed Wear OS 6/7 images, adb sometimes stayed unauthorised (3 of 15 jobs before the fix). Cause: the emulator could boot before adb created its key. Fixed by creating the key and starting adb first; 0 of 15 after the fix.
+5. On the production-signed Wear OS 6/7 images, adb sometimes stayed unauthorised (3 of 15 jobs before the fix). Cause: the emulator could boot before adb created its key. Fixed by creating the key and starting adb first; 0 of 30 jobs after the fix.
+6. Two emulator runs failed on Maven Central download errors while building, before any emulator started: five parallel jobs each downloaded every dependency. The APK is now built once and shared by the five emulator jobs.
 
 ## Inferred
 
