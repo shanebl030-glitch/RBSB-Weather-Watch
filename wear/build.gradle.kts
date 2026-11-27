@@ -56,6 +56,13 @@ android {
         compose = true
         buildConfig = true
     }
+    sourceSets {
+        // Stage 2 sample data: the Stage 1 valid snapshots, copied in at build time (one source of truth).
+        getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/sampleAssets"))
+    }
+    testOptions {
+        unitTests.all { it.systemProperty("rbsb.samples", rootProject.file("sync/samples").absolutePath) }
+    }
     lint {
         abortOnError = true
         warningsAsErrors = false
@@ -71,6 +78,7 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.foundation:foundation")      // HorizontalPager (sky and About pages)
     implementation("androidx.wear.compose:compose-material:1.4.1")
     implementation("androidx.wear.compose:compose-foundation:1.4.1")
 
@@ -78,4 +86,12 @@ dependencies {
     implementation(project(":sync"))
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20250517")          // the real org.json for JVM tests (Android's is a stub there)
 }
+
+// Copies sync/samples/snapshot/valid/*.json into the app's assets as samples/*.json (Stage 2 sample data).
+val copySampleAssets by tasks.registering(Sync::class) {
+    from(rootProject.file("sync/samples/snapshot/valid")) { include("*.json") }
+    into(layout.buildDirectory.dir("generated/sampleAssets/samples"))
+}
+tasks.named("preBuild") { dependsOn(copySampleAssets) }

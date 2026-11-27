@@ -126,20 +126,22 @@ jobs:
           echo "Booted after about $((i * 4)) s"
           sleep 45          # let first-boot setup settle before launching
           bash scripts/emulator/wear-smoke.sh "$(ls apk/*.apk | head -1)" emu-out "${{ matrix.label }}" "${{ matrix.rotary }}"
-      - name: Screenshot in the log (artifacts are not readable from the review environment)
+      - name: Screenshots in the log (artifacts are not readable from the review environment)
         if: always()
         run: |
-          [ -f emu-out/about.png ] || exit 0
+          ls emu-out/*.png > /dev/null 2>&1 || exit 0
           python3 -m pip install --quiet pillow 2>/dev/null || pip install --quiet --break-system-packages pillow
           python3 - <<'PY'
-          import base64, io
+          import base64, glob, io, os
           from PIL import Image
-          im = Image.open("emu-out/about.png").convert("RGB")
-          buf = io.BytesIO(); im.save(buf, "JPEG", quality=80)
-          b = base64.b64encode(buf.getvalue()).decode()
-          print("SCREENSHOT-BEGIN")
-          for i in range(0, len(b), 4000): print(b[i:i+4000])
-          print("SCREENSHOT-END")
+          for path in sorted(glob.glob("emu-out/sky-*.png")) + ["emu-out/about-page.png"]:
+              if not os.path.exists(path): continue
+              im = Image.open(path).convert("RGB")
+              buf = io.BytesIO(); im.save(buf, "JPEG", quality=88)
+              b = base64.b64encode(buf.getvalue()).decode()
+              print(f"SCREENSHOT-BEGIN {os.path.basename(path)} {im.size[0]}x{im.size[1]}")
+              for i in range(0, len(b), 4000): print(b[i:i+4000])
+              print("SCREENSHOT-END")
           PY
       - name: Upload results
         if: always()

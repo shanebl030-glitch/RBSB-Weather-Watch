@@ -21,6 +21,13 @@ class AboutInfoTest {
     }
 
     @Test
+    fun aboutCreditsNasaForTheMoonImagery() {
+        // Approved Stage 2 decision 5: the Moon textures come from NASA's CGI Moon Kit.
+        assertTrue(AboutInfo.lines("0.1.0-dev").contains(AboutInfo.MOON_CREDIT))
+        assertTrue(AboutInfo.MOON_CREDIT.contains("NASA"))
+    }
+
+    @Test
     fun buildIsTheStage0WatchVersion() {
         // Watch version codes use their own range (1_000_000 + major*10_000 + minor*100 + patch).
         assertEquals(1_000_100, BuildConfig.VERSION_CODE)

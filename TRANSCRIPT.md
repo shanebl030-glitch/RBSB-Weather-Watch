@@ -75,3 +75,17 @@ A summary of decisions and work, newest last.
 - Unknown names are `BAD_VALUE`; wrong characters stay `BAD_FORMAT`. The Python check also now uses full pattern matches, as Kotlin does.
 - **Finding for the phone (0.8.0):** Android 0.7.2 stores `auto` for My location, and with MET Norway it reaches `Forecast.timezone`. The phone must send a real zone name; a test documents that `auto` is refused. Nothing in the phone app was changed.
 - Build and test passed at `c9d7128`: 60 of 60 tests, time zones match. Version 0.1.0-dev; no Stage 2; nothing published.
+
+## 28 Nov 2026: Stage 2 approved; milestone 1 (design review)
+
+- Shane merged Stage 1 (PR #2, `fd00950`) and approved the Stage 2 scope with conditions:
+  1. Moon option C.
+  2. Sample data in debug and release builds until Stage 3, clearly labelled, switchable by tap or rotary.
+  3. The proposed quality thresholds, adjustable, with measurements recorded for Stage 7.
+  4. Forecast icons left for Stage 3.
+  5. A 512 px Moon texture with the NASA credit.
+  6. Test-only Robolectric, with SDK 36 compatibility verified in CI first.
+  7. The sky as the first screen, About on the second page.
+- He asked to see the watch design early: a basic sky screen with sample data and emulator screenshots (432, 480 and 498 px) for review before the full effects and animation work.
+- Built milestone 1 on `claude/stage-2-animated-sky`: the copied scene code adapted to the Stage 1 snapshot, the sky and About pages, bundled samples, 512 px Moon textures, the emulator screenshots, and unit tests for sample loading, the text over the sky and the snapshot-to-sky conditions (including the Moon, option C).
+- Note: the CI emulators capture the full square framebuffer; Galaxy Watch screens are round. The layout keeps content inside the circle, and review images have a circular mask applied afterwards, labelled as such.

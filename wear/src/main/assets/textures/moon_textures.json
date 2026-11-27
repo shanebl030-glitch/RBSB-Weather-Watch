@@ -1,0 +1,18 @@
+{
+  "source": "nasa-cgi-moon-kit",
+  "bump": 0.008498,
+  "tint": [
+    1.0,
+    1.0,
+    1.0
+  ],
+  "credit": "Moon imagery: NASA's Scientific Visualization Studio, CGI Moon Kit (LRO LROC WAC and LOLA data)",
+  "inputs": [
+    "lroc_color_poles_4k.tif",
+    "ldem_16_uint.tif"
+  ],
+  "size": 512,
+  "relief_span_m": 2214.8,
+  "exaggeration": 3.0,
+  "note": "Created By Shane BlackbuRn. Resized from RBSB-Weather for Android v0.7.2 (2048 px) to 512 px for the watch (approved Stage 2 decision 5), Lanczos, JPEG quality 92."
+}

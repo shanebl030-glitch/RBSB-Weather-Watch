@@ -4,7 +4,18 @@ RBSB-Weather for Galaxy Watch. Created By Shane BlackbuRn
 
 Version codes use their own range: 1_000_000 + major × 10_000 + minor × 100 + patch.
 
-## 0.1.0-dev (Stage 1: sync format v1, in review)
+## 0.1.0-dev (Stage 2: animated sky, in progress)
+
+Milestone 1, for Shane's design review before the full effects and animation work:
+- The sky is now the first screen, with About on a second page (swipe sideways). Approved decision 7.
+- The sky is drawn by the scene code copied from RBSB-Weather for Android v0.7.2 (commit `cdf422d`, source recorded in each file): SceneEngine, SceneDraw, SafeBrush, MoonRender, Moon, WeatherCodes, and SceneModel adapted to read the Stage 1 snapshot. The Android repository is unchanged.
+- Moon (decision 1, option C): phase and illumination from the snapshot; live position and tilt calculated on the watch; rise and set from the snapshot when they bracket the moment shown.
+- Sample data (decision 2): the Stage 1 valid samples are bundled (copied from `sync/samples` at build time), labelled "SAMPLE DATA". Tap or turn the bezel/crown to switch samples.
+- Moon textures resized to 512 px (about 147 KB; the phone's are 2048 px, 1.8 MB). NASA credit on the About page (decision 5).
+- Milestone 1 draws a still picture of each sample's moment; animation, quality levels and frame timing follow after the review.
+- Emulator test: checks the sample label and that a tap changes the sample, captures a sky screenshot for 10 samples, and still checks the About page credit.
+
+## 0.1.0-dev (Stage 1: sync format v1, merged 28 Nov 2026)
 
 Defines what RBSB-Weather for Android will send the watch. No weather features, no screen changes, and nothing is sent or received yet (watch receiver: Stage 3; phone side: Android 0.8.0, which needs approval).
 
