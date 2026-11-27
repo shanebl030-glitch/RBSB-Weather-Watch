@@ -1,4 +1,5 @@
-# Build, unit tests, lint, 64-bit check and signing checks for RBSB-Weather Watch.
+# Build, unit tests (wear app and shared sync module), sync sample checks, lint, 64-bit check and
+# signing checks for RBSB-Weather Watch.
 # Runs on every push and pull request. Created By Shane BlackbuRn
 name: Build and test
 
@@ -25,20 +26,40 @@ jobs:
       - name: Android 16 SDK platform (compileSdk 36)
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" > /dev/null
 
-      - name: Unit tests (baseline suite)
-        run: ./gradlew --no-daemon --stacktrace :wear:testDebugUnitTest
+      - name: Unit tests (baseline suite, wear app and shared sync module)
+        run: ./gradlew --no-daemon --stacktrace :wear:testDebugUnitTest :sync:test
       - name: Test totals
         if: always()
         run: |
           python3 - <<'PY'
           import glob, xml.etree.ElementTree as ET
-          t = f = e = sk = 0
-          for x in glob.glob("wear/build/test-results/testDebugUnitTest/*.xml"):
-              r = ET.parse(x).getroot()
-              t += int(r.get("tests", 0)); f += int(r.get("failures", 0))
-              e += int(r.get("errors", 0)); sk += int(r.get("skipped", 0))
-          print(f"TEST TOTALS: {t} run, {t - f - e - sk} passed, {f} failed, {e} errors, {sk} skipped")
+          T = F = E = SK = 0
+          for name, pattern in [("wear", "wear/build/test-results/testDebugUnitTest/*.xml"),
+                                ("sync", "sync/build/test-results/test/*.xml")]:
+              t = f = e = sk = 0
+              for x in sorted(glob.glob(pattern)):
+                  r = ET.parse(x).getroot()
+                  t += int(r.get("tests", 0)); f += int(r.get("failures", 0))
+                  e += int(r.get("errors", 0)); sk += int(r.get("skipped", 0))
+                  print(f"  {r.get('name')}: {r.get('tests')} run, {r.get('failures')} failed, {r.get('errors')} errors")
+                  out = r.find("system-out")
+                  for line in (out.text or "").splitlines() if out is not None else []:
+                      if line.startswith(("SIZE ", "MAPPING ", "SCHEMA MATCH ")):
+                          print("    " + line)
+              print(f"TEST TOTALS ({name}): {t} run, {t - f - e - sk} passed, {f} failed, {e} errors, {sk} skipped")
+              T += t; F += f; E += e; SK += sk
+          print(f"TEST TOTALS: {T} run, {T - F - E - SK} passed, {F} failed, {E} errors, {SK} skipped")
           PY
+
+      - name: Sync samples are up to date (regenerated and compared)
+        run: |
+          python3 sync/samples/make_samples.py
+          git diff --exit-code -- sync/samples && echo "SAMPLES UP TO DATE: regenerating changes nothing"
+      - name: Sync samples, independent check (JSON Schema + extra rules in Python)
+        run: |
+          python3 -m venv /tmp/samples-venv
+          /tmp/samples-venv/bin/pip install --quiet "jsonschema==4.26.0"
+          /tmp/samples-venv/bin/python scripts/check-samples.py
 
       - name: Lint (errors fail the build)
         run: ./gradlew --no-daemon :wear:lintDebug
@@ -135,4 +156,6 @@ jobs:
           path: |
             wear/build/reports/
             wear/build/test-results/
+            sync/build/reports/
+            sync/build/test-results/
           retention-days: 14

@@ -1,0 +1,68 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/shanebl030-glitch/RBSB-Weather-Watch/sync/contract/settings-v1.schema.json",
+  "title": "RBSB-Weather sync format v1: settings (data item /rbsb/v1/settings)",
+  "description": "Created By Shane BlackbuRn. The six display settings the watch follows. sentAt may be at most 10 minutes ahead of the receiver's clock.",
+  "type": "object",
+  "required": [
+    "kind",
+    "schema",
+    "sentAt",
+    "temperatureUnit",
+    "windUnit",
+    "precipitationUnit",
+    "clock",
+    "animations",
+    "minWarningLevel"
+  ],
+  "properties": {
+    "kind": {
+      "const": "rbsb.settings"
+    },
+    "schema": {
+      "const": 1
+    },
+    "sentAt": {
+      "type": "integer",
+      "minimum": 1577836800000,
+      "maximum": 4102444800000
+    },
+    "temperatureUnit": {
+      "enum": [
+        "C",
+        "F"
+      ]
+    },
+    "windUnit": {
+      "enum": [
+        "KMH",
+        "MS",
+        "MPH",
+        "KN"
+      ]
+    },
+    "precipitationUnit": {
+      "enum": [
+        "MM",
+        "IN"
+      ]
+    },
+    "clock": {
+      "enum": [
+        "H24",
+        "H12"
+      ]
+    },
+    "animations": {
+      "type": "boolean"
+    },
+    "minWarningLevel": {
+      "enum": [
+        "all",
+        "watch",
+        "orange",
+        "red"
+      ]
+    }
+  }
+}
