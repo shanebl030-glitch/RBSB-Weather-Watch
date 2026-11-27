@@ -58,6 +58,11 @@ jobs:
           echo "$REF_APK_SHA256  ref.apk" | sha256sum -c -
           "$AS" lineage --in ref.apk --print-certs -v | tee ref-lineage.txt
           python3 scripts/lineage_check.py ref-lineage.txt --expect-old "$TEST_CERT" --expect-new "$PROD_CERT" --json ref-flags.json
+          # The real watch release will reuse this public lineage: check it extracts and reads back
+          python3 scripts/extract_lineage.py ref.apk ref-lineage.bin
+          "$AS" lineage --in ref-lineage.bin --print-certs -v > ref-lineage-file.txt
+          python3 scripts/lineage_check.py ref-lineage-file.txt --expect-old "$TEST_CERT" --expect-new "$PROD_CERT" --json ref-file-flags.json
+          cmp <(python3 -c "import json;print(json.load(open('ref-flags.json')))") <(python3 -c "import json;print(json.load(open('ref-file-flags.json')))") && echo "0.7.2 LINEAGE EXTRACTS CLEANLY: same certificates and flags as in the APK"
 
       - name: Build the unsigned probe
         run: ./gradlew --no-daemon :signingprobe:assembleRelease
@@ -93,8 +98,11 @@ jobs:
           # Watch copy: key B ONLY + the lineage extracted from the phone APK (public data).
           # Key A's private key is deleted first, just as the real watch release will not need
           # the test key: the production key plus 0.7.2's published lineage is enough.
-          "$AS" lineage --in kit/probe-phone.apk --out "$K/extracted.bin"
-          rm -f "$K/A.p12"
+          python3 scripts/extract_lineage.py kit/probe-phone.apk "$K/extracted.bin"
+          # Prove the extractor is exact: it must equal the lineage file apksigner created
+          cmp "$K/lineage.bin" "$K/extracted.bin" || { echo "Extracted lineage differs from apksigner's"; od -A x -t x1 "$K/lineage.bin" | head -3; od -A x -t x1 "$K/extracted.bin" | head -3; exit 1; }
+          echo "EXTRACTOR OK: the lineage extracted from the phone APK is byte-identical to apksigner's"
+          rm -f "$K/A.p12" "$K/lineage.bin"
           "$AS" sign --ks "$K/B.p12" --ks-pass env:PW --ks-key-alias probeB \
             --lineage "$K/extracted.bin" --rotation-min-sdk-version 28 \
             --out kit/probe-watch.apk "$K/aligned.apk"
