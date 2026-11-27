@@ -230,7 +230,8 @@ fun conditionsFromSnapshot(s: Snapshot, nowMs: Long = System.currentTimeMillis()
         cond = cond.copy(moonLimb = live.brightLimb, moonRotation = g.q, moonUp = up, moonAltitude = g.altitude)
         if (up) {
             // Rise and set: the snapshot's when they bracket this moment, otherwise calculated.
-            val (mr, ms) = if (m.rise != null && m.set != null && m.rise <= atMs && atMs <= m.set) m.rise to m.set
+            val sr = m.rise; val ss = m.set
+            val (mr, ms) = if (sr != null && ss != null && sr <= atMs && atMs <= ss) sr to ss
                 else MoonPassCache.get(at, s.place.latitude, s.place.longitude).let { (r, st) -> r?.toEpochMilli() to st?.toEpochMilli() }
             if (mr != null && ms != null) {
                 cond = cond.copy(moonRiseMs = mr, moonSetMs = ms)
