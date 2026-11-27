@@ -97,7 +97,7 @@ jobs:
           done
           if [ "$booted" != yes ]; then echo "== emulator.log (last 60 lines)"; tail -60 emulator.log; echo "Emulator did not boot"; exit 1; fi
           echo "Booted after about $((i * 4)) s"
-          sleep 20
+          sleep 45          # let first-boot setup settle before launching
           bash scripts/emulator/wear-smoke.sh "$(ls wear/build/outputs/apk/debug/*.apk | head -1)" emu-out "${{ matrix.label }}" "${{ matrix.rotary }}"
       - name: Screenshot in the log (artifacts are not readable from the review environment)
         if: always()
