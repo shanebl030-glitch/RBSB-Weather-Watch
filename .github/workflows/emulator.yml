@@ -39,16 +39,21 @@ jobs:
         run: |
           SDK="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$SDK" --licenses > /dev/null || true
-          "$SDK" --list 2>/dev/null | grep -oE "system-images;android-[0-9]+;android-wear;x86_64" | sort -u | tee wear-images.txt
+          # Wear OS images from the stable channel and, if Google publishes newer ones there,
+          # the beta/canary channels. Tags vary by version, so match any tag containing "wear".
+          { "$SDK" --list 2>/dev/null; "$SDK" --list --channel=3 2>/dev/null; } \
+            | grep -oE "system-images;android-[0-9]+(\.[0-9]+)?(-[a-z0-9]+)?;[a-z0-9_-]*wear[a-z0-9_-]*;x86_64" | sort -u | tee wear-images.txt
+          api() { echo "$1" | sed -E 's/^system-images;android-([0-9]+).*/\1/'; }
           if [ "${{ matrix.api }}" = "newest" ]; then
-            IMG=$(sort -t- -k2 -n wear-images.txt | tail -1)
+            IMG=$(while read -r l; do echo "$(api "$l") $l"; done < wear-images.txt | sort -n -k1,1 | tail -1 | cut -d' ' -f2)
           else
-            IMG="system-images;android-${{ matrix.api }};android-wear;x86_64"
+            IMG=$(grep -m1 -E "^system-images;android-${{ matrix.api }}(\.[0-9]+)?;" wear-images.txt || true)
           fi
-          grep -qx "$IMG" wear-images.txt || { echo "Image not available: $IMG"; exit 1; }
+          [ -n "$IMG" ] || { echo "NO WEAR OS IMAGE for API ${{ matrix.api }} in the SDK repository"; exit 1; }
           echo "IMG=$IMG" >> "$GITHUB_ENV"
           echo "Using $IMG"
-          yes | "$SDK" "platforms;android-36" "build-tools;36.0.0" "emulator" "platform-tools" "$IMG" > /dev/null
+          CH=""; "$SDK" --list 2>/dev/null | grep -q "$IMG" || CH="--channel=3"
+          yes | "$SDK" $CH "platforms;android-36" "build-tools;36.0.0" "emulator" "platform-tools" "$IMG" > /dev/null
       - name: Build the debug APK
         run: ./gradlew --no-daemon :wear:assembleDebug
       - name: Enable KVM
@@ -62,7 +67,9 @@ jobs:
           "$AVDM" list device -c | grep -i wear | tee devices.txt
           DEV=$(grep -m1 -i "wearos_large_round" devices.txt || grep -m1 -i "round" devices.txt)
           echo no | "$AVDM" create avd -n watch -k "$IMG" -d "$DEV" --force
-          CFG="$HOME/.android/avd/watch.avd/config.ini"
+          AVD_DIR=$("$AVDM" list avd | grep -m1 "Path:" | awk '{print $2}')
+          CFG="$AVD_DIR/config.ini"
+          echo "AVD config: $CFG"
           sed -i '/^hw.lcd.width/d;/^hw.lcd.height/d;/^hw.lcd.density/d;/^hw.rotaryInput/d;/^hw.ramSize/d' "$CFG"
           {
             echo "hw.lcd.width=${{ matrix.px }}"

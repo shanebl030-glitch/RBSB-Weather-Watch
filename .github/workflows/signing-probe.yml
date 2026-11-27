@@ -80,7 +80,10 @@ jobs:
             echo
             for a in probe-phone-rotated.apk probe-watch-newkey-only.apk probe-watch-lineage-fallback.apk; do
               echo "== $a"
-              "$AS" verify --verbose --print-certs --min-sdk-version 30 "$a" | grep -E "Verified using|Signer|certificate SHA-256|Number of signers" || true
+              echo "-- as Android 11+ sees it (v3):"
+              "$AS" verify --verbose --print-certs --min-sdk-version 30 "$a" | grep -E "Verified using v3 |Number of signers|certificate DN|certificate SHA-256" || true
+              echo "-- rotation history (lineage) inside the APK:"
+              "$AS" lineage --in "$a" --print-certs 2>&1 | grep -E "Signer #|certificate DN|certificate SHA-256" || echo "   none"
               echo
             done
           } | tee CERTS.txt
@@ -90,6 +93,11 @@ jobs:
           grep -A3 "== probe-phone-rotated.apk" CERTS.txt > /dev/null
           "$AS" verify --verbose --min-sdk-version 30 probe-phone-rotated.apk | grep -q "Verified using v3 scheme (APK Signature Scheme v3): true" || { echo "Phone copy has no v3 signature"; exit 1; }
           "$AS" verify --verbose --print-certs --min-sdk-version 30 probe-watch-newkey-only.apk | grep -q "Number of signers: 1" || { echo "Watch copy should have one signer"; exit 1; }
+          NPHONE=$("$AS" lineage --in probe-phone-rotated.apk --print-certs 2>/dev/null | grep -c "certificate SHA-256" || true)
+          NWATCH=$("$AS" lineage --in probe-watch-newkey-only.apk --print-certs 2>/dev/null | grep -c "certificate SHA-256" || true)
+          echo "Lineage certificates: phone copy $NPHONE, watch copy $NWATCH"
+          [ "$NPHONE" = "2" ] || { echo "Phone copy should carry a two-key lineage (A -> B)"; exit 1; }
+          [ "${NWATCH:-0}" -le 1 ] || { echo "Watch copy should not carry a rotation lineage"; exit 1; }
           echo "Phone copy current signer (v3, Android 9+): $PHONE_NEW"
           echo "Watch copy signer:                         $WATCH"
           [ "$PHONE_NEW" = "$WATCH" ] || { echo "MISMATCH: the rotated phone copy's current signer is not key B"; exit 1; }
