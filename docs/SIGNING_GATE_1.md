@@ -80,5 +80,5 @@ The emulators can be deleted in Device Manager.
 ## What this proves, and what it doesn't
 
 - It proves Play services' "same app" check with the same rotation structure, on Google's emulator images.
-- It does **not** use the real production key. Signing gate 2 (stage 10) repeats the check with the real release candidates before anything is published.
-- It does not test a real Samsung phone or watch. That is covered at stage 9.
+- It does **not** use the real production key. Signing gate 2 (stage 8) repeats the check with the real release candidates before anything is published.
+- It does not test a real Samsung phone or watch. That is covered at stage 7.

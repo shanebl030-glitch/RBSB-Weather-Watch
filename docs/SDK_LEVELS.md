@@ -2,7 +2,7 @@
 
 Created By Shane BlackbuRn
 
-From the approved Development Plan v1.0, section 3.
+From the approved Development Plan v1.1, section 3.
 
 | Setting | Watch app | Meaning |
 |---|---|---|

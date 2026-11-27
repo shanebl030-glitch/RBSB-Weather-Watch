@@ -2,19 +2,23 @@
 
 RBSB-Weather for Samsung Galaxy Watch (Wear OS), fed by RBSB-Weather for Android.
 
+**A standalone weather app, not a watch face.** It does not replace or change Samsung's watch face or clock.
+
 Created By Shane BlackbuRn
 
 ## Status
 
 **Version 0.1.0-dev, Stage 0 (project foundation).** The app is a shell with an About screen only. There are no weather features yet.
 
-Work follows the approved plan, **RBSB-Weather for Galaxy Watch: Development Plan v1.0** (approved 27 Nov 2026):
+Work follows the approved plan, **RBSB-Weather for Galaxy Watch: Development Plan v1.1** (approved 28 Nov 2026):
 https://claude.ai/artifact/PRGaNrySRq7hgTMNBheuzs
 
 ## What the finished app will be
 
 - **RBSB-Weather for Android is the only weather source.** The phone sends weather to the watch over the Wear OS Data Layer. The watch never fetches weather and needs no API keys.
-- **The animated sky is the central feature.** The watch app draws the full live sky locally at 30 fps, adjusting detail automatically. A separate watch face plays lighter animated loops, and the always-on display shows a still, low-power sky.
+- **The animated sky is the central feature.** The watch app draws the full live sky locally at 30 fps, adjusting detail automatically. When the screen dims while the app is open, it shows a still, low-power sky.
+- **Weather screens:** now, forecast, wind, warnings and Moon, plus an optional Tile (a static weather glance card that opens the app).
+- **Not a watch face or clock.** There is no custom watch face. Leaving the app returns to Samsung's own watch face as normal.
 - **Supported watches:** Galaxy Watch6 / Watch6 Classic and every newer generation, decided by Wear OS capabilities rather than model numbers. Galaxy Watch FE is unsupported but not blocked.
 
 ## Project layout

@@ -8,6 +8,8 @@ Version codes use their own range: 1_000_000 + major × 10_000 + minor × 100 + 
 
 Project foundation only. No weather features.
 
+- Scope clarified (plan v1.1): a standalone weather app, not a watch face. Documentation updated; watch-face key and references removed. No code changes were needed.
+
 - Gradle project with a `wear` module: package `io.github.shanebl030glitch.rbsbweather`, minSdk 33 (Wear OS 4), targetSdk 36, versionCode 1000100.
 - Minimal watch app shell: one About screen with the title, version and "Created By Shane BlackbuRn".
 - Development builds signed with the shared public debug key and installed as `...rbsbweather.dev`. Release builds are unsigned.

@@ -17,6 +17,5 @@ release.keystore
 keystore.properties
 signing.properties
 rbsb-release*
-watchface-release*
 # Throwaway keys made by the signing probe workflow must never be committed
 probe-keys/

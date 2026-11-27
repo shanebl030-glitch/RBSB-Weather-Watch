@@ -6,7 +6,9 @@ Created By Shane BlackbuRn
 
 ## What it does now
 
-Opening the app shows an About screen: the app name, its version and "Created By Shane BlackbuRn". There is no weather, sync, watch face, Tile or complication yet. Those arrive in later stages of the approved plan.
+Opening the app shows an About screen: the app name, its version and "Created By Shane BlackbuRn". There is no weather, sync or Tile yet. Those arrive in later stages of the approved plan.
+
+RBSB-Weather for Galaxy Watch is a **weather app, not a watch face**. It never replaces or changes Samsung's watch face or clock; leaving the app returns to your normal watch face.
 
 ## Supported watches (planned)
 

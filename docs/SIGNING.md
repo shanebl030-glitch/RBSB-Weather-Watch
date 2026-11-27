@@ -2,7 +2,7 @@
 
 Created By Shane BlackbuRn
 
-From the approved Development Plan v1.0, section 8.
+From the approved Development Plan v1.1, section 8.
 
 ## Development builds
 
@@ -16,14 +16,14 @@ From the approved Development Plan v1.0, section 8.
 - Release builds come out of Gradle **unsigned**. CI fails if a release build is signed.
 - The production key will sign the watch app (package `io.github.shanebl030glitch.rbsbweather`, same as the phone app, required by the Wear OS Data Layer). Production key only, without the rotation history from the test key.
 - Production credentials will live only in a protected GitHub environment (main branch, required approval) or be used on Shane's own machine. They are never committed and never printed.
-- The WFF watch face (a later stage) gets its **own separate key**.
+- There is no watch face and no watch-face key: this is a standalone weather app (plan v1.1).
 - Nothing is signed for release in Stage 0.
 
 ## Rotation compatibility gates
 
 1. **Gate 1 (Stage 0):** throwaway-key copy of the rotation structure. See [SIGNING_GATE_1.md](SIGNING_GATE_1.md).
-2. **Gate 2 (stage 10):** release candidates signed with the real production key, checked on Shane's devices before anything is published.
+2. **Gate 2 (stage 8):** release candidates signed with the real production key, checked on Shane's devices before anything is published.
 
 ## Never committed
 
-`.gitignore` refuses `*.jks`, `*.p12`, `*.pfx`, `*.bks`, `keystore.properties`, `signing.properties`, `rbsb-release*`, `watchface-release*` and `probe-keys/`.
+`.gitignore` refuses `*.jks`, `*.p12`, `*.pfx`, `*.bks`, `keystore.properties`, `signing.properties`, `rbsb-release*` and `probe-keys/`.

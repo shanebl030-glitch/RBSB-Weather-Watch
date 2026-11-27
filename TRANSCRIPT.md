@@ -8,8 +8,8 @@ A summary of decisions and work, newest last.
 
 - Shane asked for a Galaxy Watch version of RBSB-Weather that keeps the animated weather experience. No coding until a plan was approved.
 - Claude inspected the desktop and Android repos. The Android scene code (SceneEngine, SceneDraw, MoonRender) is pure Compose drawing and can be reused on Wear OS.
-- Key finding: Wear OS watch faces must use the Watch Face Format (no code), so the live engine runs in the watch app; the watch face plays pre-rendered loops chosen through a complication.
-- Decisions, over four revisions: RBSB-Weather for Android is the only weather source (Wear OS Data Layer); Galaxy Watch6 generation onwards by capability; Watch FE unsupported but not blocked; minSdk 33, targetSdk 36 (fallback 35); WFF version 1; separate watch face key; matching `.dev` debug suffixes; one synced location; test devices chosen at stage 9.
+- Key finding: Wear OS watch faces must use the Watch Face Format (no code), so the live engine runs in the watch app; the watch face plays pre-rendered loops chosen through a complication. *(Superseded 28 Nov 2026: there is no watch face.)*
+- Decisions, over four revisions: RBSB-Weather for Android is the only weather source (Wear OS Data Layer); Galaxy Watch6 generation onwards by capability; Watch FE unsupported but not blocked; minSdk 33, targetSdk 36 (fallback 35); WFF version 1 and a separate watch face key *(both superseded 28 Nov 2026)*; matching `.dev` debug suffixes; one synced location; test devices chosen at stage 9.
 - Shane approved **Development Plan v1.0** and asked for Stage 0 only.
 
 ## 27–28 Nov 2026: Stage 0
@@ -22,3 +22,10 @@ A summary of decisions and work, newest last.
 - Two runs hit Maven Central download errors before any emulator started; the five emulator jobs now share one APK build.
 - Final results at `6cb6fdc`: all workflows green; 15 of 15 emulator tests passed over three full runs, with no re-runs (Wear OS 4, 5, 6 ×2 and a Wear OS 7 beta image). Pull request #1 opened for Shane's review. The signing gate 1 pairing test is waiting for Shane.
 - Results are in TEST_REPORT.md. Neither existing RBSB repository, Android 0.7.2 or the 0.8.0 proposal was touched.
+
+## 28 Nov 2026: scope clarified (plan v1.1)
+
+- Shane clarified that RBSB-Weather for Galaxy Watch is **strictly a standalone weather app**: not a watch face, not a clock, and never a replacement for Samsung's watch face, which stays untouched.
+- Plan v1.1 removes the Watch Face Format project, its separate package and signing key, the watch-face animation loops and the watch-face stages (12 stages became 10). Kept: the Data Layer link, the live animated sky, weather screens, forecasts, warnings, Moon, caching and staleness handling.
+- The Tile is kept as an optional, strictly weather-related glance card that never replaces or interferes with Samsung's watch face or clock. Complications on Samsung's faces may be considered separately later; they are not in the plan.
+- Shane approved plan v1.1. Stage 0 needed documentation changes only (no code referenced a watch face); they were made in one commit on `claude/stage-0-foundation`. Signing gate 1 still needs Shane's PC test.

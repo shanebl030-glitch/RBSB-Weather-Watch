@@ -38,7 +38,7 @@ Screenshots: [docs/stage0/emulator-about-screens.png](docs/stage0/emulator-about
 1. CI checked `sdkVersion` instead of `minSdkVersion` (test script bug).
 2. Wear OS 6 and 7 emulator images use the tag `android-wear-signed`, not `android-wear`. The workflow now finds any Wear OS tag.
 3. `avdmanager` and the emulator used different AVD folders. Now one folder is set for both.
-4. On fresh emulators the system sometimes returned to the watch face after launch. The test now keeps the screen on and confirms the app is in front.
+4. On fresh emulators the system sometimes returned to its built-in watch face after launch (the emulator's own face, not part of this project). The test now keeps the screen on and confirms the app is in front.
 5. On the production-signed Wear OS 6/7 images, adb sometimes stayed unauthorised (3 of 15 jobs before the fix). Cause: the emulator could boot before adb created its key. Fixed by creating the key and starting adb first; 0 of 30 jobs after the fix.
 6. Two emulator runs failed on Maven Central download errors while building, before any emulator started: five parallel jobs each downloaded every dependency. The APK is now built once and shared by the five emulator jobs.
 
