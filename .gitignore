@@ -1,0 +1,22 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+captures/
+.externalNativeBuild/
+.cxx/
+# Never commit a real release key, its passwords or its backups.
+# (keystore/rbsb-test.keystore is the PUBLIC shared debug key and is committed on purpose.)
+release.keystore
+*.jks
+*.p12
+*.pfx
+*.bks
+keystore.properties
+signing.properties
+rbsb-release*
+watchface-release*
+# Throwaway keys made by the signing probe workflow must never be committed
+probe-keys/

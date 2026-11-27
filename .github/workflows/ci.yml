@@ -1,0 +1,111 @@
+# Build, unit tests, lint, 64-bit check and signing checks for RBSB-Weather Watch.
+# Runs on every push and pull request. Created By Shane BlackbuRn
+name: Build and test
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Android 16 SDK platform (compileSdk 36)
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+
+      - name: Unit tests (baseline suite)
+        run: ./gradlew --no-daemon --stacktrace :wear:testDebugUnitTest
+      - name: Test totals
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import glob, xml.etree.ElementTree as ET
+          t = f = e = sk = 0
+          for x in glob.glob("wear/build/test-results/testDebugUnitTest/*.xml"):
+              r = ET.parse(x).getroot()
+              t += int(r.get("tests", 0)); f += int(r.get("failures", 0))
+              e += int(r.get("errors", 0)); sk += int(r.get("skipped", 0))
+          print(f"TEST TOTALS: {t} run, {t - f - e - sk} passed, {f} failed, {e} errors, {sk} skipped")
+          PY
+
+      - name: Lint (errors fail the build)
+        run: ./gradlew --no-daemon :wear:lintDebug
+      - name: Lint totals
+        if: always()
+        run: |
+          python3 - <<'PY'
+          import os, xml.etree.ElementTree as ET
+          p = "wear/build/reports/lint-results-debug.xml"
+          if not os.path.exists(p):
+              print("LINT: no report"); raise SystemExit
+          issues = ET.parse(p).getroot().findall("issue")
+          errors = [i for i in issues if i.get("severity") in ("Error", "Fatal")]
+          print(f"LINT: {len(errors)} errors, {len(issues) - len(errors)} warnings")
+          for i in issues[:40]:
+              print(f"  {i.get('severity')}: {i.get('id')}: {i.get('message')}")
+          PY
+
+      - name: Build debug and release APKs
+        run: ./gradlew --no-daemon :wear:assembleDebug :wear:assembleRelease
+
+      - name: 64-bit check
+        run: python3 scripts/check-64bit.py wear/build/outputs/apk/debug/*.apk wear/build/outputs/apk/release/*.apk
+
+      - name: Signing and package checks
+        run: |
+          set -e
+          AS=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          AAPT=$(ls -d "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
+          DBG=$(ls wear/build/outputs/apk/debug/*.apk | head -1)
+          REL=$(ls wear/build/outputs/apk/release/*.apk | head -1)
+          TEST=a9618b324c0ed08d0850953843fe7d6ea4aef6353ccaaffc3e6e53ad4a36e87c
+          norm() { echo "$1" | tr -d ': ' | tr 'A-F' 'a-f'; }
+
+          echo "== Debug APK: $DBG"
+          "$AAPT" dump badging "$DBG" | head -3 | tee badging.txt
+          grep -q "package: name='io.github.shanebl030glitch.rbsbweather.dev'" badging.txt || { echo "Debug package is not ...rbsbweather.dev"; exit 1; }
+          grep -q "versionCode='1000100'" badging.txt || { echo "Unexpected versionCode"; exit 1; }
+          grep -q "sdkVersion:'33'" <("$AAPT" dump badging "$DBG") || { echo "minSdk is not 33"; exit 1; }
+          grep -q "targetSdkVersion:'36'" <("$AAPT" dump badging "$DBG") || { echo "targetSdk is not 36"; exit 1; }
+          "$AS" verify --print-certs "$DBG" | tee dbg-signer.txt
+          GOT=$(grep -m1 "certificate SHA-256 digest" dbg-signer.txt | awk '{print $NF}')
+          [ "$(norm "$GOT")" = "$TEST" ] || { echo "Debug APK is not signed with the shared debug key"; exit 1; }
+          echo "DEBUG OK: package ...rbsbweather.dev, minSdk 33, targetSdk 36, shared debug key"
+
+          echo "== Release APK: $REL"
+          "$AAPT" dump badging "$REL" | head -1 | grep -q "package: name='io.github.shanebl030glitch.rbsbweather'" || { echo "Release package wrong"; exit 1; }
+          if "$AS" verify "$REL" > /dev/null 2>&1; then
+            echo "Release APK is signed, but Stage 0 release builds must be unsigned"; exit 1
+          fi
+          echo "RELEASE OK: package ...rbsbweather, unsigned (signed later only by the protected release workflow)"
+
+      - name: Name the debug APK and its checksum
+        run: |
+          mkdir -p out
+          cp wear/build/outputs/apk/debug/*.apk out/rbsb-weather-watch_0.1.0-dev_debug.apk
+          cd out && sha256sum *.apk > SHA256SUMS && cat SHA256SUMS
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rbsb-weather-watch-debug-apk
+          path: out/
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-and-lint-reports
+          path: |
+            wear/build/reports/
+            wear/build/test-results/
+          retention-days: 14

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Shane's RBSB-Weather icon (the round version), fitted inside Android's safe zone so no
+     launcher shape cuts it. The monochrome layer is a simple silhouette for themed icons.
+     Created By Shane BlackbuRn -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/icon_background" />
+    <foreground android:drawable="@mipmap/ic_launcher_foreground" />
+    <monochrome android:drawable="@drawable/ic_launcher_monochrome" />
+</adaptive-icon>
