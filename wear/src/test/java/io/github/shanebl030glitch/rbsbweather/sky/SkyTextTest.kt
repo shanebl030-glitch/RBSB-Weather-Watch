@@ -13,7 +13,8 @@ class SkyTextTest {
 
     @Test fun temperatureIsRoundedWithADegreeSign() {
         assertEquals("19°", SkyText.temperature(19.0))
-        assertEquals("-4°", SkyText.temperature(-3.5))
+        assertEquals("-3°", SkyText.temperature(-3.5))        // rounds half up, as Math.round and the phone app do
+        assertEquals("-4°", SkyText.temperature(-3.6))
         assertEquals("--°", SkyText.temperature(null))
         assertEquals("--°", SkyText.temperature(Double.NaN))
     }
