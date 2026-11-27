@@ -82,15 +82,34 @@ jobs:
       - name: Boot, install, launch, screenshot
         run: |
           export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH"
-          emulator -avd watch -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot -no-metrics > emulator.log 2>&1 &
-          adb wait-for-device
-          for i in $(seq 1 120); do
-            [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && break
-            sleep 5
+          emulator -accel-check || true
+          emulator -avd watch -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot > emulator.log 2>&1 &
+          EMU=$!
+          booted=no
+          for i in $(seq 1 150); do
+            if ! kill -0 "$EMU" 2>/dev/null; then echo "The emulator process exited early"; break; fi
+            if [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then booted=yes; break; fi
+            sleep 4
           done
-          [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ] || { tail -50 emulator.log; echo "Emulator did not boot"; exit 1; }
+          if [ "$booted" != yes ]; then echo "== emulator.log (last 60 lines)"; tail -60 emulator.log; echo "Emulator did not boot"; exit 1; fi
+          echo "Booted after about $((i * 4)) s"
           sleep 20
           bash scripts/emulator/wear-smoke.sh "$(ls wear/build/outputs/apk/debug/*.apk | head -1)" emu-out "${{ matrix.label }}" "${{ matrix.rotary }}"
+      - name: Screenshot in the log (artifacts are not readable from the review environment)
+        if: always()
+        run: |
+          [ -f emu-out/about.png ] || exit 0
+          python3 -m pip install --quiet pillow 2>/dev/null || pip install --quiet --break-system-packages pillow
+          python3 - <<'PY'
+          import base64, io
+          from PIL import Image
+          im = Image.open("emu-out/about.png").convert("RGB")
+          buf = io.BytesIO(); im.save(buf, "JPEG", quality=80)
+          b = base64.b64encode(buf.getvalue()).decode()
+          print("SCREENSHOT-BEGIN")
+          for i in range(0, len(b), 4000): print(b[i:i+4000])
+          print("SCREENSHOT-END")
+          PY
       - name: Upload results
         if: always()
         uses: actions/upload-artifact@v4
