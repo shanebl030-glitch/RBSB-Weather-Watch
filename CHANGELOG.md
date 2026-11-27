@@ -14,4 +14,5 @@ Project foundation only. No weather features.
 - CI: unit tests, lint, 64-bit check, signing and package checks, debug APK with SHA256SUMS.
 - Wear OS emulator set: Wear OS 4, 5, 6 and the newest available image, at 432 to 498 px, with and without rotary input.
 - Signing gate 1 kit: a throwaway probe app signed with throwaway keys (rotated phone copy, new-key-only watch copy, lineage fallback) and a checklist.
-- Docs: README, SIGNING, SDK levels, signing gate 1 checklist, user guide, transcript, test report.
+- Backup and device transfer exclude all app data (the weather cache will come back from the phone).
+- Docs: README, SIGNING, SDK levels, signing gate 1 checklist, user guide, transcript, test report with emulator screenshots.
