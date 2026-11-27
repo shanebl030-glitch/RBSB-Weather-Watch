@@ -29,7 +29,7 @@ https://claude.ai/artifact/PRGaNrySRq7hgTMNBheuzs
 | `tools/signing-probe/` | Stage 0 test tool for signing gate 1. Never released; its own package |
 | `scripts/` | 64-bit check and emulator scripts |
 | `keystore/rbsb-test.keystore` | The shared, **public** debug key. Development builds only |
-| `docs/` | Signing, SDK levels, signing gate 1 checklist, user guide |
+| `docs/` | Signing, SDK levels, signing gate 1, user guide |
 
 ## Building
 
@@ -37,14 +37,14 @@ Builds run in GitHub Actions (JDK 17, Android SDK 36):
 
 - **Build and test:** unit tests, lint, debug and release APKs, 64-bit check, signing and package checks. The debug APK and its SHA256SUMS are an artifact.
 - **Wear OS emulators:** installs and launches the app on Wear OS 4, 5, 6 and the newest available image at Galaxy Watch screen sizes, with and without rotary input.
-- **Signing gate 1 kit:** throwaway-key probe APKs and the checklist in `docs/SIGNING_GATE_1.md`.
+- **Signing gate 1 (automated identity check):** checks the published Android 0.7.2 signing history, signs a throwaway probe the same way for phone and watch (throwaway keys), and confirms a phone emulator and a Wear OS 6 emulator report the same signer and history. See `docs/SIGNING_GATE_1.md`.
 
 Locally: `./gradlew :wear:testDebugUnitTest :wear:assembleDebug`.
 
 ## Documents
 
 - [CHANGELOG](CHANGELOG.md), [TRANSCRIPT](TRANSCRIPT.md), [TEST_REPORT](TEST_REPORT.md)
-- [User guide](docs/USER_GUIDE.md), [Signing](docs/SIGNING.md), [SDK levels](docs/SDK_LEVELS.md), [Signing gate 1 checklist](docs/SIGNING_GATE_1.md)
+- [User guide](docs/USER_GUIDE.md), [Signing](docs/SIGNING.md), [SDK levels](docs/SDK_LEVELS.md), [Signing gate 1](docs/SIGNING_GATE_1.md)
 
 ## Related projects (not modified by this repository)
 

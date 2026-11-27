@@ -2,7 +2,7 @@
 
 RBSB-Weather for Galaxy Watch 0.1.0-dev. Created By Shane BlackbuRn
 
-Code tested: `6cb6fdc` on `claude/stage-0-foundation` (27–28 Nov 2026). Later commits change documentation only. Runs: Build and test `45998461300` and `45998467459`, Signing gate 1 kit `45998461152`, Wear OS emulators `45998461144`, `45998467423` and `45998497079` (three full runs of all five emulators).
+Latest code tested: `d791e80` on `claude/stage-0-foundation` (28 Nov 2026). Runs at `d791e80`: Build and test `46069091372` and `46069096984`; Signing gate 1 (automated identity check) `46069091337` and `46069096974`; Wear OS emulators `46069091266` and `46069096990`. The emulator reliability figures below are from `6cb6fdc` (runs `45998461144`, `45998467423`, `45998497079`); the watch app itself has not changed since.
 
 Results are split into **tested** (run and passed), **inferred** (follows from what was tested, not run directly) and **not yet tested**.
 
@@ -16,7 +16,25 @@ Results are split into **tested** (run and passed), **inferred** (follows from w
 | 64-bit check | Pass: no native code in either APK |
 | Debug APK | Package `io.github.shanebl030glitch.rbsbweather.dev`, versionCode 1000100, minSdk 33, targetSdk 36, signed with the shared debug key `a9618b32…4a36e87c` |
 | Release APK | Package `io.github.shanebl030glitch.rbsbweather`, **unsigned** (as required) |
-| Signing gate 1 kit | Phone copy: v3 signer key B with a two-key lineage A → B, same `apksigner` options as Android 0.7.2. Watch copy: key B only, no lineage. Current signers match. Throwaway keys deleted after the run |
+| Custom permissions | Debug and release each define only AndroidX's `…DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (allowed); nothing else |
+
+### Signing gate 1: automated signing identity check — **PASS** (both runs at `d791e80`)
+
+| Check | Result |
+|---|---|
+| Published 0.7.2 APK | SHA-256 matches `66bc5d44…74611`. History: test key `a9618b32…` → production key `02f6fc5f…` |
+| 0.7.2 old-key flags | installed-data **yes**, permission **yes**, shared UID **no**, rollback **no**, auth **no** (read by `apksigner` in CI and independently by a local parser) |
+| 0.7.2 lineage reuse | Extracted from the APK and read back with the same certificates and flags |
+| Lineage extractor | Output byte-identical to the lineage file `apksigner` creates |
+| Probe phone copy | Throwaway A → B, same `apksigner` options as 0.7.2 |
+| Probe watch copy | Throwaway key B only (key A deleted first) + extracted lineage, v3 only |
+| Copies compared | Same current signer, identical two-key history, old-key flags identical to 0.7.2 |
+| Phone emulator (API 34) | Android records current signer + history `[old flags 5, new flags 17]`; the app sees A → B |
+| Wear OS 6 emulator (API 36) | **Same** current signer and history as the phone; the app sees A → B |
+
+Flags 5 = installed-data + permission for the old key, as in 0.7.2. Flags 17 is how Android records the current signer.
+
+Emulator tests at `d791e80`: 10 of 10 passed (two runs).
 
 ### Wear OS emulators (x86_64, 64-bit images)
 
@@ -49,6 +67,14 @@ Screenshots: [docs/stage0/emulator-about-screens.png](docs/stage0/emulator-about
 
 ## Not yet tested
 
-- **Signing gate 1 pairing test:** needs Shane to pair a phone emulator and a watch emulator in Android Studio and follow [docs/SIGNING_GATE_1.md](docs/SIGNING_GATE_1.md). **Stage 0 is not complete until this result is in.**
+- **Live Data Layer communication** between the release-signed phone and watch apps: moved to **signing gate 2** (stage 8, real devices). The manual emulator pairing test was retired on 28 Nov 2026 (see [docs/SIGNING_GATE_1.md](docs/SIGNING_GATE_1.md)).
+- How Google Play services compares signatures for rotated keys is not documented. Gate 1 makes both apps present **identical** signing information, so any comparison sees the same thing; gate 2 confirms it live.
 - Anything on real Samsung hardware (stage 9).
 - Always-on behaviour, battery and performance (later stages; the shell has nothing to measure).
+
+## Gate 1 rework (28 Nov 2026): problems found and fixed
+
+1. `apksigner` aligns its capability lines (`capability    :`); the new lineage check did not allow for the spaces.
+2. The new permission check read the package name from the wrong field of `aapt2`'s output.
+3. `apksigner` cannot write a lineage file straight from an APK; a small extractor was added and proved byte-identical in CI.
+4. Signing the watch copy with key B only failed while v1/v2 signatures were enabled (they need the old key). The watch copy is signed v3 only, which every supported watch verifies.

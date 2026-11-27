@@ -29,3 +29,11 @@ A summary of decisions and work, newest last.
 - Plan v1.1 removes the Watch Face Format project, its separate package and signing key, the watch-face animation loops and the watch-face stages (12 stages became 10). Kept: the Data Layer link, the live animated sky, weather screens, forecasts, warnings, Moon, caching and staleness handling.
 - The Tile is kept as an optional, strictly weather-related glance card that never replaces or interferes with Samsung's watch face or clock. Complications on Samsung's faces may be considered separately later; they are not in the plan.
 - Shane approved plan v1.1. Stage 0 needed documentation changes only (no code referenced a watch face); they were made in one commit on `claude/stage-0-foundation`. Signing gate 1 still needs Shane's PC test.
+
+## 28 Nov 2026: signing gate 1 becomes automatic; watch signing decision
+
+- Shane paused the manual gate 1 test: Android Studio's Wear OS pairing could not find the watch emulator.
+- Investigation: Google documents that the Data Layer needs matching package names and signatures, but not how Play services compares signatures when one app has a key-rotation history. Pairing cannot be automated (it needs the companion app and a Google sign-in).
+- **Decisions (Shane):** gate 1 becomes an automated signing identity check; **Option A**: the watch app uses the same signing history as Android 0.7.2. Live Data Layer testing moves to gate 2; real Galaxy Watch testing remains required.
+- Verified from the published 0.7.2 APK (checksum matched): old test key `a9618b32…` → production key `02f6fc5f…`; old-key flags installed-data and permission only (no rollback, shared UID or auth). The one custom permission 0.7.2 defines is AndroidX's `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`.
+- Built and passed (two runs): the 0.7.2 reference check, a probe kit (phone A → B; watch key B only + extracted public lineage, v3 only, with key A deleted first), and identical signer and history reported by a phone emulator and a Wear OS 6 emulator. CI now refuses any custom permission other than AndroidX's own. The production key was never used.
