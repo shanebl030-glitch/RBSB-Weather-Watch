@@ -1,0 +1,153 @@
+# Wear OS emulator set (approved plan, section 9): installs and launches the watch app on
+# Wear OS 4, 5, 6 and the newest available Wear OS image, at Galaxy Watch screen sizes, with
+# and without rotary input. 64-bit (x86_64) images only. Screenshots are kept as artifacts.
+# Emulators show behaviour, not real watch speed or battery.
+# Created By Shane BlackbuRn
+name: Wear OS emulators
+
+on:
+  push:
+    branches: ["claude/stage-*", "claude/emulator-*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apk:
+    name: Build the debug APK once
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v4
+      - name: SDK platform
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+      - name: Build
+        run: ./gradlew --no-daemon :wear:assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: wear-debug-apk
+          path: wear/build/outputs/apk/debug/*.apk
+          retention-days: 3
+
+  wear:
+    name: ${{ matrix.label }}
+    needs: apk
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      # One AVD folder for both avdmanager and the emulator (they default to different places)
+      ANDROID_AVD_HOME: /home/runner/.android/avd
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { label: "Wear OS 4 (API 33) 432px, like an un-updated Watch6", api: "33", px: 432, rotary: "no" }
+          - { label: "Wear OS 5 (API 34) 480px rotary, like Watch7 or Ultra at launch", api: "34", px: 480, rotary: "yes" }
+          - { label: "Wear OS 6 (API 36) 438px, like Watch8", api: "36", px: 438, rotary: "no" }
+          - { label: "Wear OS 6 (API 36) 480px rotary, like Watch6 Classic", api: "36", px: 480, rotary: "yes" }
+          - { label: "Newest Wear OS image 498px, like Ultra2", api: "newest", px: 498, rotary: "no" }
+    steps:
+      - uses: actions/checkout@v4
+      - name: SDK packages
+        run: |
+          SDK="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDK" --licenses > /dev/null || true
+          # Wear OS images from the stable channel and, if Google publishes newer ones there,
+          # the beta/canary channels. Tags vary by version, so match any tag containing "wear".
+          { "$SDK" --list 2>/dev/null; "$SDK" --list --channel=3 2>/dev/null; } \
+            | grep -oE "system-images;android-[0-9]+(\.[0-9]+)?(-[a-z0-9]+)?;[a-z0-9_-]*wear[a-z0-9_-]*;x86_64" | sort -u | tee wear-images.txt
+          api() { echo "$1" | sed -E 's/^system-images;android-([0-9]+).*/\1/'; }
+          if [ "${{ matrix.api }}" = "newest" ]; then
+            IMG=$(while read -r l; do echo "$(api "$l") $l"; done < wear-images.txt | sort -n -k1,1 | tail -1 | cut -d' ' -f2)
+          else
+            IMG=$(grep -m1 -E "^system-images;android-${{ matrix.api }}(\.[0-9]+)?;" wear-images.txt || true)
+          fi
+          [ -n "$IMG" ] || { echo "NO WEAR OS IMAGE for API ${{ matrix.api }} in the SDK repository"; exit 1; }
+          echo "IMG=$IMG" >> "$GITHUB_ENV"
+          echo "Using $IMG"
+          CH=""; "$SDK" --list 2>/dev/null | grep -q "$IMG" || CH="--channel=3"
+          yes | "$SDK" $CH "emulator" "platform-tools" "$IMG" > /dev/null
+      - uses: actions/download-artifact@v4
+        with:
+          name: wear-debug-apk
+          path: apk
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Create the watch emulator
+        run: |
+          AVDM="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
+          mkdir -p "$ANDROID_AVD_HOME"
+          "$AVDM" list device -c | grep -i wear | tee devices.txt
+          DEV=$(grep -m1 -i "wearos_large_round" devices.txt || grep -m1 -i "round" devices.txt)
+          echo no | "$AVDM" create avd -n watch -k "$IMG" -d "$DEV" --force
+          AVD_DIR="$ANDROID_AVD_HOME/watch.avd"
+          CFG="$AVD_DIR/config.ini"
+          echo "AVD config: $CFG"
+          sed -i '/^hw.lcd.width/d;/^hw.lcd.height/d;/^hw.lcd.density/d;/^hw.rotaryInput/d;/^hw.ramSize/d' "$CFG"
+          {
+            echo "hw.lcd.width=${{ matrix.px }}"
+            echo "hw.lcd.height=${{ matrix.px }}"
+            echo "hw.lcd.density=320"
+            echo "hw.rotaryInput=${{ matrix.rotary }}"
+            echo "hw.ramSize=2048"
+          } >> "$CFG"
+          grep -E "image.sysdir|hw.lcd|hw.rotary|hw.ramSize|hw.device.name" "$CFG"
+      - name: Boot, install, launch, screenshot
+        run: |
+          export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH"
+          emulator -accel-check || true
+          # The Wear OS 6/7 images are production-signed and require adb authorisation. Create
+          # adb's key and start its server BEFORE the emulator boots, so the emulator can
+          # install that key (otherwise it is a race and adb can stay "unauthorized").
+          mkdir -p "$HOME/.android"
+          [ -f "$HOME/.android/adbkey" ] || adb keygen "$HOME/.android/adbkey"
+          export ADB_VENDOR_KEYS="$HOME/.android/adbkey"
+          adb kill-server || true
+          adb start-server
+          emulator -avd watch -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot > emulator.log 2>&1 &
+          EMU=$!
+          booted=no
+          for i in $(seq 1 150); do
+            if ! kill -0 "$EMU" 2>/dev/null; then echo "The emulator process exited early"; break; fi
+            if [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ]; then booted=yes; break; fi
+            sleep 4
+          done
+          if [ "$booted" != yes ]; then echo "== emulator.log (last 60 lines)"; tail -60 emulator.log; echo "Emulator did not boot"; exit 1; fi
+          echo "Booted after about $((i * 4)) s"
+          sleep 45          # let first-boot setup settle before launching
+          bash scripts/emulator/wear-smoke.sh "$(ls apk/*.apk | head -1)" emu-out "${{ matrix.label }}" "${{ matrix.rotary }}"
+      - name: Screenshot in the log (artifacts are not readable from the review environment)
+        if: always()
+        run: |
+          [ -f emu-out/about.png ] || exit 0
+          python3 -m pip install --quiet pillow 2>/dev/null || pip install --quiet --break-system-packages pillow
+          python3 - <<'PY'
+          import base64, io
+          from PIL import Image
+          im = Image.open("emu-out/about.png").convert("RGB")
+          buf = io.BytesIO(); im.save(buf, "JPEG", quality=80)
+          b = base64.b64encode(buf.getvalue()).decode()
+          print("SCREENSHOT-BEGIN")
+          for i in range(0, len(b), 4000): print(b[i:i+4000])
+          print("SCREENSHOT-END")
+          PY
+      - name: Upload results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emulator-${{ strategy.job-index }}
+          path: |
+            emu-out/
+            emulator.log
+            wear-images.txt
+          retention-days: 30
