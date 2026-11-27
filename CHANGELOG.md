@@ -4,7 +4,21 @@ RBSB-Weather for Galaxy Watch. Created By Shane BlackbuRn
 
 Version codes use their own range: 1_000_000 + major × 10_000 + minor × 100 + patch.
 
-## 0.1.0-dev (Stage 0, in review)
+## 0.1.0-dev (Stage 1: sync format v1, in review)
+
+Defines what RBSB-Weather for Android will send the watch. No weather features, no screen changes, and nothing is sent or received yet (watch receiver: Stage 3; phone side: Android 0.8.0, which needs approval).
+
+- New `sync` module: plain Kotlin with **no Android dependencies**, so the phone app can later use an exact copy. The wear app depends on it, but no screen uses it yet.
+- Sync format v1: weather snapshot (`/rbsb/v1/snapshot`), settings (`/rbsb/v1/settings`), refresh request (`/rbsb/v1/refresh`), capability names, gzip JSON, size limits. The largest snapshot is about 10 KB compressed (target under 20 KB).
+- Snapshot contents as in plan v1.1 section 5, including Moon phase, illumination, tilt and rise/set times. Hourly wind is optional, falling back to the current wind. Warnings are what the phone shows after its own filters: the user's limits are included, muted ones are not.
+- Six settings: temperature, wind and rain units, 12/24-hour clock, animations on/off, minimum warning level.
+- Strict decoding: every payload is untrusted. A bad one is rejected with a reason, never a crash. The phone-side `encode()` refuses anything the watch would reject.
+- Ordering: fetchedAt first, then sequence; a per-install `sourceId` handles phone reinstalls. Snapshots more than 10 minutes in the future are rejected.
+- JSON Schemas (`sync/contract`), 74 sample files with expected results (`sync/samples`), `docs/SYNC_FORMAT.md`.
+- Tests: 49 new unit tests, including a schema-against-code check (328 rule checks) and a mapping test using test-only copies of the Android 0.7.2 data classes (that repository is unchanged). `scripts/check-samples.py` is an independent Python check of the same samples.
+- CI runs the sync tests, regenerates the samples to confirm they are up to date, and runs the Python check.
+
+## 0.1.0-dev (Stage 0, merged 28 Nov 2026)
 
 Project foundation only. No weather features.
 

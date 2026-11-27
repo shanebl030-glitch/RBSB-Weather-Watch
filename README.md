@@ -8,7 +8,7 @@ Created By Shane BlackbuRn
 
 ## Status
 
-**Version 0.1.0-dev, Stage 0 (project foundation).** The app is a shell with an About screen only. There are no weather features yet.
+**Version 0.1.0-dev, Stage 1 (sync format v1, in review).** Stage 0 (project foundation) is merged. Stage 1 defines what the phone will send the watch, in a shared module with tests and sample files. The app is still a shell with an About screen only. There are no weather features yet.
 
 Work follows the approved plan, **RBSB-Weather for Galaxy Watch: Development Plan v1.1** (approved 28 Nov 2026):
 https://claude.ai/artifact/PRGaNrySRq7hgTMNBheuzs
@@ -26,25 +26,26 @@ https://claude.ai/artifact/PRGaNrySRq7hgTMNBheuzs
 | Path | What it is |
 |---|---|
 | `wear/` | The Wear OS app (package `io.github.shanebl030glitch.rbsbweather`; debug builds `...rbsbweather.dev`) |
+| `sync/` | Shared sync format v1 (Stage 1): plain Kotlin with no Android dependencies, JSON Schemas (`sync/contract`) and sample files (`sync/samples`). See `docs/SYNC_FORMAT.md` |
 | `tools/signing-probe/` | Stage 0 test tool for signing gate 1. Never released; its own package |
-| `scripts/` | 64-bit check and emulator scripts |
+| `scripts/` | 64-bit check, emulator scripts, the independent sync sample check (`check-samples.py`) and the signing gate 1 scripts |
 | `keystore/rbsb-test.keystore` | The shared, **public** debug key. Development builds only |
-| `docs/` | Signing, SDK levels, signing gate 1, user guide |
+| `docs/` | Sync format, signing, SDK levels, signing gate 1, user guide |
 
 ## Building
 
 Builds run in GitHub Actions (JDK 17, Android SDK 36):
 
-- **Build and test:** unit tests, lint, debug and release APKs, 64-bit check, signing and package checks. The debug APK and its SHA256SUMS are an artifact.
+- **Build and test:** unit tests (wear app and sync module), sync sample checks (up to date, plus an independent Python check against the JSON Schemas), lint, debug and release APKs, 64-bit check, signing and package checks. The debug APK and its SHA256SUMS are an artifact.
 - **Wear OS emulators:** installs and launches the app on Wear OS 4, 5, 6 and the newest available image at Galaxy Watch screen sizes, with and without rotary input.
 - **Signing gate 1 (automated identity check):** checks the published Android 0.7.2 signing history, signs a throwaway probe the same way for phone and watch (throwaway keys), and confirms that on a phone emulator and a Wear OS 6 emulator the system, the app and the APK file agree on the signer and history, and that both devices match. Live Data Layer communication is signing gate 2, on real paired devices. See `docs/SIGNING_GATE_1.md`.
 
-Locally: `./gradlew :wear:testDebugUnitTest :wear:assembleDebug`.
+Locally: `./gradlew :wear:testDebugUnitTest :sync:test :wear:assembleDebug` and `python3 scripts/check-samples.py` (needs `pip install jsonschema`).
 
 ## Documents
 
 - [CHANGELOG](CHANGELOG.md), [TRANSCRIPT](TRANSCRIPT.md), [TEST_REPORT](TEST_REPORT.md)
-- [User guide](docs/USER_GUIDE.md), [Signing](docs/SIGNING.md), [SDK levels](docs/SDK_LEVELS.md), [Signing gate 1](docs/SIGNING_GATE_1.md)
+- [Sync format v1](docs/SYNC_FORMAT.md), [User guide](docs/USER_GUIDE.md), [Signing](docs/SIGNING.md), [SDK levels](docs/SDK_LEVELS.md), [Signing gate 1](docs/SIGNING_GATE_1.md)
 
 ## Related projects (not modified by this repository)
 

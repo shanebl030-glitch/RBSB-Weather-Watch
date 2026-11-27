@@ -43,3 +43,26 @@ A summary of decisions and work, newest last.
 - Shane noticed the probe app's own report of its signing identity was printed but not checked. He asked for it to be compared automatically, without weakening the existing checks.
 - The probe now logs its identity (`PackageManager`) as JSON. On each emulator, CI fails unless the system (`dumpsys`), the app and the APK file (`apksigner`) agree on the current signer and the full history; a final job then requires the phone and watch to match on all of them. A self-test proves the comparison fails on five kinds of disagreement. No existing check was removed.
 - Passed in both runs at `c569a89` (one run needed a re-run after a Maven Central 429 before any check ran). The full Stage 0 checks were run again on the documentation commit. Gate 1 = automated signing identity and history verification; gate 2 = live Data Layer on real paired devices (stage 8).
+
+## 28 Nov 2026: Stage 0 merged
+
+- Shane approved Stage 0. PR #1 was merged into `main` (merge commit `cb8e6d7`). All three workflows passed on `main`: Build and test on the merge, and Wear OS emulators and Signing gate 1 run by hand (they only run automatically on work branches and pull requests).
+
+## 28 Nov 2026: Stage 1, sync format v1
+
+- Claude reported the Stage 1 scope from plan v1.1 and six decisions. Shane decided:
+  1. Watch-side tests plus an independent Python schema check; Android 0.8.0 stays separate and needs approval.
+  2. Moon phase, illumination, tilt and rise/set stay in the snapshot, as the plan specifies.
+  3. Hourly wind optional, falling back to the current wind.
+  4. fetchedAt first, sequence as tie-breaker; future-date tolerance documented and tested; phone reinstalls handled.
+  5. All six settings in v1.
+  6. Warnings as the phone shows them after its filters: user limits included, muted ones excluded.
+- Built on `claude/stage-1-sync-format`:
+  - the `sync` module (no Android dependencies);
+  - JSON Schemas and 74 sample files;
+  - 49 tests, including a schema-against-code check and a mapping test using test-only copies of the Android 0.7.2 data classes;
+  - `scripts/check-samples.py`;
+  - `docs/SYNC_FORMAT.md`.
+- Reinstalls are handled with a per-install `sourceId`: a reinstalled phone's fresh weather wins on fetchedAt, and a re-send of its cached weather wins because the id changed. The future tolerance is 10 minutes.
+- Maven Central is blocked from Claude's workspace, so the Kotlin code was built and tested only in GitHub Actions. All three workflows passed on the first run (`8856fb2`). The Python check was run locally as well.
+- Version stays 0.1.0-dev. No screen changes. RBSB-Weather-Android (only read) and WeatherDesk were not touched. No production key; nothing published.
