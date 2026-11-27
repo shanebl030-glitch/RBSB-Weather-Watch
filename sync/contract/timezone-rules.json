@@ -1,0 +1,5 @@
+{
+  "description": "Created By Shane BlackbuRn. Time-zone rule for place.timezone in sync format v1: the name must be a real IANA time zone in the checker's own time-zone database (Java: java.time.ZoneId.getAvailableZoneIds(); Python: zoneinfo with the tzdata package), excluding the names below so every checker gives the same answer. Wrong characters are BAD_FORMAT; a well-formed unknown name (such as auto, UTC+13 or Not/ARealZone) is BAD_VALUE. Kotlin keeps the same list in TimeZones (SyncFormat.kt); a test keeps them identical.",
+  "excluded": ["Factory", "localtime", "posixrules", "EST", "HST", "MST", "GMT+0", "GMT-0", "ROC"],
+  "excludedPrefixes": ["SystemV/"]
+}

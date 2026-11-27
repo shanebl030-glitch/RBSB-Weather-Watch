@@ -11,7 +11,8 @@ What RBSB-Weather for Android sends the watch over the Wear OS Data Layer, and h
 |---|---|
 | `sync/src/main/` | The shared module: plain Kotlin, **no Android dependencies**. The phone app can take an exact copy. |
 | `sync/contract/*.schema.json` | Language-neutral definition (JSON Schema 2020-12) |
-| `sync/samples/` | 74 sample files and `expected.json` (the result each must give) |
+| `sync/contract/timezone-rules.json` | The time-zone rule and its exclusion list, shared by both checkers |
+| `sync/samples/` | 77 sample files and `expected.json` (the result each must give), plus `timezones.json` (34 time-zone cases) |
 | `scripts/check-samples.py` | Independent Python check of the samples |
 
 ## Channels
@@ -64,7 +65,7 @@ Any path not starting with `/rbsb/` is ignored.
 - Required:
   - `name` (1–100 characters);
   - `latitude` and `longitude`, **rounded to 3 decimals** (about 100 m);
-  - `timezone` (IANA name);
+  - `timezone`: a **real IANA time-zone name** (see [Time zones](#time-zones));
   - `utcOffsetSeconds` (±64,800).
 - Optional: `country`, `admin1`.
 
@@ -119,9 +120,26 @@ Any path not starting with `/rbsb/` is ignored.
 
 Whole-number fields also accept `12.0`.
 
+### Time zones
+
+`place.timezone` must be a time zone that actually exists in the time-zone database. Having the right characters is not enough.
+
+- **Kotlin:** checked against `java.time.ZoneId.getAvailableZoneIds()`, this device's own IANA database.
+- **Python check:** checked against `zoneinfo`, reading only the `tzdata` package so every machine has the same full IANA list.
+- **Names never accepted,** so both checkers give the same answer whichever database they use. The list is in `sync/contract/timezone-rules.json` and `TimeZones` (a test keeps them identical):
+  - `SystemV/…` (Java-only, not IANA zones);
+  - `Factory`, `localtime`, `posixrules` (entries in Python's database that aren't zones);
+  - `EST`, `HST`, `MST`, `GMT+0`, `GMT-0`, `ROC` (IANA names Java's `ZoneId` doesn't offer).
+- **Accepted** (examples): `Pacific/Auckland`, `UTC`, `Etc/UTC`, `GMT`, `Etc/GMT+12`, `Europe/Kyiv`, and older alias names such as `Europe/Kiev`. Names are case-sensitive.
+- **Rejected as `BAD_VALUE`:** well-formed but not a real zone, such as `Not/ARealZone`, `auto`, `pacific/auckland`, `UTC+13`, `Z`, `NZDT`. `ZoneId.of()` itself would accept offset forms like `UTC+13`; the format doesn't.
+- **Rejected as `BAD_FORMAT`:** characters not allowed in a zone name, such as `+13:00`, a space or a trailing newline.
+- **CI compares the full lists** of names Java and Python accept and fails if they differ.
+- **Phone obligation (0.8.0):** RBSB-Weather for Android 0.7.2 stores `auto` for My location, and with MET Norway it reaches `Forecast.timezone` unchanged. The phone must send a real zone name instead. A snapshot with `auto` is refused by `encode()` and would be rejected by the watch.
+
 ### Rules beyond the schema
 
 Both checkers enforce these:
+- `place.timezone` is a real IANA time zone (above);
 - coordinates have at most 3 decimals;
 - hours and days are in order with no repeats;
 - `sentAt` is not before `fetchedAt`;
@@ -182,8 +200,8 @@ Decoding never throws. A bad payload returns `Decoded.Rejected(reason, path, det
 | `OUT_OF_RANGE` | A value outside its range |
 | `BAD_LENGTH` | Text too long, or empty where text is required |
 | `TOO_MANY` | Too many hours, days or warnings |
-| `BAD_FORMAT` | A time, date, id or time zone in the wrong format |
-| `BAD_VALUE` | A name outside its list |
+| `BAD_FORMAT` | A time, date, id or time zone with the wrong characters or layout |
+| `BAD_VALUE` | A name outside its list (warning level, unit, or a time zone that doesn't exist) |
 | `UNROUNDED_COORDINATES` | Coordinates with more than 3 decimals |
 | `INCONSISTENT` | Values that contradict each other |
 | `FUTURE_DATED` | Too far ahead of this device's clock |
@@ -197,6 +215,8 @@ Everything here runs in CI. The tests are in `sync/src/test/` and run with `:syn
 
 1. **Samples:** every valid sample decodes and survives JSON and compressed round trips. Every invalid sample is rejected with its expected reason. Every file on disk is listed in `expected.json`, and every listed file exists.
 2. **Independent check:** `scripts/check-samples.py` checks the same samples against the JSON Schemas plus the extra rules, written separately from the Kotlin. Both must match `expected.json`, so they agree on every sample.
+   - Both also run the 34 cases in `timezones.json`: 17 accepted and 17 rejected with their reasons.
+   - CI then compares the complete lists of time zones Java and Python accept, and fails on any difference.
 3. **Schema matches code:** a test walks every field of each schema and checks that the Kotlin decoder applies the same rules: required and optional fields, both ends of every range, every length and list limit, every allowed name. More than 250 checks for the snapshot.
 4. **Safety:**
    - over-size payloads;
@@ -212,6 +232,7 @@ Everything here runs in CI. The tests are in `sync/src/test/` and run with `:syn
 
 ## Not covered yet
 
+- Time zones are checked against the JVM's database in CI. On the watch, Android's own database is used; it should list the same names, but that is only verified when the Stage 3 receiver runs on the emulators. A zone added to IANA after a watch's last time-zone update would be rejected by that watch. New zone names are rare.
 - The decoder is tested on the JVM with the Maven copy of `org.json`. The watch app uses Android's built-in `org.json`, which behaves the same for everything this format uses, but that is only verified once the Stage 3 receiver runs on emulators.
 - Nothing is sent over a real Data Layer link yet. That is Stage 3 (watch) and Stage 8 (live, real paired devices, signing gate 2).
 - The Moon values in the samples are plausible, not calculated for those dates.

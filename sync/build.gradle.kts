@@ -28,6 +28,8 @@ dependencies {
 tasks.test {
     // The sample files are shared with the independent Python check (scripts/check-samples.py).
     systemProperty("rbsb.samples", file("samples").absolutePath)
+    // The JVM's accepted time-zone names are written here; CI compares them with Python's (check-samples.py).
+    systemProperty("rbsb.zoneList", layout.buildDirectory.file("java-timezones.txt").get().asFile.absolutePath)
     testLogging {
         events("failed")
         exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL

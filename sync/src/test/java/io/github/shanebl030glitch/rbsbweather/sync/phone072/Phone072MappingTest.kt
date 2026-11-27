@@ -123,6 +123,19 @@ class Phone072MappingTest {
         }
     }
 
+    @Test fun phone072AutoTimeZoneIsRefusedSoThePhoneMustResolveIt() {
+        // 0.7.2 keeps "auto" for My location; with MET Norway it reaches Forecast.timezone unchanged.
+        // "auto" is not an IANA time zone, so the phone (0.8.0) must send a real name instead.
+        val auto = forecast().copy(timezone = "auto")
+        val snap = Phone072Mapper.toSnapshot(auto, shown, sun, moon, 1, "3f2b9c1e-6d4a-4b7e-9a51-0c8d2e7f4a10", fetchedAt + 1000)
+        try {
+            SnapshotCodec.encode(snap)
+            fail("encode accepted timezone auto")
+        } catch (e: IllegalArgumentException) {
+            assertTrue(e.message!!.contains("place.timezone"))
+        }
+    }
+
     @Test fun moreThanTwentyShownWarningsAreCappedNotRejected() {
         val many = (1..25).map { Alert("w$it", "MetService", "yellow", "Wind Warning $it") }
         val snap = Phone072Mapper.toSnapshot(forecast(), many, sun, moon, 1, "3f2b9c1e-6d4a-4b7e-9a51-0c8d2e7f4a10", fetchedAt + 1000)

@@ -43,7 +43,7 @@ data class SnapPlace(
     /** Rounded to 3 decimals (about 100 m). */
     val latitude: Double,
     val longitude: Double,
-    /** IANA time zone of the place, e.g. "Pacific/Auckland". */
+    /** IANA time zone of the place, e.g. "Pacific/Auckland"; must exist in the time-zone database (see [TimeZones]). */
     val timezone: String,
     /** The place's UTC offset when the weather was fetched, in seconds. */
     val utcOffsetSeconds: Int,

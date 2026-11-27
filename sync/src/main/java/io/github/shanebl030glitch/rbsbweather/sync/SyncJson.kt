@@ -140,8 +140,10 @@ internal object SyncJson {
         return s
     }
 
+    /** Wrong characters: BAD_FORMAT. Well-formed but not a real IANA time zone (e.g. "auto"): BAD_VALUE. */
     fun checkTimezone(path: String, s: String): String {
         if (!TIMEZONE.matches(s)) throw Invalid(Reason.BAD_FORMAT, path, "not a time zone name")
+        if (!TimeZones.isValid(s)) throw Invalid(Reason.BAD_VALUE, path, "not a known IANA time zone: $s")
         return s
     }
 

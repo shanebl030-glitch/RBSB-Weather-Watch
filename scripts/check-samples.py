@@ -8,24 +8,53 @@ sync/samples against the JSON Schemas in sync/contract plus the rules JSON Schem
 and checks each result against sync/samples/expected.json. The Kotlin tests check the same files
 against the same expected.json, so if this script and the Kotlin decoder both pass, they agree.
 
-Usage: python3 scripts/check-samples.py [repo-root]
-Needs the jsonschema package (pip install jsonschema).
+Usage: python3 scripts/check-samples.py [--java-zones FILE] [repo-root]
+Needs the jsonschema and tzdata packages (pip install jsonschema tzdata).
+
+Time zones: place.timezone must be a real IANA name in Python's zoneinfo database, read only from
+the tzdata package (the same full IANA list on every machine), minus the names listed in
+sync/contract/timezone-rules.json. With --java-zones (written by the Kotlin tests), the full lists
+of names accepted by Java and by Python are compared and must be identical.
 """
+import argparse
 import json
 import pathlib
 import re
 import sys
+import zoneinfo
 from datetime import date, datetime
 from decimal import Decimal
 
 from jsonschema import Draft202012Validator
 from jsonschema.exceptions import best_match
 
-ROOT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else pathlib.Path(__file__).resolve().parent.parent)
+ARGS = argparse.ArgumentParser()
+ARGS.add_argument("--java-zones", help="file of time-zone names the Kotlin tests accepted, one per line")
+ARGS.add_argument("root", nargs="?", default=str(pathlib.Path(__file__).resolve().parent.parent))
+OPTS = ARGS.parse_args()
+ROOT = pathlib.Path(OPTS.root)
 SAMPLES = ROOT / "sync" / "samples"
 CONTRACT = ROOT / "sync" / "contract"
 
-LOCAL_TIME = re.compile(r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$")
+# Full matches only: Python's "$" would also accept a trailing newline, which the Kotlin checks reject.
+LOCAL_TIME = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?")
+SOURCE_ID = re.compile(r"[A-Za-z0-9-]{8,64}")
+TIMEZONE_CHARS = re.compile(r"[A-Za-z0-9_+\-/]{1,64}")
+
+
+def accepted_time_zones():
+    try:
+        import tzdata  # noqa: F401  (the IANA database as a Python package)
+    except ImportError:
+        sys.exit("check-samples.py needs the tzdata package: pip install tzdata")
+    zoneinfo.reset_tzpath([])                    # ignore the system's files; use only the tzdata package
+    rules = json.loads((CONTRACT / "timezone-rules.json").read_text(encoding="utf-8"))
+    names = zoneinfo.available_timezones()
+    return {z for z in names
+            if z not in rules["excluded"] and not any(z.startswith(p) for p in rules["excludedPrefixes"])}
+
+
+ZONES = accepted_time_zones()
 
 KEYWORD_REASON = {
     "required": "MISSING_FIELD",
@@ -60,7 +89,7 @@ def schema_reason(err):
 
 
 def real_local_time(s, where):
-    if not LOCAL_TIME.match(s):
+    if not LOCAL_TIME.fullmatch(s):
         raise Reject("BAD_FORMAT", where)
     try:
         datetime.fromisoformat(s)
@@ -74,7 +103,13 @@ def three_decimals(v):
 
 
 def snapshot_rules(s, now, tol):
+    if not SOURCE_ID.fullmatch(s["sourceId"]):
+        raise Reject("BAD_FORMAT", "sourceId")
     p = s["place"]
+    if not TIMEZONE_CHARS.fullmatch(p["timezone"]):
+        raise Reject("BAD_FORMAT", "place.timezone")
+    if p["timezone"] not in ZONES:
+        raise Reject("BAD_VALUE", "place.timezone")
     for k in ("latitude", "longitude"):
         if not three_decimals(p[k]):
             raise Reject("UNROUNDED_COORDINATES", f"place.{k}")
@@ -115,11 +150,11 @@ def sent_rule(s, now, tol):
         raise Reject("FUTURE_DATED", "sentAt")
 
 
-def check(path, validator, rules, now, tol):
+def check(path, validator, rules, now, tol, text=None):
     """Returns None for an accepted sample, else the rejection reason."""
     try:
         try:
-            obj = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=no_duplicates)
+            obj = json.loads(text if text is not None else path.read_text(encoding="utf-8"), object_pairs_hook=no_duplicates)
         except json.JSONDecodeError:
             raise Reject("BAD_JSON", "parse")
         if not isinstance(obj, dict):
@@ -131,6 +166,11 @@ def check(path, validator, rules, now, tol):
         return None
     except Reject as r:
         return r.reason
+
+
+def tzdata_version():
+    import tzdata
+    return getattr(tzdata, "IANA_VERSION", "?")
 
 
 def main():
@@ -165,12 +205,36 @@ def main():
             print(f"{'OK  ' if ok else 'FAIL'} {rel}: {'accepted' if got is None else 'rejected ' + got} (expected {want})")
             if not ok:
                 failures.append(f"{rel}: got {got}, expected {want}")
+    # Time-zone cases both checkers must agree on, each tried as place.timezone in the clear-day sample.
+    tz_cases = json.loads((SAMPLES / "timezones.json").read_text(encoding="utf-8"))
+    snap_validator = Draft202012Validator(json.loads((CONTRACT / "snapshot-v1.schema.json").read_text(encoding="utf-8")))
+    base = json.loads((SAMPLES / "snapshot/valid/clear-day.json").read_text(encoding="utf-8"))
+    cases = [(z, None) for z in tz_cases["accept"]] + list(tz_cases["reject"].items())
+    for zone, want in cases:
+        total += 1
+        base["place"]["timezone"] = zone
+        got = check(None, snap_validator, snapshot_rules, now, tol, text=json.dumps(base))
+        ok = got == want
+        print(f"{'OK  ' if ok else 'FAIL'} timezone {zone!r}: {'accepted' if got is None else 'rejected ' + got} (expected {want or 'accepted'})")
+        if not ok:
+            failures.append(f"timezone {zone!r}: got {got}, expected {want or 'accepted'}")
+    print(f"TIMEZONES (Python, tzdata {tzdata_version()}): {len(ZONES)} names accepted")
+
+    if OPTS.java_zones:
+        java = set(pathlib.Path(OPTS.java_zones).read_text(encoding="utf-8").split())
+        only_java, only_python = sorted(java - ZONES), sorted(ZONES - java)
+        if only_java or only_python:
+            failures.append(f"time-zone lists differ: only Java accepts {only_java}; only Python accepts {only_python}")
+        else:
+            print(f"TIMEZONES MATCH: Java and Python accept the same {len(java)} names")
+
     if failures:
         print(f"\nSAMPLES FAIL: {len(failures)} problem(s)")
         for f in failures:
             print("  " + f)
         sys.exit(1)
-    print(f"\nSAMPLES OK: {total} samples, every result matches expected.json (schema + extra rules, independent of the Kotlin decoder)")
+    print(f"\nSAMPLES OK: {total - len(cases)} samples and {len(cases)} time-zone cases, every result matches the expected one "
+          "(schema + extra rules, independent of the Kotlin decoder)")
 
 
 if __name__ == "__main__":

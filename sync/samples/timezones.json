@@ -1,0 +1,25 @@
+{
+  "comment": "Created By Shane BlackbuRn. Time-zone cases both checkers must agree on (SamplesTest/TimeZoneTest in Kotlin, scripts/check-samples.py in Python). Each is tried as place.timezone in the clear-day sample.",
+  "accept": ["Pacific/Auckland", "UTC", "Etc/UTC", "GMT", "Europe/Oslo", "Australia/Brisbane", "America/New_York",
+             "America/Argentina/Buenos_Aires", "Asia/Kolkata", "Asia/Kathmandu", "Pacific/Chatham", "Etc/GMT+12",
+             "Etc/GMT-14", "Europe/Kyiv", "Europe/Kiev", "America/Ciudad_Juarez", "Antarctica/Troll"],
+  "reject": {
+    "Not/ARealZone": "BAD_VALUE",
+    "auto": "BAD_VALUE",
+    "pacific/auckland": "BAD_VALUE",
+    "PACIFIC/AUCKLAND": "BAD_VALUE",
+    "Pacific/Atlantis": "BAD_VALUE",
+    "UTC+13": "BAD_VALUE",
+    "GMT+13": "BAD_VALUE",
+    "Z": "BAD_VALUE",
+    "NZDT": "BAD_VALUE",
+    "SystemV/PST8": "BAD_VALUE",
+    "Factory": "BAD_VALUE",
+    "localtime": "BAD_VALUE",
+    "EST": "BAD_VALUE",
+    "ROC": "BAD_VALUE",
+    "+13:00": "BAD_FORMAT",
+    "Pacific/Auck land": "BAD_FORMAT",
+    "Pacific/Auckland\n": "BAD_FORMAT"
+  }
+}

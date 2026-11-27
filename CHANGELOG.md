@@ -14,9 +14,10 @@ Defines what RBSB-Weather for Android will send the watch. No weather features, 
 - Six settings: temperature, wind and rain units, 12/24-hour clock, animations on/off, minimum warning level.
 - Strict decoding: every payload is untrusted. A bad one is rejected with a reason, never a crash. The phone-side `encode()` refuses anything the watch would reject.
 - Ordering: fetchedAt first, then sequence; a per-install `sourceId` handles phone reinstalls. Snapshots more than 10 minutes in the future are rejected.
-- JSON Schemas (`sync/contract`), 74 sample files with expected results (`sync/samples`), `docs/SYNC_FORMAT.md`.
+- JSON Schemas (`sync/contract`), 77 sample files with expected results (`sync/samples`), `docs/SYNC_FORMAT.md`.
 - Tests: 49 new unit tests, including a schema-against-code check (328 rule checks) and a mapping test using test-only copies of the Android 0.7.2 data classes (that repository is unchanged). `scripts/check-samples.py` is an independent Python check of the same samples.
 - CI runs the sync tests, regenerates the samples to confirm they are up to date, and runs the Python check.
+- Review fix: `place.timezone` must now be a real IANA time zone. Kotlin checks it against `java.time.ZoneId`'s database and the Python check against `zoneinfo` with the `tzdata` package, both with the same exclusion list (`sync/contract/timezone-rules.json`). Unknown names such as `Not/ARealZone` or `auto` are rejected as `BAD_VALUE`; wrong characters stay `BAD_FORMAT`. CI compares the full lists of accepted names from both. The Python check also now uses full matches for patterns, as Kotlin does (a trailing newline is no longer accepted). New: `TimeZoneTest` (7 tests), a 0.7.2 `auto` mapping test, 3 samples and 34 shared time-zone cases. The snapshot format is unchanged.
 
 ## 0.1.0-dev (Stage 0, merged 28 Nov 2026)
 

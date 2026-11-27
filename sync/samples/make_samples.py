@@ -203,6 +203,11 @@ def build():
         h["time"] += ":00"
     valid["times-with-seconds"] = seconds
 
+    utc = snapshot()
+    utc["place"]["timezone"] = "UTC"
+    utc["place"]["utcOffsetSeconds"] = 0
+    valid["utc-timezone"] = utc
+
     unknown = snapshot()
     unknown["futureFeature"] = {"anything": [1, 2, 3]}
     unknown["place"]["elevation"] = 196
@@ -253,6 +258,9 @@ def build():
     bad("impossible-date", "BAD_FORMAT", lambda s: s["daily"][1].update(date="2026-02-30"))
     bad("bad-source-id", "BAD_FORMAT", lambda s: s.update(sourceId="abc"))
     bad("bad-timezone", "BAD_FORMAT", lambda s: s["place"].update(timezone="Pacific/Auck land"))
+    bad("unknown-timezone", "BAD_VALUE", lambda s: s["place"].update(timezone="Not/ARealZone"))
+    # Android 0.7.2 can hold "auto" (My location with MET Norway); it is not an IANA name.
+    bad("auto-timezone", "BAD_VALUE", lambda s: s["place"].update(timezone="auto"))
     bad("too-many-hours", "TOO_MANY", lambda s: s["hourly"].append(
         dict(s["hourly"][-1], time=local_str(datetime(2026, 11, 30, 10, 0)))))
     bad("too-many-days", "TOO_MANY", lambda s: s["daily"].extend(

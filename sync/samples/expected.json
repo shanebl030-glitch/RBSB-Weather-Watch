@@ -20,9 +20,11 @@
    "snapshot/valid/snow-northern.json",
    "snapshot/valid/thunder-warning.json",
    "snapshot/valid/times-with-seconds.json",
-   "snapshot/valid/unknown-fields.json"
+   "snapshot/valid/unknown-fields.json",
+   "snapshot/valid/utc-timezone.json"
   ],
   "invalid": {
+   "snapshot/invalid/auto-timezone.json": "BAD_VALUE",
    "snapshot/invalid/bad-source-id.json": "BAD_FORMAT",
    "snapshot/invalid/bad-time-format.json": "BAD_FORMAT",
    "snapshot/invalid/bad-timezone.json": "BAD_FORMAT",
@@ -59,6 +61,7 @@
    "snapshot/invalid/too-many-hours.json": "TOO_MANY",
    "snapshot/invalid/too-many-warnings.json": "TOO_MANY",
    "snapshot/invalid/truncated-json.txt": "BAD_JSON",
+   "snapshot/invalid/unknown-timezone.json": "BAD_VALUE",
    "snapshot/invalid/unrounded-coordinates.json": "UNROUNDED_COORDINATES",
    "snapshot/invalid/warning-ends-before-start.json": "INCONSISTENT",
    "snapshot/invalid/warning-title-too-long.json": "BAD_LENGTH",

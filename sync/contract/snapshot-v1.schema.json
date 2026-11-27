@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://github.com/shanebl030-glitch/RBSB-Weather-Watch/sync/contract/snapshot-v1.schema.json",
   "title": "RBSB-Weather sync format v1: weather snapshot (data item /rbsb/v1/snapshot)",
-  "description": "Created By Shane BlackbuRn. The language-neutral reference for the snapshot the phone sends the watch. Units are metric (°C, km/h, mm, hPa, %). Forecast times are local times at the place; every other time is unix milliseconds. Absent and null mean the same for optional values. Unknown fields are allowed and ignored. Rules JSON Schema cannot express (coordinates rounded to 3 decimals, times in order, sentAt not before fetchedAt, end not before start, tempMax not below tempMin, not always up and down, the 10-minute future tolerance) are in docs/SYNC_FORMAT.md and checked by both checkers.",
+  "description": "Created By Shane BlackbuRn. The language-neutral reference for the snapshot the phone sends the watch. Units are metric (°C, km/h, mm, hPa, %). Forecast times are local times at the place; every other time is unix milliseconds. Absent and null mean the same for optional values. Unknown fields are allowed and ignored. Rules JSON Schema cannot express (place.timezone must be a real IANA time zone, see timezone-rules.json; coordinates rounded to 3 decimals, times in order, sentAt not before fetchedAt, end not before start, tempMax not below tempMin, not always up and down, the 10-minute future tolerance) are in docs/SYNC_FORMAT.md and checked by both checkers.",
   "type": "object",
   "required": [
     "kind",
@@ -80,7 +80,8 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 64,
-          "pattern": "^[A-Za-z0-9_+\\-/]{1,64}$"
+          "pattern": "^[A-Za-z0-9_+\\-/]{1,64}$",
+          "description": "A real IANA time zone name (checked against the time-zone database, not only these characters): see timezone-rules.json. Unknown names, auto and offsets such as UTC+13 are rejected (BAD_VALUE)."
         },
         "utcOffsetSeconds": {
           "type": "integer",

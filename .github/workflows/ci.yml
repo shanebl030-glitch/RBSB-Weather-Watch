@@ -44,7 +44,7 @@ jobs:
                   print(f"  {r.get('name')}: {r.get('tests')} run, {r.get('failures')} failed, {r.get('errors')} errors")
                   out = r.find("system-out")
                   for line in (out.text or "").splitlines() if out is not None else []:
-                      if line.startswith(("SIZE ", "MAPPING ", "SCHEMA MATCH ")):
+                      if line.startswith(("SIZE ", "MAPPING ", "SCHEMA MATCH ", "TIMEZONES ")):
                           print("    " + line)
               print(f"TEST TOTALS ({name}): {t} run, {t - f - e - sk} passed, {f} failed, {e} errors, {sk} skipped")
               T += t; F += f; E += e; SK += sk
@@ -55,11 +55,11 @@ jobs:
         run: |
           python3 sync/samples/make_samples.py
           git diff --exit-code -- sync/samples && echo "SAMPLES UP TO DATE: regenerating changes nothing"
-      - name: Sync samples, independent check (JSON Schema + extra rules in Python)
+      - name: Sync samples, independent check (JSON Schema + extra rules in Python, time zones compared with Java)
         run: |
           python3 -m venv /tmp/samples-venv
-          /tmp/samples-venv/bin/pip install --quiet "jsonschema==4.26.0"
-          /tmp/samples-venv/bin/python scripts/check-samples.py
+          /tmp/samples-venv/bin/pip install --quiet "jsonschema==4.26.0" "tzdata==2026.6"
+          /tmp/samples-venv/bin/python scripts/check-samples.py --java-zones sync/build/java-timezones.txt
 
       - name: Lint (errors fail the build)
         run: ./gradlew --no-daemon :wear:lintDebug

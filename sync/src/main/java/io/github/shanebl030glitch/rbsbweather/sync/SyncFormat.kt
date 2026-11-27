@@ -117,6 +117,31 @@ object SyncText {
     fun length(s: String): Int = s.codePointCount(0, s.length)
 }
 
+/**
+ * place.timezone must be a real IANA time zone name, checked against this device's own time-zone
+ * database with java.time.ZoneId (a character check alone is not enough). Fixed offsets such as
+ * "+13:00" or "UTC+13", "auto", and unknown names like "Not/ARealZone" are rejected.
+ *
+ * A few names are never accepted, so every checker gives the same answer whichever database it
+ * uses. The same list is in sync/contract/timezone-rules.json (a test keeps the two identical):
+ *  - Java-only names that are not IANA zones ("SystemV/..."),
+ *  - entries in Python's database that are not zones ("Factory", "localtime", "posixrules"),
+ *  - IANA names Java's ZoneId does not offer as region IDs ("EST", "HST", "MST", "GMT+0", "GMT-0", "ROC").
+ */
+object TimeZones {
+    val EXCLUDED: Set<String> = setOf("Factory", "localtime", "posixrules", "EST", "HST", "MST", "GMT+0", "GMT-0", "ROC")
+    val EXCLUDED_PREFIXES: List<String> = listOf("SystemV/")
+
+    /** This device's IANA region IDs (case-sensitive), minus the exclusions above. */
+    val accepted: Set<String> by lazy {
+        java.time.ZoneId.getAvailableZoneIds().filterTo(HashSet()) { isAllowedName(it) }
+    }
+
+    private fun isAllowedName(name: String) = name !in EXCLUDED && EXCLUDED_PREFIXES.none { name.startsWith(it) }
+
+    fun isValid(name: String): Boolean = name in accepted
+}
+
 /** Coordinates are sent rounded to 3 decimals (about 100 m), never more precisely. */
 object Coordinates {
     fun round3(v: Double): Double = Math.round(v * 1000.0) / 1000.0
