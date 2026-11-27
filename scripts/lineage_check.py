@@ -15,7 +15,7 @@ def parse(text):
         if m:
             signers.append({"cert": m.group(1).replace(":", "").lower(), "flags": {}})
             continue
-        m = re.search(r"Has (.+?) capability:\s*(true|false)", line, re.I)
+        m = re.search(r"Has (.+?) capability\s*:\s*(true|false)", line, re.I)
         if m and signers:
             key = CAPS.get(m.group(1).strip().lower(), m.group(1).strip().lower().replace(" ", "_"))
             signers[-1]["flags"][key] = m.group(2).lower() == "true"

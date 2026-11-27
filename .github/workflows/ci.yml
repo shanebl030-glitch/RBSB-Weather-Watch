@@ -89,7 +89,7 @@ jobs:
           # capability (same as Android 0.7.2), so any custom signature permission the app defines
           # could be granted to test-key-signed apps. Allow only the one AndroidX adds itself.
           for APK in "$DBG" "$REL"; do
-            PKGNAME=$("$AAPT" dump badging "$APK" | head -1 | sed -E "s/.*name='([^']+)'.*/\1/")
+            PKGNAME=$("$AAPT" dump badging "$APK" | head -1 | sed -E "s/^package: name='([^']+)'.*/\1/")
             "$AAPT" dump xmltree --file AndroidManifest.xml "$APK" > manifest.txt
             python3 - "$PKGNAME" <<'PY'
           import re, sys
