@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/shanebl030-glitch/RBSB-Weather-Watch/sync/contract/refresh-v1.schema.json",
+  "title": "RBSB-Weather sync format v1: refresh request (message /rbsb/v1/refresh, watch to phone)",
+  "description": "Created By Shane BlackbuRn. Please fetch now. haveFetchedAt is the fetchedAt of the snapshot the watch already has, if any.",
+  "type": "object",
+  "required": [
+    "kind",
+    "schema",
+    "sentAt"
+  ],
+  "properties": {
+    "kind": {
+      "const": "rbsb.refresh"
+    },
+    "schema": {
+      "const": 1
+    },
+    "sentAt": {
+      "type": "integer",
+      "minimum": 1577836800000,
+      "maximum": 4102444800000
+    },
+    "haveFetchedAt": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 1577836800000,
+      "maximum": 4102444800000
+    }
+  }
+}

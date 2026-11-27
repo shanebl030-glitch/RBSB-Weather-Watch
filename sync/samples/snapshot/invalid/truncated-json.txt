@@ -1,0 +1,1 @@
+{"kind": "rbsb.snapshot", "schema": 1, "provider": "Open-Me

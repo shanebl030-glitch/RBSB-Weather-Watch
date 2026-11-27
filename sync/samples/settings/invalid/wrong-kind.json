@@ -1,0 +1,11 @@
+{
+ "kind": "rbsb.snapshot",
+ "schema": 1,
+ "sentAt": 1795867470000,
+ "temperatureUnit": "C",
+ "windUnit": "KMH",
+ "precipitationUnit": "MM",
+ "clock": "H24",
+ "animations": true,
+ "minWarningLevel": "watch"
+}

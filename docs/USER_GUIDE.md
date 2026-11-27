@@ -2,11 +2,13 @@
 
 Created By Shane BlackbuRn
 
-**Version 0.1.0-dev (Stage 0).** This is a development shell, not a usable weather app yet.
+**Version 0.1.0-dev (Stage 1).** This is a development shell, not a usable weather app yet.
 
 ## What it does now
 
 Opening the app shows an About screen: the app name, its version and "Created By Shane BlackbuRn". There is no weather, sync or Tile yet. Those arrive in later stages of the approved plan.
+
+Stage 1 changed nothing you can see on the watch. It defined the format the phone will use to send weather to the watch (see [SYNC_FORMAT.md](SYNC_FORMAT.md)). When sync arrives, the watch will follow the phone's units, clock format, animation setting and minimum warning level, and show the same warnings the phone shows.
 
 RBSB-Weather for Galaxy Watch is a **weather app, not a watch face**. It never replaces or changes Samsung's watch face or clock; leaving the app returns to your normal watch face.
 

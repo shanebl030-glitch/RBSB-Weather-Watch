@@ -1,0 +1,550 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/shanebl030-glitch/RBSB-Weather-Watch/sync/contract/snapshot-v1.schema.json",
+  "title": "RBSB-Weather sync format v1: weather snapshot (data item /rbsb/v1/snapshot)",
+  "description": "Created By Shane BlackbuRn. The language-neutral reference for the snapshot the phone sends the watch. Units are metric (°C, km/h, mm, hPa, %). Forecast times are local times at the place; every other time is unix milliseconds. Absent and null mean the same for optional values. Unknown fields are allowed and ignored. Rules JSON Schema cannot express (place.timezone must be a real IANA time zone, see timezone-rules.json; coordinates rounded to 3 decimals, times in order, sentAt not before fetchedAt, end not before start, tempMax not below tempMin, not always up and down, the 10-minute future tolerance) are in docs/SYNC_FORMAT.md and checked by both checkers.",
+  "type": "object",
+  "required": [
+    "kind",
+    "schema",
+    "provider",
+    "fetchedAt",
+    "sentAt",
+    "sequence",
+    "sourceId",
+    "place",
+    "current",
+    "hourly",
+    "daily",
+    "warnings",
+    "sun",
+    "moon"
+  ],
+  "properties": {
+    "kind": {
+      "const": "rbsb.snapshot"
+    },
+    "schema": {
+      "const": 1
+    },
+    "provider": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 40
+    },
+    "fetchedAt": {
+      "type": "integer",
+      "minimum": 1577836800000,
+      "maximum": 4102444800000
+    },
+    "sentAt": {
+      "type": "integer",
+      "minimum": 1577836800000,
+      "maximum": 4102444800000
+    },
+    "sequence": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "sourceId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9-]{8,64}$"
+    },
+    "place": {
+      "type": "object",
+      "required": [
+        "name",
+        "latitude",
+        "longitude",
+        "timezone",
+        "utcOffsetSeconds"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "latitude": {
+          "type": "number",
+          "minimum": -90,
+          "maximum": 90
+        },
+        "longitude": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 64,
+          "pattern": "^[A-Za-z0-9_+\\-/]{1,64}$",
+          "description": "A real IANA time zone name (checked against the time-zone database, not only these characters): see timezone-rules.json. Unknown names, auto and offsets such as UTC+13 are rejected (BAD_VALUE)."
+        },
+        "utcOffsetSeconds": {
+          "type": "integer",
+          "minimum": -64800,
+          "maximum": 64800
+        },
+        "country": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 100
+        },
+        "admin1": {
+          "type": "string",
+          "minLength": 0,
+          "maxLength": 100
+        }
+      }
+    },
+    "current": {
+      "type": "object",
+      "required": [
+        "time",
+        "isDay"
+      ],
+      "properties": {
+        "time": {
+          "type": "string",
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$"
+        },
+        "isDay": {
+          "type": "boolean"
+        },
+        "temperature": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": -90,
+          "maximum": 60
+        },
+        "apparentTemperature": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": -100,
+          "maximum": 80
+        },
+        "humidity": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "pressure": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 850,
+          "maximum": 1100
+        },
+        "cloudCover": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 100
+        },
+        "precipitation": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 500
+        },
+        "weatherCode": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 99
+        },
+        "wind": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "properties": {
+            "speed": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 500
+            },
+            "gusts": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 600
+            },
+            "direction": {
+              "type": [
+                "number",
+                "null"
+              ],
+              "minimum": 0,
+              "maximum": 360
+            }
+          }
+        }
+      }
+    },
+    "hourly": {
+      "type": "array",
+      "maxItems": 48,
+      "items": {
+        "type": "object",
+        "required": [
+          "time"
+        ],
+        "properties": {
+          "time": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$"
+          },
+          "temperature": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": -90,
+            "maximum": 60
+          },
+          "precipitationProbability": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 100
+          },
+          "precipitation": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 500
+          },
+          "weatherCode": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 99
+          },
+          "wind": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "speed": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 500
+              },
+              "gusts": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 600
+              },
+              "direction": {
+                "type": [
+                  "number",
+                  "null"
+                ],
+                "minimum": 0,
+                "maximum": 360
+              }
+            }
+          }
+        }
+      }
+    },
+    "daily": {
+      "type": "array",
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "required": [
+          "date"
+        ],
+        "properties": {
+          "date": {
+            "type": "string",
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+          },
+          "weatherCode": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 99
+          },
+          "tempMax": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": -90,
+            "maximum": 60
+          },
+          "tempMin": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": -90,
+            "maximum": 60
+          },
+          "precipitationSum": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 2000
+          },
+          "precipitationProbabilityMax": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 100
+          },
+          "windSpeedMax": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 500
+          },
+          "gustMax": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 600
+          },
+          "uvIndexMax": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 25
+          },
+          "sunrise": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$"
+              }
+            ]
+          },
+          "sunset": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "string",
+                "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$"
+              }
+            ]
+          }
+        }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "level",
+          "title",
+          "official"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200
+          },
+          "level": {
+            "enum": [
+              "red",
+              "orange",
+              "yellow",
+              "watch",
+              "minor",
+              "limit"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "official": {
+            "type": "boolean"
+          },
+          "area": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 200
+          },
+          "start": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1577836800000,
+            "maximum": 4102444800000
+          },
+          "end": {
+            "type": [
+              "integer",
+              "null"
+            ],
+            "minimum": 1577836800000,
+            "maximum": 4102444800000
+          },
+          "summary": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 500
+          },
+          "source": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 60
+          },
+          "hazard": {
+            "type": "string",
+            "minLength": 0,
+            "maxLength": 32
+          }
+        }
+      }
+    },
+    "sun": {
+      "type": "object",
+      "properties": {
+        "rise": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1577836800000,
+          "maximum": 4102444800000
+        },
+        "set": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1577836800000,
+          "maximum": 4102444800000
+        }
+      }
+    },
+    "moon": {
+      "type": "object",
+      "required": [
+        "at",
+        "phase",
+        "phaseName",
+        "illumination",
+        "brightLimb",
+        "tilt"
+      ],
+      "properties": {
+        "at": {
+          "type": "integer",
+          "minimum": 1577836800000,
+          "maximum": 4102444800000
+        },
+        "phase": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360
+        },
+        "phaseName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 40
+        },
+        "illumination": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "brightLimb": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 360
+        },
+        "tilt": {
+          "type": "number",
+          "minimum": -180,
+          "maximum": 180
+        },
+        "rise": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1577836800000,
+          "maximum": 4102444800000
+        },
+        "set": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1577836800000,
+          "maximum": 4102444800000
+        },
+        "alwaysUp": {
+          "type": "boolean"
+        },
+        "alwaysDown": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

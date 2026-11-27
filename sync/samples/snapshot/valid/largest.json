@@ -1,0 +1,1002 @@
+{
+ "kind": "rbsb.snapshot",
+ "schema": 1,
+ "provider": "Open-Meteo",
+ "fetchedAt": 1795813200000,
+ "sentAt": 1795813230000,
+ "sequence": 12,
+ "sourceId": "3f2b9c1e-6d4a-4b7e-9a51-0c8d2e7f4a10",
+ "place": {
+  "name": "gale rivers downpours, thunderstorms possible exposed possible. places downpours, localised wind fl.",
+  "latitude": -36.848,
+  "longitude": 174.763,
+  "timezone": "Pacific/Auckland",
+  "utcOffsetSeconds": 46800,
+  "country": "coast northwest flooding slips, possible 34 flooding wind gusts rain localised. conditions 94 flood.",
+  "admin1": "thunderstorms. thunderstorms. localised, possible rising. severe, 14 flooding, heavy, quickly local."
+ },
+ "current": {
+  "time": "2026-11-28T10:00",
+  "isDay": true,
+  "temperature": 19.0,
+  "apparentTemperature": 18.0,
+  "humidity": 72.0,
+  "pressure": 1016.4,
+  "cloudCover": 100.0,
+  "precipitation": 2.5,
+  "weatherCode": 63,
+  "wind": {
+   "speed": 14.0,
+   "gusts": 26.0,
+   "direction": 225.0
+  }
+ },
+ "hourly": [
+  {
+   "time": "2026-11-28T10:00",
+   "temperature": 8.7,
+   "precipitationProbability": 75.0,
+   "precipitation": 3.5,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 13.6,
+    "gusts": 89.2,
+    "direction": 84.0
+   }
+  },
+  {
+   "time": "2026-11-28T11:00",
+   "temperature": 15.4,
+   "precipitationProbability": 95.0,
+   "precipitation": 8.4,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 23.3,
+    "gusts": 68.7,
+    "direction": 261.0
+   }
+  },
+  {
+   "time": "2026-11-28T12:00",
+   "temperature": 8.1,
+   "precipitationProbability": 40.0,
+   "precipitation": 4.4,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 16.5,
+    "gusts": 69.8,
+    "direction": 144.0
+   }
+  },
+  {
+   "time": "2026-11-28T13:00",
+   "temperature": 8.1,
+   "precipitationProbability": 5.0,
+   "precipitation": 0.3,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 52.5,
+    "gusts": 93.2,
+    "direction": 251.0
+   }
+  },
+  {
+   "time": "2026-11-28T14:00",
+   "temperature": 13.3,
+   "precipitationProbability": 58.0,
+   "precipitation": 2.0,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 28.8,
+    "gusts": 101.5,
+    "direction": 208.0
+   }
+  },
+  {
+   "time": "2026-11-28T15:00",
+   "temperature": 15.5,
+   "precipitationProbability": 86.0,
+   "precipitation": 5.9,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 57.1,
+    "gusts": 96.7,
+    "direction": 42.0
+   }
+  },
+  {
+   "time": "2026-11-28T16:00",
+   "temperature": 19.6,
+   "precipitationProbability": 10.0,
+   "precipitation": 7.5,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 18.2,
+    "gusts": 101.5,
+    "direction": 77.0
+   }
+  },
+  {
+   "time": "2026-11-28T17:00",
+   "temperature": 15.0,
+   "precipitationProbability": 0.0,
+   "precipitation": 8.9,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 21.9,
+    "gusts": 89.1,
+    "direction": 315.0
+   }
+  },
+  {
+   "time": "2026-11-28T18:00",
+   "temperature": 18.7,
+   "precipitationProbability": 37.0,
+   "precipitation": 2.4,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 42.3,
+    "gusts": 62.6,
+    "direction": 35.0
+   }
+  },
+  {
+   "time": "2026-11-28T19:00",
+   "temperature": 9.3,
+   "precipitationProbability": 30.0,
+   "precipitation": 6.2,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 50.8,
+    "gusts": 102.6,
+    "direction": 354.0
+   }
+  },
+  {
+   "time": "2026-11-28T20:00",
+   "temperature": 11.3,
+   "precipitationProbability": 75.0,
+   "precipitation": 6.2,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 56.2,
+    "gusts": 83.5,
+    "direction": 63.0
+   }
+  },
+  {
+   "time": "2026-11-28T21:00",
+   "temperature": 18.0,
+   "precipitationProbability": 35.0,
+   "precipitation": 4.2,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 26.7,
+    "gusts": 66.9,
+    "direction": 304.0
+   }
+  },
+  {
+   "time": "2026-11-28T22:00",
+   "temperature": 8.4,
+   "precipitationProbability": 61.0,
+   "precipitation": 4.1,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 35.4,
+    "gusts": 88.7,
+    "direction": 122.0
+   }
+  },
+  {
+   "time": "2026-11-28T23:00",
+   "temperature": 18.0,
+   "precipitationProbability": 35.0,
+   "precipitation": 0.3,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 51.0,
+    "gusts": 83.1,
+    "direction": 58.0
+   }
+  },
+  {
+   "time": "2026-11-29T00:00",
+   "temperature": 10.6,
+   "precipitationProbability": 75.0,
+   "precipitation": 7.0,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 29.7,
+    "gusts": 79.4,
+    "direction": 48.0
+   }
+  },
+  {
+   "time": "2026-11-29T01:00",
+   "temperature": 13.0,
+   "precipitationProbability": 15.0,
+   "precipitation": 8.3,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 53.5,
+    "gusts": 97.0,
+    "direction": 243.0
+   }
+  },
+  {
+   "time": "2026-11-29T02:00",
+   "temperature": 9.9,
+   "precipitationProbability": 66.0,
+   "precipitation": 7.7,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 10.5,
+    "gusts": 90.6,
+    "direction": 137.0
+   }
+  },
+  {
+   "time": "2026-11-29T03:00",
+   "temperature": 20.5,
+   "precipitationProbability": 21.0,
+   "precipitation": 7.4,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 34.0,
+    "gusts": 104.5,
+    "direction": 126.0
+   }
+  },
+  {
+   "time": "2026-11-29T04:00",
+   "temperature": 11.0,
+   "precipitationProbability": 53.0,
+   "precipitation": 6.4,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 17.3,
+    "gusts": 70.1,
+    "direction": 222.0
+   }
+  },
+  {
+   "time": "2026-11-29T05:00",
+   "temperature": 22.3,
+   "precipitationProbability": 57.0,
+   "precipitation": 8.4,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 28.6,
+    "gusts": 72.3,
+    "direction": 176.0
+   }
+  },
+  {
+   "time": "2026-11-29T06:00",
+   "temperature": 10.4,
+   "precipitationProbability": 80.0,
+   "precipitation": 1.6,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 12.8,
+    "gusts": 103.1,
+    "direction": 61.0
+   }
+  },
+  {
+   "time": "2026-11-29T07:00",
+   "temperature": 17.6,
+   "precipitationProbability": 57.0,
+   "precipitation": 7.9,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 33.8,
+    "gusts": 70.8,
+    "direction": 75.0
+   }
+  },
+  {
+   "time": "2026-11-29T08:00",
+   "temperature": 9.3,
+   "precipitationProbability": 40.0,
+   "precipitation": 8.7,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 14.3,
+    "gusts": 85.6,
+    "direction": 172.0
+   }
+  },
+  {
+   "time": "2026-11-29T09:00",
+   "temperature": 14.7,
+   "precipitationProbability": 77.0,
+   "precipitation": 6.3,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 34.6,
+    "gusts": 102.0,
+    "direction": 156.0
+   }
+  },
+  {
+   "time": "2026-11-29T10:00",
+   "temperature": 12.8,
+   "precipitationProbability": 87.0,
+   "precipitation": 4.6,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 53.8,
+    "gusts": 64.2,
+    "direction": 292.0
+   }
+  },
+  {
+   "time": "2026-11-29T11:00",
+   "temperature": 12.5,
+   "precipitationProbability": 50.0,
+   "precipitation": 5.0,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 38.9,
+    "gusts": 78.5,
+    "direction": 315.0
+   }
+  },
+  {
+   "time": "2026-11-29T12:00",
+   "temperature": 13.3,
+   "precipitationProbability": 83.0,
+   "precipitation": 3.2,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 18.7,
+    "gusts": 104.3,
+    "direction": 250.0
+   }
+  },
+  {
+   "time": "2026-11-29T13:00",
+   "temperature": 14.1,
+   "precipitationProbability": 74.0,
+   "precipitation": 0.1,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 31.2,
+    "gusts": 60.8,
+    "direction": 280.0
+   }
+  },
+  {
+   "time": "2026-11-29T14:00",
+   "temperature": 21.4,
+   "precipitationProbability": 1.0,
+   "precipitation": 4.9,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 13.4,
+    "gusts": 109.1,
+    "direction": 284.0
+   }
+  },
+  {
+   "time": "2026-11-29T15:00",
+   "temperature": 20.5,
+   "precipitationProbability": 11.0,
+   "precipitation": 1.7,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 49.2,
+    "gusts": 75.1,
+    "direction": 140.0
+   }
+  },
+  {
+   "time": "2026-11-29T16:00",
+   "temperature": 17.4,
+   "precipitationProbability": 79.0,
+   "precipitation": 0.2,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 32.5,
+    "gusts": 79.8,
+    "direction": 164.0
+   }
+  },
+  {
+   "time": "2026-11-29T17:00",
+   "temperature": 21.5,
+   "precipitationProbability": 84.0,
+   "precipitation": 2.3,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 34.5,
+    "gusts": 81.5,
+    "direction": 308.0
+   }
+  },
+  {
+   "time": "2026-11-29T18:00",
+   "temperature": 12.8,
+   "precipitationProbability": 34.0,
+   "precipitation": 6.8,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 51.5,
+    "gusts": 73.3,
+    "direction": 311.0
+   }
+  },
+  {
+   "time": "2026-11-29T19:00",
+   "temperature": 16.0,
+   "precipitationProbability": 70.0,
+   "precipitation": 4.7,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 56.5,
+    "gusts": 80.8,
+    "direction": 194.0
+   }
+  },
+  {
+   "time": "2026-11-29T20:00",
+   "temperature": 12.4,
+   "precipitationProbability": 15.0,
+   "precipitation": 4.5,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 13.2,
+    "gusts": 99.4,
+    "direction": 99.0
+   }
+  },
+  {
+   "time": "2026-11-29T21:00",
+   "temperature": 12.6,
+   "precipitationProbability": 42.0,
+   "precipitation": 6.9,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 55.6,
+    "gusts": 85.3,
+    "direction": 203.0
+   }
+  },
+  {
+   "time": "2026-11-29T22:00",
+   "temperature": 13.1,
+   "precipitationProbability": 81.0,
+   "precipitation": 0.8,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 16.0,
+    "gusts": 89.5,
+    "direction": 209.0
+   }
+  },
+  {
+   "time": "2026-11-29T23:00",
+   "temperature": 11.3,
+   "precipitationProbability": 25.0,
+   "precipitation": 4.7,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 26.3,
+    "gusts": 78.0,
+    "direction": 3.0
+   }
+  },
+  {
+   "time": "2026-11-30T00:00",
+   "temperature": 23.4,
+   "precipitationProbability": 33.0,
+   "precipitation": 5.1,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 51.0,
+    "gusts": 76.9,
+    "direction": 58.0
+   }
+  },
+  {
+   "time": "2026-11-30T01:00",
+   "temperature": 10.9,
+   "precipitationProbability": 29.0,
+   "precipitation": 4.0,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 50.5,
+    "gusts": 69.5,
+    "direction": 83.0
+   }
+  },
+  {
+   "time": "2026-11-30T02:00",
+   "temperature": 18.9,
+   "precipitationProbability": 80.0,
+   "precipitation": 2.7,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 39.1,
+    "gusts": 69.5,
+    "direction": 41.0
+   }
+  },
+  {
+   "time": "2026-11-30T03:00",
+   "temperature": 15.7,
+   "precipitationProbability": 59.0,
+   "precipitation": 0.1,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 13.2,
+    "gusts": 88.9,
+    "direction": 23.0
+   }
+  },
+  {
+   "time": "2026-11-30T04:00",
+   "temperature": 21.1,
+   "precipitationProbability": 1.0,
+   "precipitation": 7.4,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 36.6,
+    "gusts": 63.6,
+    "direction": 184.0
+   }
+  },
+  {
+   "time": "2026-11-30T05:00",
+   "temperature": 19.8,
+   "precipitationProbability": 56.0,
+   "precipitation": 4.2,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 10.8,
+    "gusts": 60.7,
+    "direction": 249.0
+   }
+  },
+  {
+   "time": "2026-11-30T06:00",
+   "temperature": 21.9,
+   "precipitationProbability": 49.0,
+   "precipitation": 4.0,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 16.5,
+    "gusts": 65.0,
+    "direction": 180.0
+   }
+  },
+  {
+   "time": "2026-11-30T07:00",
+   "temperature": 12.4,
+   "precipitationProbability": 95.0,
+   "precipitation": 4.2,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 37.7,
+    "gusts": 104.3,
+    "direction": 203.0
+   }
+  },
+  {
+   "time": "2026-11-30T08:00",
+   "temperature": 21.2,
+   "precipitationProbability": 48.0,
+   "precipitation": 7.9,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 30.0,
+    "gusts": 92.3,
+    "direction": 273.0
+   }
+  },
+  {
+   "time": "2026-11-30T09:00",
+   "temperature": 15.9,
+   "precipitationProbability": 71.0,
+   "precipitation": 4.2,
+   "weatherCode": 63,
+   "wind": {
+    "speed": 38.8,
+    "gusts": 104.2,
+    "direction": 45.0
+   }
+  }
+ ],
+ "daily": [
+  {
+   "date": "2026-11-28",
+   "weatherCode": 63,
+   "tempMax": 23.0,
+   "tempMin": 13.0,
+   "precipitationSum": 15.0,
+   "precipitationProbabilityMax": 62.5,
+   "windSpeedMax": 28.0,
+   "gustMax": 45.0,
+   "uvIndexMax": 9.5,
+   "sunrise": "2026-11-28T05:58",
+   "sunset": "2026-11-28T20:21"
+  },
+  {
+   "date": "2026-11-29",
+   "weatherCode": 63,
+   "tempMax": 23.0,
+   "tempMin": 13.0,
+   "precipitationSum": 15.0,
+   "precipitationProbabilityMax": 62.5,
+   "windSpeedMax": 28.0,
+   "gustMax": 45.0,
+   "uvIndexMax": 9.5,
+   "sunrise": "2026-11-29T05:58",
+   "sunset": "2026-11-29T20:21"
+  },
+  {
+   "date": "2026-11-30",
+   "weatherCode": 63,
+   "tempMax": 23.0,
+   "tempMin": 13.0,
+   "precipitationSum": 15.0,
+   "precipitationProbabilityMax": 62.5,
+   "windSpeedMax": 28.0,
+   "gustMax": 45.0,
+   "uvIndexMax": 9.5,
+   "sunrise": "2026-11-30T05:58",
+   "sunset": "2026-11-30T20:21"
+  },
+  {
+   "date": "2026-12-01",
+   "weatherCode": 63,
+   "tempMax": 23.0,
+   "tempMin": 13.0,
+   "precipitationSum": 15.0,
+   "precipitationProbabilityMax": 62.5,
+   "windSpeedMax": 28.0,
+   "gustMax": 45.0,
+   "uvIndexMax": 9.5,
+   "sunrise": "2026-12-01T05:58",
+   "sunset": "2026-12-01T20:21"
+  },
+  {
+   "date": "2026-12-02",
+   "weatherCode": 63,
+   "tempMax": 23.0,
+   "tempMin": 13.0,
+   "precipitationSum": 15.0,
+   "precipitationProbabilityMax": 62.5,
+   "windSpeedMax": 28.0,
+   "gustMax": 45.0,
+   "uvIndexMax": 9.5,
+   "sunrise": "2026-12-02T05:58",
+   "sunset": "2026-12-02T20:21"
+  },
+  {
+   "date": "2026-12-03",
+   "weatherCode": 63,
+   "tempMax": 23.0,
+   "tempMin": 13.0,
+   "precipitationSum": 15.0,
+   "precipitationProbabilityMax": 62.5,
+   "windSpeedMax": 28.0,
+   "gustMax": 45.0,
+   "uvIndexMax": 9.5,
+   "sunrise": "2026-12-03T05:58",
+   "sunset": "2026-12-03T20:21"
+  },
+  {
+   "date": "2026-12-04",
+   "weatherCode": 63,
+   "tempMax": 23.0,
+   "tempMin": 13.0,
+   "precipitationSum": 15.0,
+   "precipitationProbabilityMax": 62.5,
+   "windSpeedMax": 28.0,
+   "gustMax": 45.0,
+   "uvIndexMax": 9.5,
+   "sunrise": "2026-12-04T05:58",
+   "sunset": "2026-12-04T20:21"
+  },
+  {
+   "date": "2026-12-05",
+   "weatherCode": 63,
+   "tempMax": 23.0,
+   "tempMin": 13.0,
+   "precipitationSum": 15.0,
+   "precipitationProbabilityMax": 62.5,
+   "windSpeedMax": 28.0,
+   "gustMax": 45.0,
+   "uvIndexMax": 9.5,
+   "sunrise": "2026-12-05T05:58",
+   "sunset": "2026-12-05T20:21"
+  },
+  {
+   "date": "2026-12-06",
+   "weatherCode": 63,
+   "tempMax": 23.0,
+   "tempMin": 13.0,
+   "precipitationSum": 15.0,
+   "precipitationProbabilityMax": 62.5,
+   "windSpeedMax": 28.0,
+   "gustMax": 45.0,
+   "uvIndexMax": 9.5,
+   "sunrise": "2026-12-06T05:58",
+   "sunset": "2026-12-06T20:21"
+  },
+  {
+   "date": "2026-12-07",
+   "weatherCode": 63,
+   "tempMax": 23.0,
+   "tempMin": 13.0,
+   "precipitationSum": 15.0,
+   "precipitationProbabilityMax": 62.5,
+   "windSpeedMax": 28.0,
+   "gustMax": 45.0,
+   "uvIndexMax": 9.5,
+   "sunrise": "2026-12-07T05:58",
+   "sunset": "2026-12-07T20:21"
+  }
+ ],
+ "warnings": [
+  {
+   "id": "000-0iu5ccfj81gbensw5wjfwz8p2z-ae72k5ev7eled77e357z635gyjnip1o2ivsnnreb-12o8r-s0uk8qwgm0o8itl67t8g8rn82fkwa4nrrhluirusm85940-rjw5khpda2b4jquazkrti22gvd4uh7knarjmp51w5-0say0j7qw6xom-dao0fml-jhqog5s-7a3",
+   "level": "red",
+   "title": "exposed, northwest 36 quickly northwest possible, expect conditions conditions, 71 rain thunderstorms. downpours. 82 pl.",
+   "official": true,
+   "area": "expect 51 gale expect rising, heavy. surface, rain roads. 72 northwest. 48 roads flooding, rain expect, 59 quickly, 29 northwest coast heavy, roads roads rain 94 exposed quickly, severe slips 81 quic.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "flooding, flooding 97 exposed flooding flooding. 64 places localised, heavy. wind, 65 coast. thunderstorms heavy exposed. thunderstorms 95 flooding, travel quickly northwest, rising ranges. 82 gusts. ranges 49 heavy heavy, surface. ranges. downpours conditions. ranges places. expect, roads wind ranges, severe thunderstorms possible. slips travel, surface flooding, flooding. thunderstorms, severe. expect. flooding flooding, places. exposed, places ranges. northwest, severe expect, hail surface t.",
+   "source": "severe. heavy flooding rain, ranges northwest travel surfac.",
+   "hazard": "wind, exposed. surface conditio."
+  },
+  {
+   "id": "001-vo9shc9y22c4cykw784ra-x8h9dv16ep6flxx99ho35unj56snmp9p9iiiuzk8vn9878h4q3s-hddoyzw8eudqvpjcg1npscfh1xfl8-rz75thntmal17v832hxsrh5iw02pbs5qalqcf8ox2u8qo78q-pbrmmusyut4hb6070r49ri4s8srjy3-tsvtyvgceka-",
+   "level": "orange",
+   "title": "quickly northwest places. 45 gale slips 21 rain, flooding. 50 surface severe expect roads thunderstorms places ranges g.",
+   "official": true,
+   "area": "possible, 77 surface. places localised. rain gale ranges rain, quickly, flooding severe possible wind rain roads rivers. quickly severe. thunderstorms quickly, northwest gusts. roads thunderstorms th.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "exposed 88 flooding rivers 27 hail hail, flooding severe flooding heavy wind northwest quickly northwest expect. rivers severe. conditions surface 62 downpours, rivers possible gusts ranges possible travel. localised severe slips surface, heavy flooding rivers flooding flooding. localised heavy downpours. 28 heavy, ranges 78 downpours 13 surface 89 rain. rising downpours, thunderstorms flooding severe, conditions slips, quickly rivers 89 flooding. travel rain possible, gale northwest 55 quickly.",
+   "source": "coast slips ranges hail, northwest expect. exposed rising d.",
+   "hazard": "conditions 41 slips. rain. rain."
+  },
+  {
+   "id": "002-aji3lliz09zndd-12b1clz9rhvedig1w0lj-rnrh45hkazwszgd4k0-fq2bu0fx5fjjaltgx7svobkhsl7i2qlprtn9e81blflp-u17vwg33r56nhsqaozxceykacv7xefrrftbh2yl-bixgons4k0f06evgyo75fgwk5maavu6a5rosfrwiqih18dzs1ph3pt3k",
+   "level": "yellow",
+   "title": "severe. rain 80 travel flooding, thunderstorms coast severe gale flooding northwest. conditions. thunderstorms, heavy,x.",
+   "official": true,
+   "area": "surface flooding ranges roads thunderstorms flooding. places. downpours conditions. heavy flooding gusts 58 rivers northwest rain expect, gusts flooding wind. flooding slips 61 roads. severe 14 flood.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "northwest. slips travel slips rising rivers, hail wind, ranges ranges. rising surface thunderstorms gale. slips, 66 roads. rivers heavy. gale severe 42 wind exposed ranges flooding wind 93 expect thunderstorms coast, 59 travel. ranges hail. possible, travel. thunderstorms rivers. roads. rising, roads. rain conditions. severe, slips, flooding wind, heavy flooding, thunderstorms. northwest heavy, hail rising. conditions, travel coast. 50 places roads roads surface 99 travel exposed expect surface.",
+   "source": "quickly, coast, places expect. flooding. localised travel,x.",
+   "hazard": "rain northwest. conditions down."
+  },
+  {
+   "id": "003-1n2hj86h6tderuro1hm--aq-ae5f33kf0d3hvqh6rlhplotwfntpzbrlpa91iftltql478kpv0ce8wffetou3lz7r8ja8yyi4zlixdooevs87ot52acbejpvua9ptzqluuibls2lw-nnpvtwxyinhgaqxejn96hgy3e65evo7pb9ovhm74n5dx8ogmehnysbg11a",
+   "level": "watch",
+   "title": "roads exposed possible, rivers coast travel places possible. slips travel. slips, quickly hail. ranges expect slips pos.",
+   "official": true,
+   "area": "quickly. heavy. ranges rising 94 exposed hail exposed possible roads rivers, thunderstorms thunderstorms 91 northwest places. places thunderstorms flooding gale rivers heavy 27 quickly rising. hail s.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "gusts wind flooding quickly. hail northwest rain. northwest, severe. heavy expect, thunderstorms flooding flooding. severe. expect exposed severe. rain 60 rising severe, 93 slips roads, surface wind 75 gusts. expect. surface thunderstorms downpours. gale exposed northwest localised severe. rising, gale, heavy flooding. expect. 80 hail, flooding heavy gusts severe, places gale flooding. rising, rain 49 heavy localised. quickly. flooding 76 slips. heavy slips. thunderstorms rising. heavy, placesx.",
+   "source": "expect northwest expect ranges heavy roads, 31 flooding gal.",
+   "hazard": "gusts. wind possible places flo."
+  },
+  {
+   "id": "004-rfn1k7tagm6bt-exm9letv-gcpc1hon8iucsk6jvub0ezveayi-a6aafqsg56qx0fonpmn8nw7agdomrfrz6ekm3yk619ssmntabf3f6fxn9d810fd2flkxsq5bxfjd72hfzjjt6tleod3nohh308qrkrb3yj3il9qr9r9b016xmpi5tdt7685lyewhao2x8488w",
+   "level": "minor",
+   "title": "rain surface, 29 surface flooding slips heavy. places, roads. thunderstorms, rising coast expect, hail hail, coast, 91x.",
+   "official": true,
+   "area": "rising, northwest, 84 slips. ranges. expect exposed, quickly, gusts. conditions. thunderstorms 36 conditions, flooding expect, possible places gale. hail. flooding northwest northwest, conditions, 35.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "rising, 80 gusts 90 localised rising 57 heavy, northwest. northwest severe, places. flooding coast. slips 87 severe rain flooding. rivers, heavy. downpours. slips gusts 60 heavy 83 ranges downpours. exposed 54 severe. flooding. rivers flooding travel. possible places thunderstorms northwest travel gale, roads, flooding, surface. rivers quickly rivers downpours, wind severe, flooding gusts. ranges. coast travel rising rivers 17 exposed 32 slips hail exposed rising. expect ranges, quickly wind, r.",
+   "source": "coast, downpours 25 surface, rising rising 98 rising severe.",
+   "hazard": "rivers. downpours 72 wind, hail."
+  },
+  {
+   "id": "005-qay4eocoqxqacn98r4mfz0hxysdohpua4qoc6vwjdn4iqz3zpro8-fmk56shuhowydxss1fxdsh1c9k901ybbbzzth50orcuwg6ipssjcc5vg5zx8edkwcktg09sd0i83q2g176ig953t2olnn8jwhnu3fqkcor450g6-5h8-qbsh91j8yw0m4lezwnrk7rkdgfa",
+   "level": "limit",
+   "title": "rain gale expect, slips travel. expect. travel localised 71 coast severe rivers 71 thunderstorms heavy, conditions 72 g.",
+   "official": false,
+   "area": "northwest. hail localised, 49 wind heavy rain. rivers, flooding downpours. 20 flooding. 66 travel, northwest ranges thunderstorms gale severe flooding flooding 28 rising. 67 hail 92 flooding hail, th.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "roads thunderstorms rising, exposed 19 heavy gusts ranges ranges. 69 gusts rain ranges rain rising. 19 thunderstorms heavy quickly. possible 15 rivers. thunderstorms quickly, downpours. northwest quickly slips coast expect 73 coast rain. places roads conditions heavy 50 flooding localised quickly, localised, slips gusts surface gusts, expect conditions hail, exposed heavy. conditions expect. 25 flooding, 18 exposed wind. 96 localised. expect expect severe quickly, rain 21 possible 67 slips expe.",
+   "source": "RBSB-Weather",
+   "hazard": "conditions coast expect exposed."
+  },
+  {
+   "id": "006-m66nb62ls6kce1htvwsinxoks3i2cdzuh32czy8tyorch21aqdne5un7fdyfixuqayt1cz3iv0huctgy4igye-09eknapx9dy3lzb4nfie-q9qhfuhzkzq7892rbwh4sujzw3cpqjaeqv8gqrhvqw-a498fiw1lvh6kuagga3pblhpzdp3l84nk9oslmlxkqv96w",
+   "level": "red",
+   "title": "flooding localised flooding 47 rivers severe northwest localised flooding flooding rising possible, flooding rivers. gu.",
+   "official": true,
+   "area": "heavy, expect wind, possible localised. rain rising. rising flooding. severe ranges. quickly localised, surface severe downpours. heavy 96 rising, conditions severe rain, heavy roads. exposed coast g.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "ranges heavy, coast rain northwest. downpours expect, expect. places 38 slips rain northwest. 63 rivers. coast. travel flooding. hail, rain. localised. northwest, ranges 97 heavy wind, coast conditions, 53 wind thunderstorms conditions wind hail, 62 northwest gusts, hail northwest localised places, surface slips. 81 severe rivers flooding flooding. possible gusts 62 coast gale. 99 rising rising, 65 expect flooding, 53 ranges, rising slips, rising. thunderstorms, downpours thunderstorms, quickly.",
+   "source": "downpours, flooding 92 northwest 98 slips. rising heavy, tr.",
+   "hazard": "northwest, roads. roads travelx."
+  },
+  {
+   "id": "007-0qi4oeqp70kpq8c7ccp0vm-pf6fquvppgw308sp0ajrtu3mt8te22kedeh48-uyy3g45zyjovaabp2bq-t4qk108zk6jixfs9ml3a8lxkhznjlgkeb82r90d0rstz-v-anybzxk8bdyth5prmo2l8cuini6c5wwom1zbls1m4w101m4-9pteerpzna1muw4ele6c",
+   "level": "orange",
+   "title": "slips rising, roads 17 exposed places flooding, slips. severe. 97 expect wind, rising northwest, rivers heavy rain. sur.",
+   "official": true,
+   "area": "exposed 78 rain thunderstorms, gusts expect heavy places, severe, 91 expect. slips, expect. flooding. rivers, flooding 91 rising slips. heavy, places. gusts. coast flooding. roads, 65 ranges ranges e.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "rain flooding rising, travel, hail gale. flooding heavy. wind, possible. slips flooding. possible gusts ranges surface conditions. surface. heavy severe northwest slips wind conditions, 66 ranges wind 86 rain downpours, 91 surface 45 ranges heavy. gale flooding flooding. flooding, conditions, expect downpours. places, expect 42 rising rain rain, wind places, 79 conditions gusts wind slips hail, 64 places, flooding, quickly downpours. flooding 91 flooding expect surface quickly quickly travel, s.",
+   "source": "northwest gale 47 quickly exposed 22 flooding, rising, poss.",
+   "hazard": "localised. ranges. gale, surfac."
+  },
+  {
+   "id": "008-s-h65j3-kzrdpnc-boomxnabe-evd3s2692kc2nf-ln9s7zwjn5cjpm4813h9yevpv37xurixcr61e6izn7assuzmaas59hqfzm07x71m44ap0bhi9ltdfd-rsobgjpto6u54012zqrzkdf86sw8hwut39re60tvgo9osyb3wr5uc4dh6hw5hjv6njmbdoxk5loj",
+   "level": "yellow",
+   "title": "places downpours. thunderstorms, thunderstorms quickly. severe rivers coast flooding hail, downpours, 15 hail. 57 flood.",
+   "official": true,
+   "area": "northwest 14 flooding hail. expect, northwest roads. rivers. 67 exposed. ranges, 96 rivers possible wind severe, places, quickly 54 localised, travel, expect rivers, rain. wind, hail slips 15 possibl.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "severe, flooding. heavy ranges 31 quickly, gusts, severe, slips. 22 slips, rivers slips rising possible wind. heavy 52 ranges. thunderstorms quickly 37 conditions. possible. heavy 21 rising surface, rising downpours thunderstorms quickly rivers localised surface thunderstorms severe rain travel, severe 68 slips. expect 47 rivers, coast quickly gale. thunderstorms severe. flooding flooding flooding 87 travel wind wind roads, rain possible. gale ranges thunderstorms localised surface. 78 coast fl.",
+   "source": "flooding, ranges surface places flooding flooding exposed t.",
+   "hazard": "rivers slips wind flooding. roa."
+  },
+  {
+   "id": "009-6l9uj38bgm13x8fuk85ygjoy2t2-tcjj0c-ckbvcar9c5aj29463mhnv00nxlct554dfneo7snu2jxpwbbfsinw92lme1h495qfbnjs8w7tmrp3c0gpyndzezhids358p4sh51gm5ldiispwwo5qjr6a1ghpk-bwea18p9v8x-0yrsmrsawh8v2cino0y51utewp",
+   "level": "watch",
+   "title": "slips. 45 expect. coast conditions severe downpours. rain downpours. travel northwest, surface conditions severe, 52 ha.",
+   "official": true,
+   "area": "localised, wind conditions, heavy. rain 73 rivers flooding, slips thunderstorms, flooding possible places hail. severe rain rising rising heavy ranges 33 heavy rivers. 30 hail rivers. rivers. floodin.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "rising. places localised gusts, thunderstorms gusts. 72 quickly ranges slips thunderstorms rivers quickly conditions, conditions rivers exposed, coast 69 expect, heavy downpours coast, hail. slips. localised northwest localised places. downpours, surface. possible, possible northwest places, flooding conditions. expect, 93 rivers roads 52 downpours wind surface, severe, places 22 rivers places, quickly, 38 travel roads flooding roads ranges rivers flooding, gale gusts slips. downpours possible..",
+   "source": "heavy. gale downpours severe, quickly. gale, possible slips.",
+   "hazard": "downpours, downpours quickly. h."
+  },
+  {
+   "id": "010-521xm7mrpoyjzj89sek1c4ut9z7g0jebuc05a5hplsq2jqvhjzcmjlao04uo9uzcj5edfs9iaq8hvqjrlg7mmb3269m13tjkanxklj2fysp-nk56aswohd7b8tt2lxm5mme8ty9a2nrhf5lr8nccgtoeh-6rbtkyubcrmr1afw0kk57r5z8axiwih8ndbrum6g5r",
+   "level": "minor",
+   "title": "possible 44 ranges wind heavy 17 coast, heavy, exposed, exposed severe expect. northwest, places downpours gale gale. r.",
+   "official": true,
+   "area": "heavy coast possible rising localised. exposed. heavy exposed surface exposed, thunderstorms travel 67 northwest. hail. ranges 73 rivers surface, slips wind 35 severe, rain. surface. downpours 70 nor.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "places 30 gale, expect exposed surface 21 surface, 88 thunderstorms. ranges surface. places places roads. localised slips flooding, flooding severe, gale gale. 22 surface possible, 72 ranges, severe ranges hail, downpours. rising hail places. travel. roads 31 travel, rising rising. rivers. gale 78 thunderstorms coast. wind possible heavy. possible. travel 49 thunderstorms wind 40 heavy northwest 39 gusts 75 conditions. thunderstorms, rising. severe 40 expect. exposed, rivers severe possible, ri.",
+   "source": "gale. surface. wind. quickly localised places travel 79 hai.",
+   "hazard": "quickly exposed. gale, localise."
+  },
+  {
+   "id": "011-xar7naiidvkiayso4wersjx0g2wtmy776jn3gmplf9z58tzpa-n2ee9dgn5w3abqp4to373a3k-vo2t0wclf3wz05u2ldds0w2bwprl98hqkxj2eva04r8gy4hz90k2szgndcxygz-p90a3vep7-fypu65lo18a8g0cr3106swwpjxtbzonpgk-v0ivd5scju5p4",
+   "level": "limit",
+   "title": "surface. downpours, coast northwest 58 rising thunderstorms, 29 downpours. thunderstorms exposed. 13 surface. 28 hail r.",
+   "official": false,
+   "area": "hail. flooding coast. ranges, rain. 16 conditions, downpours. flooding gale. 93 heavy 81 hail flooding, wind travel 15 roads severe, northwest travel, ranges, rain, localised quickly. gusts coast qui.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "northwest rising, roads, possible quickly travel flooding gale 39 travel conditions 82 roads conditions localised, downpours, gusts. 65 flooding 67 conditions rivers, 96 ranges, localised. gale possible. heavy heavy, places ranges 93 rain surface ranges thunderstorms rising 51 flooding, downpours hail, gusts 62 rain 71 flooding. 72 conditions slips thunderstorms, places travel 14 rivers, 30 rising thunderstorms 42 roads roads flooding rivers northwest northwest. gusts 97 expect, hail conditions.",
+   "source": "RBSB-Weather",
+   "hazard": "possible rising ranges 83 gusts."
+  },
+  {
+   "id": "012-al2xwj-bfi8m48xn6lpdgur3pyc6ogmifixqqsyk76bpz-ybrsbq166ykojxz9iowp8c4wkv8i7qnq516bj067034am7659bc0iot9mlb3xtaaydigv3v5p2ojhpy51x17omc6tb5gmou2de2nw4nupndcxadz5uknh5e69sn8ecxfydds2ik854f4nchtir1k0d",
+   "level": "red",
+   "title": "roads rain roads roads thunderstorms hail possible, rain exposed rising. places. exposed flooding exposed heavy 55 nort.",
+   "official": true,
+   "area": "gale. downpours downpours places, gale rising thunderstorms, gusts roads. 44 places conditions conditions. hail quickly. quickly, rivers expect, expect. exposed, heavy, localised 48 rivers flooding p.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "ranges. rising. ranges downpours. quickly, thunderstorms rivers quickly heavy. flooding gale surface gusts flooding. wind, possible, severe rivers. thunderstorms gusts surface roads 55 flooding roads. travel. rising, heavy downpours severe northwest. roads flooding downpours. 59 quickly wind gale expect. surface 76 rain 17 roads. flooding conditions, downpours. conditions, places. 47 localised surface. downpours 79 expect rising wind wind gusts, 31 localised coast. flooding. hail, expect thunde.",
+   "source": "places 70 surface ranges. 44 possible rivers. coast, quickl.",
+   "hazard": "rising. hail, northwest quickly."
+  },
+  {
+   "id": "013-44sn72owtke3hlh0a31owr8sz8kn9qd3-k9ixb6blq6kt2a2h4axw766k97ehn7-ianhnh5bdil1qlwxfcmrgswbe25i9t-tb75lcwnmima119hmot1a-0dx6-wqt07q3u-yj5gho3cthvqn-b7ylr8ns4gpc3t43hzyma0ish0pk50g3ocn27x20azklpi11h-k",
+   "level": "orange",
+   "title": "exposed 24 wind possible, possible. possible slips exposed. 51 travel. 64 places. travel. 51 places. wind. expect. thun.",
+   "official": true,
+   "area": "flooding exposed hail flooding severe. heavy exposed. wind quickly. wind exposed gusts, wind gusts ranges. quickly rising, roads localised. possible, gale. slips exposed surface. wind ranges hail. ra.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "rising places northwest conditions rain, roads, ranges flooding severe, flooding. coast 86 downpours. exposed possible, rain coast 56 localised conditions exposed ranges, heavy, travel, 35 slips, ranges, 35 hail. 80 localised thunderstorms expect. rivers, roads coast rising expect, northwest 54 heavy, heavy, possible. 20 exposed, rain quickly, slips. heavy, rain flooding northwest. 12 rain hail expect 17 flooding flooding wind, roads surface possible, downpours exposed. roads gusts places local.",
+   "source": "flooding gusts. 95 flooding. 22 northwest, quickly gale 70x.",
+   "hazard": "hail expect. coast 51 ranges. f."
+  },
+  {
+   "id": "014-sk1lwkh45u9ql6ib85z3fe7478edm226mdqbc5adbi0q86mtdzf5h83e4ce98ezecwr64dpn7fb2z6i7btxlm404u344njtdhqq97sr3uj8sy78fgjyu5ctfv44v3jcj8n97flis9-6e7bueaxnspi7ratl-padqmqdrg5zs4vkbx8j38lpbnnxty3k8sy-2o3jt",
+   "level": "yellow",
+   "title": "travel. downpours places, heavy gale ranges, gale, localised possible flooding rain, flooding rain, coast northwest gal.",
+   "official": true,
+   "area": "possible, flooding travel. hail, quickly. exposed downpours severe slips hail surface, ranges 93 expect heavy localised severe. expect. roads 14 gusts, coast northwest wind. gusts, possible wind, qui.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "exposed northwest 89 heavy exposed surface travel ranges. severe. gale. wind flooding. rivers, possible, heavy downpours. flooding gale. rising downpours expect, slips, slips severe. slips. 44 downpours. rain rain travel roads flooding. 46 downpours. quickly thunderstorms, exposed. roads wind 34 travel, gale, gale. rain possible. flooding rising slips, ranges northwest. hail, 90 northwest. 72 heavy heavy. rain 19 expect ranges, travel slips gusts, severe, conditions, coast, slips wind possible,.",
+   "source": "localised rain surface northwest, localised places. floodin.",
+   "hazard": "roads rivers flooding. flooding."
+  },
+  {
+   "id": "015-q15qxt4lf21xksgaigprtm6laya4mgl3h1yidwlm6ah23zj68ppxzegcqstur9ywgs2zrrugjjlxu441592eckv61p6kqylbyp3bzewqho4vbi15i0xkejb13yliaxho14b9646wuyxvc7hy7zd8--ep81x96s24r1ty72rq9nlgwgszwzlw0kr9s8373r-4b5t1",
+   "level": "watch",
+   "title": "coast 83 flooding hail. roads rivers 49 surface flooding, places downpours wind surface. localised, rivers conditions.x.",
+   "official": true,
+   "area": "localised hail. heavy wind exposed. gale. 23 exposed severe. expect conditions, heavy. thunderstorms hail downpours, 34 coast thunderstorms, places rising expect. rivers, 62 heavy exposed surface flo.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "exposed. coast conditions, coast gusts heavy, northwest gale 19 coast. downpours, places heavy coast surface 17 conditions 86 localised exposed places coast, heavy flooding coast, localised coast 36 possible. expect, localised rain rising conditions localised, hail heavy roads coast severe rising gale coast ranges expect expect 89 conditions, flooding thunderstorms, roads ranges downpours, 32 gusts 28 downpours, 79 quickly quickly. northwest travel severe surface wind, downpours. severe risingx.",
+   "source": "possible hail quickly downpours. travel rising gale rain su.",
+   "hazard": "possible 67 rain 69 hail locali."
+  },
+  {
+   "id": "016-v7aaxp5s8g4h10jhps2hi3oinbzdohoegifek913r8p0gx503mwi47vqr2r2znqnqd4if7jltrkn162qvo8wsbqr-l41xrrfx7i26i37ipz5l8ax1d-nywecnk70rgm73n13pdee7js5bxjl8j5ga9pmjbit5ft307mnp7pug6kfiedpxwnlvkj3vjvuyzu7al4h",
+   "level": "minor",
+   "title": "wind roads exposed. travel, rivers severe severe rain expect. gale quickly surface, heavy quickly. gale. conditions rai.",
+   "official": true,
+   "area": "ranges, localised, flooding, rising ranges expect, 24 slips wind northwest, travel, quickly localised. 30 roads expect severe exposed 94 heavy wind places, flooding severe expect. flooding roads, roa.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "travel rain severe 32 heavy, flooding downpours travel places. coast, roads, flooding conditions. severe. conditions roads ranges coast coast quickly slips. conditions. hail exposed. rivers quickly, 49 wind coast, 72 rivers 44 ranges 85 conditions 41 northwest. conditions 86 ranges. wind conditions, slips quickly 25 ranges. travel, hail. 36 rivers 36 expect roads severe roads. rising flooding severe expect severe 90 expect possible conditions northwest ranges. conditions. travel, 12 slips, 62 q.",
+   "source": "hail. flooding rivers 86 downpours rising, gusts. flooding..",
+   "hazard": "gusts, wind exposed, gusts. coa."
+  },
+  {
+   "id": "017-7ew31qch539y0e5s0pdzigmwobci25mngntnmwynfsn95xp86p3be3y-vud3s7s3uao1mjm8mp1zzozdjjstzaub4n0w53wy0pwmffwmnxzlza-4jchxyuac9ju8sg956poo5f8bv4w8tg4ckxe05dc-oh84437vnc2hz09xhnd-e0eeb1uqy6pkpiwvn-l1p41l",
+   "level": "limit",
+   "title": "downpours exposed, hail conditions quickly. 52 downpours ranges severe, rain, quickly heavy, 41 conditions, 80 travel 3.",
+   "official": false,
+   "area": "localised places rain gusts. downpours gusts, flooding 24 rivers. 78 localised, quickly. exposed, 40 hail downpours. expect, coast gale severe, gusts. 68 places flooding, exposed 67 coast thunderstor.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "exposed, flooding. 92 flooding localised thunderstorms hail 40 localised heavy coast rising ranges flooding gusts downpours, coast. slips surface localised thunderstorms. places travel, possible. hail. expect, travel. 53 flooding severe 82 quickly coast severe gusts. 92 flooding. expect downpours localised. 92 gale, gusts. wind. places flooding ranges flooding rivers slips. rivers exposed 47 travel 57 slips, thunderstorms. downpours. rivers, wind. thunderstorms, quickly roads surface. thunderst.",
+   "source": "RBSB-Weather",
+   "hazard": "thunderstorms. places severe sl."
+  },
+  {
+   "id": "018-sjx8p8ovsfygs-9m0xn4zjaygikujf7q8cz9nn7nrs2vmv-hcs8guuep-4x7w7sxmm0ous9qpv5btswfpx8w6r2dj2dihb4x52wrfeiw5tey9sq5vhldrl5g94094b8-93cikcr14a79g99r2g9khn7g0bzlsinlqw818zs3ziz9e99g12hpg8rzq7--8ky-7o5y",
+   "level": "red",
+   "title": "hail wind heavy, flooding wind localised. roads possible conditions places, possible roads, severe hail gusts wind, sur.",
+   "official": true,
+   "area": "ranges. rivers quickly, gusts northwest. localised, quickly, 25 gale heavy. 28 downpours slips heavy travel expect surface quickly rising. quickly wind. exposed hail. gusts gale flooding gale. slipsx.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "hail quickly hail gusts, rain. ranges heavy, conditions downpours, flooding. conditions. heavy, downpours exposed, hail gale. heavy gale, places, slips. flooding severe rivers quickly. flooding. gusts. surface roads flooding, heavy gale ranges. coast, gale severe severe, rivers conditions rivers wind rain northwest. northwest. wind, flooding hail. surface, quickly rivers, expect rain 31 downpours, rising. 49 rain quickly 17 wind, thunderstorms. ranges roads 56 thunderstorms gusts exposed 21 ran.",
+   "source": "expect, exposed, travel surface, downpours expect severe wi.",
+   "hazard": "conditions gusts surface. surfa."
+  },
+  {
+   "id": "019-l-0-tgd47r8vhwxfqp1c7supnbofssbgnp1vvakoud8a46oc4f52mgxur6llqcmsrzi7i9fgm8t62j95ec-eou-9e-agtlo6sbftsanotitw4s1zh6xtjxd4ljwp4qtcdemxqo3fmqq5-yp84hk-0n9txfq6sihuy4kpef1x5purtq0gltg8o0x1-6fn0gtiezux",
+   "level": "orange",
+   "title": "expect severe. roads rivers possible gale. 69 places. 69 flooding. places exposed ranges, localised downpours, expect r.",
+   "official": true,
+   "area": "downpours, exposed. 55 downpours rain 11 coast. 60 travel 18 possible hail coast, hail, northwest. travel travel, downpours possible rain places possible thunderstorms gusts. severe downpours 50 quic.",
+   "start": 1795809600000,
+   "end": 1795856400000,
+   "summary": "thunderstorms. rising, roads hail heavy, expect. travel. severe coast wind exposed. expect. 86 hail 44 conditions surface severe. places quickly 82 thunderstorms localised 96 exposed localised rivers conditions, severe, heavy, possible quickly, possible flooding slips expect. gale exposed travel heavy. downpours. slips gale. travel expect. rain. localised, 57 roads 92 coast, places. expect rising exposed rivers rain thunderstorms. rising, 79 localised 69 northwest exposed, gale slips localised,.",
+   "source": "localised gusts. rising severe quickly roads, possible. thu.",
+   "hazard": "hail coast. rain. flooding rive."
+  }
+ ],
+ "sun": {
+  "rise": 1795798800000,
+  "set": 1795849200000
+ },
+ "moon": {
+  "at": 1795813200000,
+  "phase": 152.0,
+  "phaseName": "Waxing Gibbous",
+  "illumination": 0.94,
+  "brightLimb": 268.5,
+  "tilt": -31.2,
+  "rise": 1795834800000,
+  "set": 1795795200000,
+  "alwaysUp": false,
+  "alwaysDown": false
+ }
+}

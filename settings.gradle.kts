@@ -18,6 +18,9 @@ rootProject.name = "RBSB-Weather-Watch"
 // The Wear OS app (Stage 0: a minimal shell with an About screen only).
 include(":wear")
 
+// Stage 1: the shared sync format v1 (plain Kotlin, no Android dependencies). See docs/SYNC_FORMAT.md.
+include(":sync")
+
 // Stage 0 signing gate 1: a throwaway probe app used only to test that a key-rotated
 // phone app and a new-key-only watch app can talk over the Wear OS Data Layer.
 // It is never released and has its own package name (not RBSB's).

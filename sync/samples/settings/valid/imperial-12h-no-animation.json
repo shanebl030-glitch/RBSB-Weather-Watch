@@ -1,0 +1,11 @@
+{
+ "kind": "rbsb.settings",
+ "schema": 1,
+ "sentAt": 1795867470000,
+ "temperatureUnit": "F",
+ "windUnit": "MPH",
+ "precipitationUnit": "IN",
+ "clock": "H12",
+ "animations": false,
+ "minWarningLevel": "all"
+}
