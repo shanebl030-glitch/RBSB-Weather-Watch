@@ -15,7 +15,7 @@ Project foundation only. No weather features.
 - Development builds signed with the shared public debug key and installed as `...rbsbweather.dev`. Release builds are unsigned.
 - CI: unit tests, lint, 64-bit check, signing and package checks, debug APK with SHA256SUMS.
 - Wear OS emulator set: Wear OS 4, 5, 6 and the newest available image, at 432 to 498 px, with and without rotary input.
-- Signing gate 1 is an **automated signing identity check** (replaces the manual pairing checklist): verifies the published 0.7.2 signing history and flags; signs a throwaway probe for phone (A → B) and watch (key B + extracted public lineage, v3 only); confirms phone and Wear OS 6 emulators report the same signer and history.
+- Signing gate 1 is an **automated signing identity check** (replaces the manual pairing checklist): verifies the published 0.7.2 signing history and flags; signs a throwaway probe for phone (A → B) and watch (key B + extracted public lineage, v3 only); on each of a phone emulator and a Wear OS 6 emulator, fails unless the system (`dumpsys`), the app (`PackageManager`, logged by the probe) and the APK file (`apksigner`) agree on the signer and history, then requires both devices to match. A self-test proves the comparison fails on disagreement.
 - Watch signing decision (Option A): same signing history and flags as Android 0.7.2.
 - CI: the app may define no custom permission except AndroidX's own.
 - Backup and device transfer exclude all app data (the weather cache will come back from the phone).

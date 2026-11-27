@@ -28,7 +28,14 @@ Everything except the 0.7.2 reference uses **throwaway keys** made fresh in each
 
     The workflow checks both copies have the same current signer, the same two-key history, and old-key flags identical to 0.7.2's.
 
-3. **Identity on real Android systems, without pairing.** Installs `probe-phone.apk` on a phone emulator (API 34) and `probe-watch.apk` on a Wear OS 6 watch emulator (API 36), separately. On each it reads what Android records (`dumpsys package`) and what the app sees (`PackageManager` signing info). Gate 1 passes when **both systems report the same current signer and the same signing history**: the job prints `GATE 1 IDENTITY: PASS`.
+3. **Identity on real Android systems, without pairing.** Installs `probe-phone.apk` on a phone emulator (API 34) and `probe-watch.apk` on a Wear OS 6 watch emulator (API 36), separately. On **each** device it collects three independent views of the signing identity and **fails unless all three agree** on the current signer and the full history:
+    - **System:** what Android records for the installed package (`dumpsys package`, which lists signatures by their `Signature.hashCode()` and gives each history entry's capability flags).
+    - **App:** what the installed app sees through `PackageManager.signingInfo`. The probe logs this as JSON (full SHA-256 and the same hash codes dumpsys uses), and CI reads it from logcat.
+    - **APK file:** what `apksigner` read from the APK before it was installed (full SHA-256).
+
+4. **Phone against watch.** A final job compares the two devices: the system's current signer, the system's history with flags, and the app-reported SHA-256 values of the current signer and the history must all be identical. It prints `GATE 1 IDENTITY: PASS` only then; any difference fails the workflow.
+
+5. **Self-test.** Before using it, the workflow proves the per-device comparison passes when everything agrees and fails on each of five kinds of disagreement (wrong current signer, wrong history, wrong SHA-256 of either, or an app that cannot read its signing info).
 
 ## What this means for the real watch release (a later stage)
 
@@ -41,6 +48,11 @@ The watch release will be signed with the **production key only**, plus the **pu
 - **Can** hand over installed data: an app first installed with the old key could be updated to the production-signed app, keeping its data. This is how 0.6.x phone installs kept their data. On the watch there are no test-key installs of the release package (development builds use the separate `.dev` package).
 - **Can** be granted the app's signature permissions. The only custom permission the app defines is AndroidX's `…DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION` (the same one 0.7.2 defines), and CI fails if any other appears. On API 33 and later, which covers every supported watch, AndroidX uses the system's own "not exported" receiver flag instead of that permission.
 
+## Gate 1 and gate 2
+
+- **Gate 1 (this check):** automated signing identity and history verification. It proves the phone and watch apps are signed so that Android on both devices records the same signer and history, as the app itself and the APK file confirm.
+- **Gate 2 (stage 8):** live Data Layer communication between the real release-signed apps on real paired devices.
+
 ## What gate 1 does not prove
 
 - A live Data Layer exchange between the two apps. That is **signing gate 2** (stage 8), with the real release-signed phone and watch apps on real devices.
@@ -48,4 +60,4 @@ The watch release will be signed with the **production key only**, plus the **pu
 
 ## Where to find the results
 
-Actions → **Signing gate 1 (automated identity check)** → the latest run on `claude/stage-0-foundation`. The **Same identity on phone and watch** job prints the result. The `signing-gate-1-kit` artifact holds the two probe APKs, `CERTS.txt` and `SHA256SUMS` for reference.
+Actions → **Signing gate 1 (automated identity check)** → the latest run on `claude/stage-0-foundation`. Each **Identity on …** job prints the three views and `DEVICE IDENTITY OK`; the **Same identity on phone and watch** job prints each comparison (`SAME` or `DIFFERENT`) and the final result. The `signing-gate-1-kit` artifact holds the two probe APKs, `CERTS.txt` and `SHA256SUMS` for reference.

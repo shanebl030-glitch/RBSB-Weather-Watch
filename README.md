@@ -37,7 +37,7 @@ Builds run in GitHub Actions (JDK 17, Android SDK 36):
 
 - **Build and test:** unit tests, lint, debug and release APKs, 64-bit check, signing and package checks. The debug APK and its SHA256SUMS are an artifact.
 - **Wear OS emulators:** installs and launches the app on Wear OS 4, 5, 6 and the newest available image at Galaxy Watch screen sizes, with and without rotary input.
-- **Signing gate 1 (automated identity check):** checks the published Android 0.7.2 signing history, signs a throwaway probe the same way for phone and watch (throwaway keys), and confirms a phone emulator and a Wear OS 6 emulator report the same signer and history. See `docs/SIGNING_GATE_1.md`.
+- **Signing gate 1 (automated identity check):** checks the published Android 0.7.2 signing history, signs a throwaway probe the same way for phone and watch (throwaway keys), and confirms that on a phone emulator and a Wear OS 6 emulator the system, the app and the APK file agree on the signer and history, and that both devices match. Live Data Layer communication is signing gate 2, on real paired devices. See `docs/SIGNING_GATE_1.md`.
 
 Locally: `./gradlew :wear:testDebugUnitTest :wear:assembleDebug`.
 

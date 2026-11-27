@@ -24,8 +24,8 @@ From the approved Development Plan v1.1, section 8.
 
 ## Rotation compatibility gates
 
-1. **Gate 1 (Stage 0): automated signing identity check.** Throwaway keys, same structure; phone and Wear OS 6 emulators (no pairing) must report the same signer and history. See [SIGNING_GATE_1.md](SIGNING_GATE_1.md).
-2. **Gate 2 (stage 8): live Data Layer communication** release candidates signed with the real production key, checked on Shane's devices before anything is published.
+1. **Gate 1 (Stage 0): automated signing identity and history verification.** Throwaway keys, same structure. On a phone emulator and a Wear OS 6 emulator (no pairing), the system, the app and the APK file must agree on the signer and history, and the two devices must match. See [SIGNING_GATE_1.md](SIGNING_GATE_1.md).
+2. **Gate 2 (stage 8): live Data Layer communication on real paired devices.** release candidates signed with the real production key, checked on Shane's devices before anything is published.
 
 ## Never committed
 

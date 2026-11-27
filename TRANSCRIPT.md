@@ -37,3 +37,9 @@ A summary of decisions and work, newest last.
 - **Decisions (Shane):** gate 1 becomes an automated signing identity check; **Option A**: the watch app uses the same signing history as Android 0.7.2. Live Data Layer testing moves to gate 2; real Galaxy Watch testing remains required.
 - Verified from the published 0.7.2 APK (checksum matched): old test key `a9618b32…` → production key `02f6fc5f…`; old-key flags installed-data and permission only (no rollback, shared UID or auth). The one custom permission 0.7.2 defines is AndroidX's `DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION`.
 - Built and passed (two runs): the 0.7.2 reference check, a probe kit (phone A → B; watch key B only + extracted public lineage, v3 only, with key A deleted first), and identical signer and history reported by a phone emulator and a Wear OS 6 emulator. CI now refuses any custom permission other than AndroidX's own. The production key was never used.
+
+## 28 Nov 2026: gate 1 compares the app's view with the system's
+
+- Shane noticed the probe app's own report of its signing identity was printed but not checked. He asked for it to be compared automatically, without weakening the existing checks.
+- The probe now logs its identity (`PackageManager`) as JSON. On each emulator, CI fails unless the system (`dumpsys`), the app and the APK file (`apksigner`) agree on the current signer and the full history; a final job then requires the phone and watch to match on all of them. A self-test proves the comparison fails on five kinds of disagreement. No existing check was removed.
+- Passed in both runs at `c569a89` (one run needed a re-run after a Maven Central 429 before any check ran). The full Stage 0 checks were run again on the documentation commit. Gate 1 = automated signing identity and history verification; gate 2 = live Data Layer on real paired devices (stage 8).
