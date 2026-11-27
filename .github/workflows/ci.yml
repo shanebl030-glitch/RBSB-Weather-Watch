@@ -84,6 +84,33 @@ jobs:
           [ "$(norm "$GOT")" = "$TEST" ] || { echo "Debug APK is not signed with the shared debug key"; exit 1; }
           echo "DEBUG OK: package ...rbsbweather.dev, minSdk 33, targetSdk 36, shared debug key"
 
+          echo "== Custom permissions defined by the app"
+          # The release signing history trusts the old public test key with the PERMISSION
+          # capability (same as Android 0.7.2), so any custom signature permission the app defines
+          # could be granted to test-key-signed apps. Allow only the one AndroidX adds itself.
+          for APK in "$DBG" "$REL"; do
+            PKGNAME=$("$AAPT" dump badging "$APK" | head -1 | sed -E "s/.*name='([^']+)'.*/\1/")
+            "$AAPT" dump xmltree --file AndroidManifest.xml "$APK" > manifest.txt
+            python3 - "$PKGNAME" <<'PY'
+          import re, sys
+          pkg = sys.argv[1]
+          lines = open("manifest.txt").read().splitlines()
+          defined = []
+          for i, l in enumerate(lines):
+              if re.match(r"\s*E: permission \(", l):
+                  for nxt in lines[i + 1:i + 8]:
+                      m = re.search(r'android:name\(0x[0-9a-f]+\)="([^"]+)"', nxt)
+                      if m:
+                          defined.append(m.group(1)); break
+          allowed = {pkg + ".DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"}
+          print(f"{pkg}: defines {defined or 'no custom permissions'}")
+          extra = [d for d in defined if d not in allowed]
+          if extra:
+              sys.exit("PERMISSION FAIL: unexpected custom permissions " + ", ".join(extra))
+          print("PERMISSIONS OK")
+          PY
+          done
+
           echo "== Release APK: $REL"
           "$AAPT" dump badging "$REL" | head -1 | grep -q "package: name='io.github.shanebl030glitch.rbsbweather'" || { echo "Release package wrong"; exit 1; }
           if "$AS" verify "$REL" > /dev/null 2>&1; then

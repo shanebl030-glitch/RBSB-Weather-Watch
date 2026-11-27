@@ -1,25 +1,43 @@
-# Signing gate 1 kit (approved plan, section 8). Builds the throwaway signing probe and signs
-# it with THROWAWAY keys made fresh in this run (never stored, never committed):
-#   key A plays the role of the old public test key, key B the role of the production key.
-#   phone APK: A -> B with a v3 rotation lineage, using the SAME apksigner options as
-#              RBSB-Weather Android's release workflow (rotation-min-sdk 28, same capabilities)
-#   watch APK: B only (the approved plan for the RBSB watch app)
-#   watch-lineage APK: A -> B lineage (the fallback, only needed if the B-only test fails)
-# Shane then pairs a phone emulator and a watch emulator in Android Studio and follows
-# docs/SIGNING_GATE_1.md. No real key is ever used here.
+# Signing gate 1: automated signing identity check (approved plan v1.1, section 8).
 # Created By Shane BlackbuRn
-name: Signing gate 1 kit
+#
+# Decision (28 Nov 2026, Option A): the watch app uses the SAME signing history as the phone app,
+# test key -> production key, with the same capability flags as Android 0.7.2.
+#
+# This workflow proves that arrangement with THROWAWAY keys (made fresh each run, never stored):
+#   key A plays the old public test key, key B plays the production key.
+#   1. 0.7.2 reference: reads the signing history of the PUBLISHED Android 0.7.2 APK (public
+#      release asset, read only) and checks its capability flags.
+#   2. Kit: signs the probe for the phone with A -> B (same apksigner options as 0.7.2's
+#      release.yml), and for the watch with key B plus the lineage EXTRACTED from the phone APK,
+#      using only key B's private key (as the real watch release will: production key + public
+#      lineage, no test-key private key needed).
+#   3. Identity: installs each copy on its own emulator (phone, then Wear OS 6 watch; no pairing)
+#      and checks both systems report the same current signer and the same signing history.
+# Live Data Layer communication is tested at signing gate 2 on real devices.
+# No real or production key is ever used here.
+name: Signing gate 1 (automated identity check)
 
 on:
   push:
     branches: ["claude/stage-*"]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: read
 
+env:
+  BT: "36.0.0"
+  # Public certificate fingerprints (not secrets)
+  TEST_CERT: a9618b324c0ed08d0850953843fe7d6ea4aef6353ccaaffc3e6e53ad4a36e87c
+  PROD_CERT: 02f6fc5fb6aed7bc036d51bb95f05de73d3ba7571f5b9665711efbb5dc7a2a60
+  REF_APK_URL: https://github.com/shanebl030-glitch/RBSB-Weather-Android/releases/download/v0.7.2/rbsb-weather-android_0.7.2.apk
+  REF_APK_SHA256: 66bc5d4491496c34bc55f014c40f5fc3557c5437447860b07d58faf5fdb74611
+
 jobs:
-  probe:
+  kit:
+    name: Reference flags and probe kit
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -30,14 +48,25 @@ jobs:
           java-version: "17"
       - uses: gradle/actions/setup-gradle@v4
       - name: SDK platform
-        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" > /dev/null
-      - name: Build the unsigned probe
-        run: ./gradlew --no-daemon :signingprobe:assembleRelease
-      - name: Make throwaway keys and sign three copies
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;$BT" > /dev/null
+
+      - name: "0.7.2 reference: read the published APK's signing history"
         run: |
           set -e
-          AS="$ANDROID_HOME/build-tools/36.0.0/apksigner"
-          ZA="$ANDROID_HOME/build-tools/36.0.0/zipalign"
+          AS="$ANDROID_HOME/build-tools/$BT/apksigner"
+          curl -sSfL -o ref.apk "$REF_APK_URL"
+          echo "$REF_APK_SHA256  ref.apk" | sha256sum -c -
+          "$AS" lineage --in ref.apk --print-certs -v | tee ref-lineage.txt
+          python3 scripts/lineage_check.py ref-lineage.txt --expect-old "$TEST_CERT" --expect-new "$PROD_CERT" --json ref-flags.json
+
+      - name: Build the unsigned probe
+        run: ./gradlew --no-daemon :signingprobe:assembleRelease
+
+      - name: Make throwaway keys and sign the two copies
+        run: |
+          set -e
+          AS="$ANDROID_HOME/build-tools/$BT/apksigner"
+          ZA="$ANDROID_HOME/build-tools/$BT/zipalign"
           K="$RUNNER_TEMP/probe-keys"; mkdir -p "$K"
           trap 'rm -rf "$K"' EXIT
           PW=$(openssl rand -hex 16)          # random, never printed or kept
@@ -49,63 +78,164 @@ jobs:
           done
           IN=$(ls tools/signing-probe/build/outputs/apk/release/*-unsigned.apk | head -1)
           "$ZA" -f -p 4 "$IN" "$K/aligned.apk"
+          mkdir -p kit
 
-          # Same capability flags as RBSB-Weather Android's release.yml
+          # Phone copy: exactly the 0.7.2 release.yml rotation and signing options
           "$AS" rotate --out "$K/lineage.bin" \
             --old-signer --ks "$K/A.p12" --ks-pass env:PW --ks-key-alias probeA \
               --set-installed-data true --set-permission true --set-rollback false --set-shared-uid false --set-auth false \
             --new-signer --ks "$K/B.p12" --ks-pass env:PW --ks-key-alias probeB
+          "$AS" sign --ks "$K/A.p12" --ks-pass env:PW --ks-key-alias probeA \
+            --next-signer --ks "$K/B.p12" --ks-pass env:PW --ks-key-alias probeB \
+            --lineage "$K/lineage.bin" --rotation-min-sdk-version 28 \
+            --out kit/probe-phone.apk "$K/aligned.apk"
 
-          mkdir -p kit
-          "$AS" sign --ks "$K/A.p12" --ks-pass env:PW --ks-key-alias probeA \
-            --next-signer --ks "$K/B.p12" --ks-pass env:PW --ks-key-alias probeB \
-            --lineage "$K/lineage.bin" --rotation-min-sdk-version 28 \
-            --out kit/probe-phone-rotated.apk "$K/aligned.apk"
+          # Watch copy: key B ONLY + the lineage extracted from the phone APK (public data).
+          # Key A's private key is deleted first, just as the real watch release will not need
+          # the test key: the production key plus 0.7.2's published lineage is enough.
+          "$AS" lineage --in kit/probe-phone.apk --out "$K/extracted.bin"
+          rm -f "$K/A.p12"
           "$AS" sign --ks "$K/B.p12" --ks-pass env:PW --ks-key-alias probeB \
-            --out kit/probe-watch-newkey-only.apk "$K/aligned.apk"
-          "$AS" sign --ks "$K/A.p12" --ks-pass env:PW --ks-key-alias probeA \
-            --next-signer --ks "$K/B.p12" --ks-pass env:PW --ks-key-alias probeB \
-            --lineage "$K/lineage.bin" --rotation-min-sdk-version 28 \
-            --out kit/probe-watch-lineage-fallback.apk "$K/aligned.apk"
+            --lineage "$K/extracted.bin" --rotation-min-sdk-version 28 \
+            --out kit/probe-watch.apk "$K/aligned.apk"
           rm -f kit/*.idsig
-      - name: Verify the three copies are signed as intended
+
+      - name: Check both copies against each other and against 0.7.2's flags
         run: |
           set -e
-          AS="$ANDROID_HOME/build-tools/36.0.0/apksigner"
+          AS="$ANDROID_HOME/build-tools/$BT/apksigner"
           cd kit
-          fp() { "$AS" verify --print-certs --min-sdk-version "$2" "$1" | grep -m1 "certificate SHA-256 digest" | awk '{print $NF}'; }
-          {
-            echo "Signing gate 1 kit, run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA}"
-            echo "Keys are throwaway, made in this run and deleted. Fingerprints for reference only."
-            echo
-            for a in probe-phone-rotated.apk probe-watch-newkey-only.apk probe-watch-lineage-fallback.apk; do
-              echo "== $a"
-              echo "-- as Android 11+ sees it (v3):"
-              "$AS" verify --verbose --print-certs --min-sdk-version 30 "$a" | grep -E "Verified using v3 |Number of signers|certificate DN|certificate SHA-256" || true
-              echo "-- rotation history (lineage) inside the APK:"
-              "$AS" lineage --in "$a" --print-certs 2>&1 | grep -E "Signer #|certificate DN|certificate SHA-256" || echo "   none"
-              echo
-            done
-          } | tee CERTS.txt
-          PHONE_NEW=$(fp probe-phone-rotated.apk 30)        # on Android 11+ the v3 signer is key B
-          WATCH=$(fp probe-watch-newkey-only.apk 30)
-          [ -n "$PHONE_NEW" ] && [ -n "$WATCH" ] || { echo "Missing signer"; exit 1; }
-          grep -A3 "== probe-phone-rotated.apk" CERTS.txt > /dev/null
-          "$AS" verify --verbose --min-sdk-version 30 probe-phone-rotated.apk | grep -q "Verified using v3 scheme (APK Signature Scheme v3): true" || { echo "Phone copy has no v3 signature"; exit 1; }
-          "$AS" verify --verbose --print-certs --min-sdk-version 30 probe-watch-newkey-only.apk | grep -q "Number of signers: 1" || { echo "Watch copy should have one signer"; exit 1; }
-          NPHONE=$("$AS" lineage --in probe-phone-rotated.apk --print-certs 2>/dev/null | grep -c "certificate SHA-256" || true)
-          NWATCH=$("$AS" lineage --in probe-watch-newkey-only.apk --print-certs 2>/dev/null | grep -c "certificate SHA-256" || true)
-          echo "Lineage certificates: phone copy $NPHONE, watch copy $NWATCH"
-          [ "$NPHONE" = "2" ] || { echo "Phone copy should carry a two-key lineage (A -> B)"; exit 1; }
-          [ "${NWATCH:-0}" -le 1 ] || { echo "Watch copy should not carry a rotation lineage"; exit 1; }
-          echo "Phone copy current signer (v3, Android 9+): $PHONE_NEW"
-          echo "Watch copy signer:                         $WATCH"
-          [ "$PHONE_NEW" = "$WATCH" ] || { echo "MISMATCH: the rotated phone copy's current signer is not key B"; exit 1; }
-          echo "KIT OK: the phone copy rotates A -> B; the watch copy is signed by B only."
-          sha256sum *.apk > SHA256SUMS && cat SHA256SUMS
+          for a in probe-phone probe-watch; do
+            "$AS" verify --verbose --print-certs --min-sdk-version 30 "$a.apk" > "$a-verify.txt"
+            grep -q "Verified using v3 scheme (APK Signature Scheme v3): true" "$a-verify.txt" || { echo "$a: no v3 signature"; exit 1; }
+            "$AS" lineage --in "$a.apk" --print-certs -v > "$a-lineage.txt"
+            python3 ../scripts/lineage_check.py "$a-lineage.txt" --json "$a-flags.json"
+          done
+          python3 - <<'PY'
+          import json
+          ref = json.load(open("../ref-flags.json"))
+          ph = json.load(open("probe-phone-flags.json"))
+          wa = json.load(open("probe-watch-flags.json"))
+          assert ph == wa, f"phone and watch histories differ:\n{ph}\n{wa}"
+          assert ph["old_flags"] == ref["old_flags"], f"old-key flags differ from 0.7.2: {ph['old_flags']} vs {ref['old_flags']}"
+          print("SAME HISTORY: phone and watch copies carry identical lineages (A -> B)")
+          print("SAME FLAGS AS 0.7.2 for the old key:", ph["old_flags"])
+          PY
+          A=$(grep -m1 "Signer #1 certificate SHA-256" probe-phone-verify.txt | awk '{print $NF}')
+          B=$(grep -m1 "Signer #1 certificate SHA-256" probe-watch-verify.txt | awk '{print $NF}')
+          echo "Phone copy current signer: $A"; echo "Watch copy current signer: $B"
+          [ -n "$A" ] && [ "$A" = "$B" ] || { echo "Current signers differ"; exit 1; }
+          echo "KIT OK: same current signer and same signing history on both copies"
+          { echo "Signing gate 1 kit, run ${GITHUB_RUN_ID}, commit ${GITHUB_SHA}"; echo "Throwaway keys, made in this run and deleted."; echo
+            for f in probe-phone probe-watch; do echo "== $f"; cat "$f-lineage.txt"; echo; done; } > CERTS.txt
+          sha256sum probe-phone.apk probe-watch.apk > SHA256SUMS && cat SHA256SUMS
+          rm -f ./*-verify.txt ./*-lineage.txt ./*-flags.json
           cp ../docs/SIGNING_GATE_1.md .
       - uses: actions/upload-artifact@v4
         with:
           name: signing-gate-1-kit
           path: kit/
           retention-days: 30
+
+  identity:
+    name: "Identity on ${{ matrix.device }} (no pairing)"
+    needs: kit
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { device: "phone emulator (API 34)", apk: probe-phone.apk, img: "system-images;android-34;google_apis;x86_64", dev: "pixel_6", tag: phone }
+          - { device: "Wear OS 6 watch emulator", apk: probe-watch.apk, img: "wear36", dev: "wearos_large_round", tag: watch }
+    env:
+      ANDROID_AVD_HOME: /home/runner/.android/avd
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: signing-gate-1-kit
+          path: kit
+      - name: System image
+        run: |
+          SDK="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDK" --licenses > /dev/null || true
+          IMG="${{ matrix.img }}"
+          if [ "$IMG" = wear36 ]; then
+            IMG=$({ "$SDK" --list 2>/dev/null; "$SDK" --list --channel=3 2>/dev/null; } | grep -oE "system-images;android-36(\.[0-9]+)?;[a-z0-9_-]*wear[a-z0-9_-]*;x86_64" | sort -u | head -1)
+          fi
+          [ -n "$IMG" ] || { echo "No image"; exit 1; }
+          echo "IMG=$IMG" >> "$GITHUB_ENV"; echo "Using $IMG"
+          CH=""; "$SDK" --list 2>/dev/null | grep -q "$IMG" || CH="--channel=3"
+          yes | "$SDK" $CH "emulator" "platform-tools" "$IMG" > /dev/null
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Boot, install, read the signing identity
+        run: |
+          export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH"
+          AVDM="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
+          mkdir -p "$ANDROID_AVD_HOME" "$HOME/.android"
+          echo no | "$AVDM" create avd -n probe -k "$IMG" -d "${{ matrix.dev }}" --force
+          [ -f "$HOME/.android/adbkey" ] || adb keygen "$HOME/.android/adbkey"
+          export ADB_VENDOR_KEYS="$HOME/.android/adbkey"
+          adb kill-server || true; adb start-server
+          emulator -avd probe -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot > emulator.log 2>&1 &
+          EMU=$!
+          for i in $(seq 1 150); do
+            kill -0 "$EMU" 2>/dev/null || { tail -40 emulator.log; echo "Emulator exited"; exit 1; }
+            [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && break
+            sleep 4
+          done
+          [ "$(adb shell getprop sys.boot_completed | tr -d '\r')" = "1" ] || { tail -40 emulator.log; echo "Did not boot"; exit 1; }
+          sleep 30
+          echo "Android API $(adb shell getprop ro.build.version.sdk | tr -d '\r')"
+          adb install -r "kit/${{ matrix.apk }}"
+          PKG=io.github.shanebl030glitch.signingprobe
+          adb shell dumpsys package "$PKG" > dumpsys.txt
+          grep -iE "signatures|signing|past" dumpsys.txt | head -20
+          python3 scripts/identity_from_dumpsys.py dumpsys.txt > "identity-${{ matrix.tag }}.json"
+          cat "identity-${{ matrix.tag }}.json"
+          # Also what the app itself sees (PackageManager.signingInfo), from its own screen
+          adb shell svc power stayon true || true
+          adb shell input keyevent KEYCODE_WAKEUP || true
+          adb shell am start -W -n "$PKG/.ProbeActivity" > /dev/null
+          sleep 6
+          adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1; adb shell cat /sdcard/ui.xml > ui.xml
+          python3 - <<'PY'
+          import re, html
+          t = html.unescape(open("ui.xml").read())
+          for line in re.findall(r'text="([^"]*)"', t):
+              for l in line.split("\n"):
+                  if "signer" in l.lower() or "history" in l.lower():
+                      print("APP SEES:", l)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: identity-${{ matrix.tag }}
+          path: identity-${{ matrix.tag }}.json
+          retention-days: 7
+
+  compare:
+    name: Same identity on phone and watch
+    needs: identity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: identity-*
+          merge-multiple: true
+      - name: Compare
+        run: |
+          cat identity-phone.json; echo; cat identity-watch.json; echo
+          python3 - <<'PY'
+          import json
+          p = json.load(open("identity-phone.json")); w = json.load(open("identity-watch.json"))
+          assert p["current"] and p["current"] == w["current"], "different current signer"
+          assert p["history"] == w["history"], "different signing history"
+          assert len(p["history"]) == 2, "expected a two-key history (A -> B)"
+          print("GATE 1 IDENTITY: PASS. Phone and watch systems report the same current signer",
+                p["current"], "and the same history", p["history"])
+          PY
