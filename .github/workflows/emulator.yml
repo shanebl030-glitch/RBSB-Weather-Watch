@@ -87,6 +87,14 @@ jobs:
         run: |
           export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH"
           emulator -accel-check || true
+          # The Wear OS 6/7 images are production-signed and require adb authorisation. Create
+          # adb's key and start its server BEFORE the emulator boots, so the emulator can
+          # install that key (otherwise it is a race and adb can stay "unauthorized").
+          mkdir -p "$HOME/.android"
+          [ -f "$HOME/.android/adbkey" ] || adb keygen "$HOME/.android/adbkey"
+          export ADB_VENDOR_KEYS="$HOME/.android/adbkey"
+          adb kill-server || true
+          adb start-server
           emulator -avd watch -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot > emulator.log 2>&1 &
           EMU=$!
           booted=no
