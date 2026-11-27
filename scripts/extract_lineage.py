@@ -43,7 +43,9 @@ def main(apk, out):
     attrs, _ = lp(signed, o + 8)  # skip min/max SDK
     for a in seq(attrs):
         if struct.unpack("<I", a[:4])[0] == POR_ATTR:
-            open(out, "wb").write(struct.pack("<II", LINEAGE_MAGIC, LINEAGE_VERSION) + a[4:])
+            body = a[4:]
+            # apksigner lineage file: magic, file version, then the length-prefixed lineage
+            open(out, "wb").write(struct.pack("<III", LINEAGE_MAGIC, LINEAGE_VERSION, len(body)) + body)
             print(f"Lineage written to {out} ({len(a) - 4} bytes of proof of rotation)")
             return
     sys.exit("The v3 signer has no proof-of-rotation (no lineage)")
