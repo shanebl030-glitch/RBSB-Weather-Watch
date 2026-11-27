@@ -66,3 +66,12 @@ A summary of decisions and work, newest last.
 - Reinstalls are handled with a per-install `sourceId`: a reinstalled phone's fresh weather wins on fetchedAt, and a re-send of its cached weather wins because the id changed. The future tolerance is 10 minutes.
 - Maven Central is blocked from Claude's workspace, so the Kotlin code was built and tested only in GitHub Actions. All three workflows passed on the first run (`8856fb2`). The Python check was run locally as well.
 - Version stays 0.1.0-dev. No screen changes. RBSB-Weather-Android (only read) and WeatherDesk were not touched. No production key; nothing published.
+
+## 28 Nov 2026: Stage 1 review fix, time-zone validation
+
+- Shane's review found that `place.timezone` was documented as an IANA name, but both checkers only checked its characters. He asked for a narrow fix with no format change.
+- **Kotlin** now checks it against `java.time.ZoneId`'s available IDs. **Python** checks it against `zoneinfo`, reading only the pinned `tzdata` package, because Debian's system copy omits the old alias names.
+- Comparing the two databases showed non-zone and Java-unsupported names on each side. Both now exclude the same list (`sync/contract/timezone-rules.json`), and CI compares the full accepted lists: 591 names each, identical.
+- Unknown names are `BAD_VALUE`; wrong characters stay `BAD_FORMAT`. The Python check also now uses full pattern matches, as Kotlin does.
+- **Finding for the phone (0.8.0):** Android 0.7.2 stores `auto` for My location, and with MET Norway it reaches `Forecast.timezone`. The phone must send a real zone name; a test documents that `auto` is refused. Nothing in the phone app was changed.
+- Build and test passed at `c9d7128`: 60 of 60 tests, time zones match. Version 0.1.0-dev; no Stage 2; nothing published.

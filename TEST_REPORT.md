@@ -6,6 +6,39 @@ Results are split into **tested** (run and passed), **inferred** (follows from w
 
 # Stage 1: sync format v1 (in review)
 
+## Review fix: time-zone validation (`c9d7128`)
+
+`place.timezone` was documented as an IANA name, but both checkers only checked its characters. Now:
+- **Kotlin** checks it against `java.time.ZoneId.getAvailableZoneIds()`.
+- **Python** checks it against `zoneinfo`, reading only the pinned `tzdata` package.
+- Both exclude the same names, listed in `sync/contract/timezone-rules.json`.
+
+Runs at `c9d7128` (push and pull request), all passed: Build and test `46081029446`, `46081039895`; Wear OS emulators `46081029436`, `46081039905`; Signing gate 1 `46081029444`, `46081040002`. The documentation commit after it was checked again by the same workflows (see the pull request).
+
+Actual output (identical in both runs, apart from the JDK build):
+
+```
+  sync.TimeZoneTest: 7 run, 0 failed, 0 errors
+    TIMEZONES (Java 17.0.21.1, tzdb 2026f): 591 names accepted      [second run: Java 17.0.21, tzdb 2026e, 591]
+  sync.phone072.Phone072MappingTest: 7 run, 0 failed, 0 errors
+TEST TOTALS (sync): 57 run, 57 passed, 0 failed, 0 errors, 0 skipped
+TEST TOTALS: 60 run, 60 passed, 0 failed, 0 errors, 0 skipped
+SAMPLES UP TO DATE: regenerating changes nothing
+TIMEZONES (Python, tzdata 2026f): 591 names accepted
+TIMEZONES MATCH: Java and Python accept the same 591 names
+SAMPLES OK: 77 samples and 34 time-zone cases, every result matches the expected one
+```
+
+What the new tests cover:
+- **Accepted:** 17 real zones, including `Pacific/Auckland`, `UTC`, `Etc/GMT+12`, and the old alias `Europe/Kiev`.
+- **Rejected as `BAD_VALUE`** (14): `Not/ARealZone`, `auto`, `pacific/auckland`, `UTC+13`, `Z`, `SystemV/PST8`, `EST`, and others.
+- **Rejected as `BAD_FORMAT`** (3): `+13:00`, a space, a trailing newline.
+- **Beyond `ZoneId.of()`:** offset forms that `ZoneId.of()` itself accepts are rejected.
+- **Exclusion list:** identical in the code and the contract file.
+- **Phone side:** `encode()` refuses unknown zones, and a 0.7.2 forecast with `auto` is refused.
+
+All earlier Stage 1 tests still pass unchanged (49 → 57 sync tests: +7 time-zone, +1 mapping). The schema's validation keywords are unchanged; only description text was added. The snapshot format is unchanged.
+
 Code tested: `8856fb2` on `claude/stage-1-sync-format` (28 Nov 2026). Runs: Build and test `46078538186`, Signing gate 1 `46078538128`, Wear OS emulators `46078538171`; all passed. The documentation commit after it was checked again by the same workflows (see the pull request).
 
 ## Tested (GitHub Actions)
@@ -43,13 +76,13 @@ The lint warnings are the same "newer library version available" notices as Stag
 
 | Acceptance criterion (approved Stage 1 proposal) | Result |
 |---|---|
-| 1. Every valid sample decodes and survives JSON and compressed round trips | Pass: 17 valid snapshots, 3 settings, 2 refresh |
-| 2. Every invalid sample is rejected with its expected reason, never a crash | Pass: 42 invalid snapshots (every rejection reason that applies to text), 7 settings, 3 refresh. Bytes-level reasons (too large, corrupt) are in PayloadSafetyTest |
+| 1. Every valid sample decodes and survives JSON and compressed round trips | Pass: 17 valid snapshots, 3 settings, 2 refresh (18 snapshots after the time-zone fix) |
+| 2. Every invalid sample is rejected with its expected reason, never a crash | Pass: 42 invalid snapshots (44 after the time-zone fix) (every rejection reason that applies to text), 7 settings, 3 refresh. Bytes-level reasons (too large, corrupt) are in PayloadSafetyTest |
 | 3. Unknown fields ignored; missing optional fields accepted | Pass: samples plus CompatibilityTest |
 | 4. Largest snapshot under 20 KB compressed | Pass: 9,872 bytes |
 | 5. Ordering: newer accepted; older, duplicate and future-dated handled as defined | Pass: 12 tests, including phone reinstall (3 cases) and the exact 10-minute boundary |
 | 6. 0.7.2 mapping: real 0.7.2 data maps to a valid snapshot | Pass: 6 tests (168 h trimmed to 48, unrounded coordinates, missing values, long warning shortened, own limit, `fetchedAt = 0` refused) |
-| 7. The Python check agrees with the Kotlin decoder on every sample | Pass: both match `expected.json` for all 74 samples. The schema-against-code test checks 328 rules field by field |
+| 7. The Python check agrees with the Kotlin decoder on every sample | Pass: both match `expected.json` for all 74 samples (77 plus 34 time-zone cases after the fix, and the full Java and Python time-zone lists match). The schema-against-code test checks 328 rules field by field |
 | 8. Existing baseline still passes | Pass: wear tests 3/3, lint 0 errors, 64-bit, permissions, signing gate 1 (`DEVICE IDENTITY OK` on phone and watch, `GATE 1 IDENTITY: PASS`), emulators 5/5 `RESULT: PASS` |
 | 9. "Created By Shane BlackbuRn" in new code and docs | Present in every new source file, script, schema, sample generator and document |
 
@@ -71,6 +104,7 @@ The Python check was itself shown to fail, with exit code 1, on a wrong expectat
 
 ## Not yet tested
 
+- **Android's time-zone database.** On the watch, `ZoneId` uses Android's own database. It should accept the same names, but that is only verified when the Stage 3 receiver runs on the emulators. A zone newer than a watch's last time-zone update would be rejected by that watch.
 - **Android's built-in `org.json`.** The decoder ran on the JVM with the Maven copy. They behave the same for what this format uses, but this is only verified when the Stage 3 receiver runs on the emulators.
 - **Real Data Layer transfer.** Nothing is sent yet: the watch side is Stage 3; the live test is Stage 8 (signing gate 2, real paired devices).
 - **Real-world provider data.** The 0.7.2 mapping test uses realistic data built in the test, not a live fetch.
