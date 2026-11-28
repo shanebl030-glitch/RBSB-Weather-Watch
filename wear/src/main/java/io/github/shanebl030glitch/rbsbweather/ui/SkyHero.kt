@@ -150,10 +150,10 @@ fun SkyHero(
         Box(Modifier.align(Alignment.TopCenter).padding(top = h * 0.125f).widthIn(max = h * 0.72f)) {
             when {
                 lines.chipText != null -> Chip(lines.chipText, if (lines.chip == ChipKind.EXPIRED) Palette.Expired else Palette.Amber,
-                    if (lines.chip == ChipKind.EXPIRED) Color.White else Color(0xFF1A1200))
+                    if (lines.chip == ChipKind.EXPIRED) Color.White else Color(0xFF1A1200), maxLines = 1)
                 lines.warningCount > 0 -> {
                     val (bg, fg) = Palette.warning(lines.topWarning ?: io.github.shanebl030glitch.rbsbweather.sync.WarningLevel.WATCH)
-                    Chip(SkyLinesBuilder.warningChip(lines.warningCount), bg, fg, Modifier.testTag("warningChip").clickable { onWarnings() })
+                    Chip(SkyLinesBuilder.warningChip(lines.warningCount), bg, fg, Modifier.testTag("warningChip").clickable { onWarnings() }, maxLines = 1)
                 }
             }
         }

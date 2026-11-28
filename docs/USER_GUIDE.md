@@ -22,6 +22,7 @@ The place, temperature and conditions over the live animated sky, with today's h
   - 45 minutes to 3 hours old: only the age line changes.
   - 3 to 12 hours old: an **Old data** chip, and "now" comes from the forecast for this hour ("Forecast for 15:00"). Readings the forecast doesn't include (humidity, pressure) are left out rather than shown out of date.
   - Over 12 hours old: **No update since …**, with the temperature dimmed. The forecast is still used.
+  - These chips show the time of the last update if it was today, or just the day if it was earlier (the age line below gives the hours).
   - Past the end of the forecast: **No current data**, with the last known conditions labelled as such.
 - **Saving battery:** the sky moves only while you can see it. It stops when you scroll down, leave the app or the watch dims.
 - **Detail adjusts by itself:** if the watch can't keep up, the sky uses less detail (fewer drops, simpler clouds) rather than dropping any effect.

@@ -55,11 +55,29 @@ class ScreenTextTest {
         val s = sample("clear-day")
         val v = SkyLinesBuilder.build(s, st, s.fetchedAt + 20 * HOUR, akl)
         assertEquals(ChipKind.NO_UPDATE, v.chip); assertTrue(v.dimTemperature)
-        assertTrue(v.chipText!!.startsWith("No update since"))
+        // fetched 10:00 local, 20 h later is the next day: the day only (the age line gives the hours)
+        assertEquals("No update since " + Units.dayName(WeatherView.localNow(s, s.fetchedAt).dayOfWeek), v.chipText)
+        assertEquals("Updated 20 h ago", v.age)
         val e = SkyLinesBuilder.build(s, st, WeatherView.forecastEnd(s) + HOUR, akl)
         assertEquals(ChipKind.EXPIRED, e.chip); assertEquals("No current data", e.chipText)
         assertTrue(e.asOf!!.startsWith("Last known · "))
         assertTrue(e.dimTemperature)
+    }
+
+    @Test fun oldDataChipStaysShortEnoughForOneLine() {
+        // Found on 432 px: "No update since Sat 10:00" wrapped into the place name. Every sample, both
+        // clock formats, every age band: at most 24 characters (the chip shrinks to fit one line).
+        val h12 = st.copy(clock = ClockFormat.H12)
+        val ages = listOf(4, 6, 11, 13, 20, 30, 47).map { it * HOUR + 59 * 60_000L }
+        for ((name, _) in samples) for (set in listOf(st, h12)) for (age in ages) {
+            val s = sample(name)
+            val l = SkyLinesBuilder.build(s, set, s.fetchedAt + age, akl)
+            val t = l.chipText ?: continue
+            assertTrue("$name ${set.clock} +${age / HOUR} h: '$t' is ${t.length} characters", t.length <= 24)
+        }
+        val s = sample("clear-day")                                      // fetched 10:00 local
+        assertEquals("Old data · from 10:00 am", SkyLinesBuilder.build(s, h12, s.fetchedAt + 5 * HOUR, akl).chipText)
+        assertEquals("No update since 10:00 am", SkyLinesBuilder.build(s, h12, s.fetchedAt + 13 * HOUR, akl).chipText)
     }
 
     @Test fun warningsChipCountsActiveWarnings() {

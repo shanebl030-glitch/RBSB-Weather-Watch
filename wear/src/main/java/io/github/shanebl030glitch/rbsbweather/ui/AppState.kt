@@ -45,6 +45,7 @@ object WeatherRepository {
  *  - phone: "waiting", "noapp" or "nophone" to show the no-data screens instead of a sample
  *  - route: open a screen ("hours", "day/0", "warning/0", "moon", "moonFull")
  *  - scrollTo: on the first screen, scroll to a section ("details", "hourly", "daily", "wind", "warnings", "moon", "about")
+ *  - clock: "12" to show the 12-hour clock (the phone's setting, before real settings arrive)
  */
 data class DebugOptions(
     val sample: String? = null,
@@ -52,6 +53,7 @@ data class DebugOptions(
     val noData: NoDataReason? = null,
     val route: String? = null,
     val scrollTo: String? = null,
+    val clock12: Boolean = false,
 ) {
     companion object {
         fun from(intent: Intent?): DebugOptions {
@@ -64,6 +66,7 @@ data class DebugOptions(
                 },
                 route = intent.getStringExtra("route"),
                 scrollTo = intent.getStringExtra("scrollTo"),
+                clock12 = intent.getStringExtra("clock") == "12",
             )
         }
     }

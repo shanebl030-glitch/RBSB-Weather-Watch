@@ -143,3 +143,11 @@ A summary of decisions and work, newest last.
   - Open screens kept the data they were first drawn with, so new data or a new sample never appeared. Fixed.
   - The first Back-button press did nothing on Wear OS 4. Fixed. The first fix overrode an Activity method whose parent call lint marks as restricted (RestrictedApi), so the build check failed although all tests passed; a second attempt inside the Compose screen passed lint but left a blank screen after Back on both Wear OS 6 emulators (screenshot and recording checked). The Back button is now taken on the window callback, the same point as the first fix but without the restricted call, with a unit test.
   - Three test mistakes were corrected: the bezel was turned the wrong way, slow injected swipes didn't count as a swipe, and the scroll-away check counted the forecast icons' own animation. Created By Shane BlackbuRn
+
+## 28 Nov 2026: milestone screenshots checked before review
+
+- All workflows passed on `5f7e019` (179 tests; lint 0 errors; all five emulators PASS; signing gate 1 passed).
+- Before sending the screenshots, Claude checked them and found a defect the tests had missed: on 432 px the "No update since Sat 10:00" chip wrapped onto two lines and "10:00" ran into the place name.
+  - The round-screen check only tested the circle's edge, and a failed fit was printed but did not fail the run. Both are fixed: overlapping text now fails the run.
+  - The chip now stays on one line, gives only the day when the data is from an earlier day (the age line still gives the hours), and shrinks its text slightly for the longest 12-hour labels.
+  - New tests: every sample, both clock formats and every age band stay at 24 characters or fewer. The emulators now also screenshot the 12-hour labels.

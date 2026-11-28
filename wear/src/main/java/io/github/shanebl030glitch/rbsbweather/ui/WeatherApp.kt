@@ -23,6 +23,7 @@ import io.github.shanebl030glitch.rbsbweather.BuildConfig
 import io.github.shanebl030glitch.rbsbweather.data.Units
 import io.github.shanebl030glitch.rbsbweather.data.WeatherView
 import io.github.shanebl030glitch.rbsbweather.sky.SampleData
+import io.github.shanebl030glitch.rbsbweather.sync.ClockFormat
 import io.github.shanebl030glitch.rbsbweather.sync.Snapshot
 import io.github.shanebl030glitch.rbsbweather.sync.SyncSettings
 import kotlinx.coroutines.delay
@@ -38,7 +39,10 @@ fun WatchApp(versionName: String, debug: DebugOptions) {
     val version by WeatherRepository.version.collectAsState()
     val phone by WeatherRepository.phone.collectAsState()
     val real = remember(version) { store.snapshot() }
-    val settings = remember(version) { store.settings() ?: Units.DEFAULT_SETTINGS }
+    val settings = remember(version) {
+        val stored = store.settings() ?: Units.DEFAULT_SETTINGS
+        if (debug.clock12) stored.copy(clock = ClockFormat.H12) else stored
+    }
 
     // Debug builds only: the Stage 1 samples when no real data has arrived (always labelled).
     val samples = remember { if (BuildConfig.DEBUG) SampleData.load(ctx.assets) else emptyList() }

@@ -47,7 +47,6 @@ object SkyLinesBuilder {
         // zone label; the full time with its label is in About (decision D3).
         val fetched = Units.clock(fetchedDay, settings.clock)
         val today = WeatherView.localNow(s, nowMs).toLocalDate()
-        val fetchedWhen = if (fetchedDay.toLocalDate() == today) fetched else "${Units.dayName(fetchedDay.dayOfWeek)} $fetched"
         val asOf = when (n.source) {
             NowSource.CURRENT -> null
             NowSource.FORECAST_HOUR -> n.asOfLocal?.let { "Forecast for ${Units.clock(it, settings.clock)}" } ?: "Forecast"
@@ -56,10 +55,16 @@ object SkyLinesBuilder {
                 "Last known · $day${Units.clock(it, settings.clock)}"
             } ?: "Last known"
         }
+        // The chip must stay on one line under the time (found on 432 px: "No update since Sat 10:00"
+        // wrapped and ran into the place name). The exact age is always shown at the bottom
+        // ("Updated 20 h ago"), so data from an earlier day names the day only. The longest form,
+        // "No update since 12:59 pm", is 24 characters; the chip shrinks its text slightly to fit.
+        val sameDay = fetchedDay.toLocalDate() == today
+        val day = Units.dayName(fetchedDay.dayOfWeek)
         val (chip, chipText) = when (f) {
             Freshness.FRESH, Freshness.AGEING -> ChipKind.NONE to null
-            Freshness.STALE -> ChipKind.OLD to "Old data · from $fetchedWhen"
-            Freshness.VERY_STALE -> ChipKind.NO_UPDATE to "No update since $fetchedWhen"
+            Freshness.STALE -> ChipKind.OLD to (if (sameDay) "Old data · from $fetched" else "Old data · from $day")
+            Freshness.VERY_STALE -> ChipKind.NO_UPDATE to (if (sameDay) "No update since $fetched" else "No update since $day")
             Freshness.EXPIRED -> ChipKind.EXPIRED to "No current data"
         }
         val today0 = WeatherView.today(s, nowMs)

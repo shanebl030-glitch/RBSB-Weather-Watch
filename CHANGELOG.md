@@ -16,8 +16,10 @@ Approved 28 Nov 2026 with decisions D1 to D10. The version is unchanged. Not mer
 - **Fixed during Stage 3, found by the emulator tests:**
   - the Moon screen would have crashed on Wear OS 4 (an API 34 call);
   - open screens did not update after their first draw;
+  - on 432 px the "No update since Sat 10:00" chip wrapped onto two lines and ran into the place name (seen in the milestone screenshots): the chip now stays on one line, names only the day for earlier days, and shrinks its text slightly for the longest 12-hour labels;
+  - the round-screen check now also fails on overlapping text, and a failed fit now fails the run (before, it was only printed);
   - the first Back-button press did nothing on Wear OS 4 (the Back button now goes to back handling before the screen's input focus, through the window callback; lint rejected a first fix that used a restricted Activity call, and a second fix inside the Compose screen blanked the screen on Wear OS 6).
-- **Tests:** 178 unit and render tests (Moon parity, data age, rows, screen text, cache with every Stage 1 sample); on every emulator, every screen and data state is screenshotted, plus round-screen fit, bezel, touch, back, animation stopping and the on-device Moon test.
+- **Tests:** 179 unit and render tests (Moon parity, data age, rows, screen text, cache with every Stage 1 sample); on every emulator, every screen and data state is screenshotted, plus round-screen fit, bezel, touch, back, animation stopping and the on-device Moon test.
 - **Libraries (D6):** play-services-wearable 20.0.1, Wear Compose navigation; no new permissions; the debug-only test activity is kept unexported.
 
 ## 0.1.0-dev (Stage 2: animated sky, merged 28 Nov 2026, PR #3)

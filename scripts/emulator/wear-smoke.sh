@@ -85,6 +85,9 @@ launch --es sample rain-night-warnings --es route warning/0; sleep 2; shot "scre
 for A in 80 300 1200 4400; do
   launch --es sample clear-day --el ageMinutes "$A"; sleep 2; shot "state-age-$A"; note "STATE age $A min: shown"; fit "state-age-$A"
 done
+# Longest old-data labels: 12-hour clock, same day ("No update since 10:00 am") and 3-12 h old.
+launch --es sample clear-day --el ageMinutes 780 --es clock 12; sleep 2; shot "state-age-780-12h"; note "STATE age 780 min, 12 h clock: shown"; fit "state-age-780-12h"
+launch --es sample clear-day --el ageMinutes 300 --es clock 12; sleep 2; shot "state-age-300-12h"; note "STATE age 300 min, 12 h clock: shown"; fit "state-age-300-12h"
 launch --es sample rain-night-warnings --el ageMinutes 240 --es scrollTo warnings; sleep 2; shot "state-warnings-stale"
 for P in waiting noapp nophone; do
   launch --es phone "$P"; shot "state-$P"; fit "state-$P"
@@ -199,5 +202,5 @@ if grep -q "ANR in $PKG" "$OUT/logcat.txt"; then note "ANR: YES"; fi
 launch
 if [ -n "$(adb shell pidof "$PKG" | tr -d '\r')" ]; then note "PROCESS: running"; else note "PROCESS: not running"; fi
 
-grep -q "CRASH: YES\|ANR: YES\|NOT found\|PROCESS: not running\|app NOT in front\|did NOT\|NOT running while shown\|still drawing" "$R" && { note "RESULT: FAIL"; exit 1; }
+grep -q "ROUND FIT .*: NOT\|CRASH: YES\|ANR: YES\|NOT found\|PROCESS: not running\|app NOT in front\|did NOT\|NOT running while shown\|still drawing" "$R" && { note "RESULT: FAIL"; exit 1; }
 note "RESULT: PASS"

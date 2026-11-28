@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
@@ -77,14 +79,21 @@ object Round {
     @Composable fun narrow(): Boolean = LocalConfiguration.current.screenWidthDp < NARROW_DP
 }
 
-/** A small rounded label ("SAMPLE DATA", "Old data · from 14:05"). */
+/**
+ * A small rounded label ("SAMPLE DATA", "Old data · from 14:05"). With [maxLines] 1 (the chip
+ * under the time on the sky), a long label shrinks from 12 sp to no less than 10 sp to stay on
+ * one line instead of wrapping into the text below.
+ */
 @Composable
-fun Chip(text: String, background: Color, color: Color, modifier: Modifier = Modifier, bold: Boolean = true) {
-    Text(
-        text, modifier = modifier.background(background, RoundedCornerShape(50)).padding(horizontal = 9.dp, vertical = 2.dp),
-        style = TextStyle(fontSize = 12.sp, fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium, color = color),
-        maxLines = 2, textAlign = TextAlign.Center, overflow = TextOverflow.Ellipsis,
-    )
+fun Chip(text: String, background: Color, color: Color, modifier: Modifier = Modifier, bold: Boolean = true, maxLines: Int = 2) {
+    val style = TextStyle(fontSize = 12.sp, fontWeight = if (bold) FontWeight.Bold else FontWeight.Medium, color = color, textAlign = TextAlign.Center)
+    val m = modifier.background(background, RoundedCornerShape(50)).padding(horizontal = 9.dp, vertical = 2.dp)
+    if (maxLines == 1) {
+        BasicText(text, m, style = style, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            autoSize = TextAutoSize.StepBased(minFontSize = 10.sp, maxFontSize = 12.sp, stepSize = 0.5.sp))
+    } else {
+        Text(text, modifier = m, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+    }
 }
 
 /** A centred section heading. */
