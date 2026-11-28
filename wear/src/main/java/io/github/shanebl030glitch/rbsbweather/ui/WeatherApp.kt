@@ -22,7 +22,6 @@ import io.github.shanebl030glitch.rbsbweather.BuildConfig
 import io.github.shanebl030glitch.rbsbweather.data.Units
 import io.github.shanebl030glitch.rbsbweather.data.WeatherView
 import io.github.shanebl030glitch.rbsbweather.sky.SampleData
-import io.github.shanebl030glitch.rbsbweather.sky.SkyText
 import io.github.shanebl030glitch.rbsbweather.sync.Snapshot
 import io.github.shanebl030glitch.rbsbweather.sync.SyncSettings
 import kotlinx.coroutines.delay
@@ -54,7 +53,7 @@ fun WatchApp(versionName: String, debug: DebugOptions) {
         snapshot = real ?: sample?.snapshot,
         settings = settings,
         nowMs = sample?.let { it.snapshot.fetchedAt + debug.ageMinutes * 60_000L + (tick - openedAt).coerceAtLeast(0) } ?: tick,
-        sampleLine = sample?.let { SkyText.sampleLine(sampleIndex, samples.size, it.name, narrow = Round.narrow()) },
+        sampleLine = sample?.let { "${sampleIndex + 1}/${samples.size}" },
     )
 
     MaterialTheme {
@@ -72,7 +71,7 @@ fun WatchApp(versionName: String, debug: DebugOptions) {
                 } else {
                     HomeScreen(
                         snapshot = s, settings = shown.settings, nowMs = shown.nowMs, sampleLine = shown.sampleLine,
-                        aboutLines = AboutInfo.lines(versionName, statusLines(s, shown.settings, shown.nowMs, phone, sample != null)),
+                        aboutLines = AboutInfo.lines(versionName, statusLines(s, shown.settings, shown.nowMs, phone, sample?.name)),
                         onSkyTap = if (sample != null) ({ sampleIndex = (sampleIndex + 1) % samples.size }) else null,
                         onOpen = { route -> nav.navigate(route) },
                         scrollTo = debug.scrollTo,
@@ -103,12 +102,12 @@ private fun resolveWarning(s: Snapshot, shown: Shown, id: String): String =
     id.toIntOrNull()?.let { i -> WeatherView.activeWarnings(s, shown.nowMs, shown.settings.minWarningLevel).getOrNull(i)?.id } ?: id
 
 /** The data's status for the About section. */
-private fun statusLines(s: Snapshot, st: SyncSettings, nowMs: Long, phone: PhoneStatus, sample: Boolean): List<String> {
+private fun statusLines(s: Snapshot, st: SyncSettings, nowMs: Long, phone: PhoneStatus, sampleName: String?): List<String> {
     val place = listOf(s.place.name, s.place.admin1, s.place.country).filter { it.isNotBlank() }.distinct().joinToString(", ")
     val zone = WeatherView.zone(s)
     val fetched = Units.clockAt(s.fetchedAt, zone, ZoneId.systemDefault(), st.clock)
     return listOfNotNull(
-        if (sample) "Showing sample data (debug build)" else null,
+        sampleName?.let { "Sample data (debug build): $it" },
         place,
         "${s.provider} · fetched $fetched",
         WeatherView.ageText(WeatherView.ageMs(s, nowMs)),

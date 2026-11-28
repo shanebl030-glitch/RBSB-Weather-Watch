@@ -27,6 +27,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -77,6 +79,21 @@ fun Modifier.rotaryScroll(state: ScrollableState, active: Boolean = true): Modif
         .focusRequester(focus)
         .focusable()
 }
+
+/**
+ * Fades list content out towards the top and bottom of the round screen, where the circle cuts
+ * rows short, so text reaches the edge softly instead of being clipped mid-letter.
+ */
+fun Modifier.edgeFade(enabled: Boolean = true, fraction: Float = 0.14f): Modifier = if (!enabled) this else this
+    .graphicsLayer { compositingStrategy = androidx.compose.ui.graphics.CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        val band = size.height * fraction
+        drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0f to Color.Transparent, 1f to Color.Black, startY = 0f, endY = band),
+            size = androidx.compose.ui.geometry.Size(size.width, band), blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
+        drawRect(androidx.compose.ui.graphics.Brush.verticalGradient(0f to Color.Black, 1f to Color.Transparent, startY = size.height - band, endY = size.height),
+            topLeft = Offset(0f, size.height - band), size = androidx.compose.ui.geometry.Size(size.width, band), blendMode = androidx.compose.ui.graphics.BlendMode.DstIn)
+    }
 
 /** One forecast hour: time, icon, temperature, rain chance (and amount when it rains). */
 @Composable

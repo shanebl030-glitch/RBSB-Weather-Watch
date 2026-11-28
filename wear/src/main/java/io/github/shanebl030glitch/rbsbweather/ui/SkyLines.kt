@@ -42,8 +42,10 @@ object SkyLinesBuilder {
         val f = WeatherView.freshness(s, nowMs)
         val n = WeatherView.now(s, nowMs)
         val zone = WeatherView.zone(s)
-        val fetched = Units.clockAt(s.fetchedAt, zone, watchZone, settings.clock)
         val fetchedDay = LocalDateTime.ofInstant(Instant.ofEpochMilli(s.fetchedAt), zone)
+        // The chip is short (it sits under the time on a round screen): the place's time without a
+        // zone label; the full time with its label is in About (decision D3).
+        val fetched = Units.clock(fetchedDay, settings.clock)
         val today = WeatherView.localNow(s, nowMs).toLocalDate()
         val fetchedWhen = if (fetchedDay.toLocalDate() == today) fetched else "${Units.dayName(fetchedDay.dayOfWeek)} $fetched"
         val asOf = when (n.source) {

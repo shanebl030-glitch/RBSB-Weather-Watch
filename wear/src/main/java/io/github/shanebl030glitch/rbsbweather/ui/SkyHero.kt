@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -35,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.TextStyle
@@ -122,7 +124,13 @@ fun AnimatedSky(cond: Conditions, active: Boolean, animate: Boolean, modifier: M
 
 private val Sky = SkyShadow
 
-/** The sky with "now" over it. */
+/**
+ * The sky with "now" over it, laid out in three bands sized from the screen so nothing collides
+ * with the time at the top or the round edge (checked at 432 to 498 px):
+ *  - top: a status chip (old data) or the warnings chip;
+ *  - middle: place, temperature, condition, and "Forecast for 15:00" / "Last known" when not current;
+ *  - bottom: today's high and low, the data's age (always shown), and the debug SAMPLE DATA label.
+ */
 @Composable
 fun SkyHero(
     cond: Conditions,
@@ -135,28 +143,25 @@ fun SkyHero(
     modifier: Modifier = Modifier,
 ) {
     val narrow = Round.narrow()
-    Box(modifier.testTag("sky").pointerInput(onSkyTap) { if (onSkyTap != null) detectTapGestures(onTap = { onSkyTap() }) }) {
+    val h = LocalConfiguration.current.screenHeightDp.dp
+    Box(modifier.testTag("sky").pointerInput(onSkyTap != null) { if (onSkyTap != null) detectTapGestures(onTap = { onSkyTap() }) }) {
         AnimatedSky(cond, active, animate, dim = if (lines.freshness == Freshness.EXPIRED) 0.35f else if (lines.freshness == Freshness.VERY_STALE) 0.2f else 0f)
-        Column(
-            Modifier.fillMaxSize().padding(horizontal = 24.dp),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
-            // Status chip (old data) or warnings chip; the age line below is always shown.
+        // top band
+        Box(Modifier.align(Alignment.TopCenter).padding(top = h * 0.125f).widthIn(max = h * 0.72f)) {
             when {
-                lines.chipText != null -> Chip(lines.chipText, when (lines.chip) {
-                    ChipKind.EXPIRED -> Palette.Expired; ChipKind.NO_UPDATE -> Palette.Amber; else -> Palette.Amber
-                }, if (lines.chip == ChipKind.EXPIRED) Color.White else Color(0xFF1A1200), Modifier.widthIn(max = 168.dp))
+                lines.chipText != null -> Chip(lines.chipText, if (lines.chip == ChipKind.EXPIRED) Palette.Expired else Palette.Amber,
+                    if (lines.chip == ChipKind.EXPIRED) Color.White else Color(0xFF1A1200))
                 lines.warningCount > 0 -> {
                     val (bg, fg) = Palette.warning(lines.topWarning ?: io.github.shanebl030glitch.rbsbweather.sync.WarningLevel.WATCH)
                     Chip(SkyLinesBuilder.warningChip(lines.warningCount), bg, fg, Modifier.testTag("warningChip").clickable { onWarnings() })
                 }
-                else -> Spacer(Modifier.height(18.dp))
             }
-            Spacer(Modifier.height(6.dp))
+        }
+        // middle band
+        Column(Modifier.align(Alignment.Center).offset(y = -h * 0.045f).padding(horizontal = 22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Text(lines.place, style = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium, color = Color.White, shadow = Sky),
                 maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
-            Text(lines.temperature, style = TextStyle(fontSize = if (narrow) 46.sp else 52.sp, fontWeight = FontWeight.Light,
+            Text(lines.temperature, style = TextStyle(fontSize = if (narrow) 44.sp else 50.sp, fontWeight = FontWeight.Light,
                 color = if (lines.dimTemperature) Color(0x99FFFFFF) else Color.White, shadow = Sky))
             Text(lines.condition, style = TextStyle(fontSize = 15.sp, color = Color.White, shadow = Sky),
                 maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
@@ -164,17 +169,16 @@ fun SkyHero(
                 Text(it, style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Color(0xFFFFE2A8), shadow = Sky),
                     maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
             }
-            lines.highLow?.let { Text(it, style = TextStyle(fontSize = 13.sp, color = Palette.TextSoft, shadow = Sky)) }
-            Spacer(Modifier.height(4.dp))
-            Text(lines.age, style = TextStyle(fontSize = 12.sp, color = Palette.TextSoft, shadow = Sky),
-                maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
         }
-        Column(Modifier.align(Alignment.BottomCenter).padding(bottom = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        // bottom band
+        Column(Modifier.align(Alignment.BottomCenter).padding(bottom = h * 0.045f), horizontalAlignment = Alignment.CenterHorizontally) {
+            lines.highLow?.let { Text(it, style = TextStyle(fontSize = 13.sp, color = Palette.TextSoft, shadow = Sky)) }
+            Text(lines.age, style = TextStyle(fontSize = 12.sp, color = Palette.TextSoft, shadow = Sky),
+                maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center, modifier = Modifier.widthIn(max = h * 0.66f))
+            Spacer(Modifier.height(2.dp))
             if (sampleLine != null) {
-                Text(SkyText.SAMPLE_LABEL, modifier = Modifier.background(Palette.Sample, RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 1.dp),
-                    style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2A1F00), letterSpacing = 0.8.sp))
-                Text(sampleLine, modifier = Modifier.widthIn(max = 120.dp), style = TextStyle(fontSize = 9.sp, color = Palette.TextSoft, shadow = Sky),
-                    maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+                Text("${SkyText.SAMPLE_LABEL} · $sampleLine", modifier = Modifier.background(Palette.Sample, RoundedCornerShape(50)).padding(horizontal = 8.dp, vertical = 1.dp),
+                    style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold, color = Color(0xFF2A1F00)), maxLines = 1)
             } else {
                 Text("⌄", style = TextStyle(fontSize = 14.sp, color = Palette.TextSoft, shadow = Sky))   // more below
             }
@@ -187,7 +191,7 @@ enum class NoDataReason { WAITING, PHONE_APP_NEEDED, NO_PHONE }
 
 @Composable
 fun NoDataHero(reason: NoDataReason, onRetry: (() -> Unit)?, modifier: Modifier = Modifier) {
-    val still = remember { Conditions(Kind.CLEAR, 0.0, daylight = 0.0) }
+    val still = remember { Conditions(Kind.CLEAR, 0.0, daylight = 0.0, moonUp = false) }   // a plain night sky: no Moon behind the words
     Box(modifier.testTag("noData")) {
         AnimatedSky(still, active = false, animate = false, dim = 0.45f)
         Column(Modifier.fillMaxSize().padding(horizontal = 30.dp), verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {

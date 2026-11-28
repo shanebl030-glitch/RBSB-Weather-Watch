@@ -45,7 +45,7 @@ import java.util.Locale
 /** A standard Wear OS detail list with the time, position indicator and bezel scrolling. */
 @Composable
 fun DetailList(tag: String, content: ScalingLazyListScope.() -> Unit) {
-    val state = rememberScalingLazyListState(initialCenterItemIndex = 0)
+    val state = rememberScalingLazyListState()   // the title starts near the top, the next item centred
     val side = Round.side()
     Scaffold(
         timeText = { TimeText(modifier = Modifier.scrollAway(state)) },
@@ -139,7 +139,7 @@ fun MoonFullScreen(s: Snapshot, st: SyncSettings, nowMs: Long, onClose: () -> Un
     val m = remember(s, st, nowMs / 60_000) { MoonInfoBuilder.build(s, nowMs, st.clock) }
     val screen = LocalConfiguration.current.screenWidthDp
     Box(Modifier.fillMaxSize().background(Color.Black).clickable(onClick = onClose).testTag("moonFull"), contentAlignment = Alignment.Center) {
-        if (m != null) MoonPicture(m.phaseAngle, m.brightLimb, m.rotation, (screen * 0.92f).dp)
+        if (m != null) MoonPicture(m.phaseAngle, m.brightLimb, m.rotation, (screen * 0.86f).dp)
         else Text("Moon not available", style = Type.Body)
         Column(Modifier.fillMaxSize().padding(bottom = 10.dp), verticalArrangement = Arrangement.Bottom, horizontalAlignment = Alignment.CenterHorizontally) {
             m?.let { Text(it.name, style = TextStyle(fontSize = 12.sp, color = Palette.TextSoft), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }

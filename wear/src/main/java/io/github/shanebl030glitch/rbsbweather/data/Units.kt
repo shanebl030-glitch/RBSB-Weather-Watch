@@ -91,8 +91,20 @@ object Units {
      * UTC offset at that moment, so labels appear only when they help (decision D3).
      */
     fun zoneLabel(place: ZoneId, watch: ZoneId, at: Instant): String {
-        if (place.rules.getOffset(at) == watch.rules.getOffset(at)) return ""
-        return DateTimeFormatter.ofPattern("zzz", Locale.ENGLISH).format(at.atZone(place))
+        val offset = place.rules.getOffset(at)
+        if (offset == watch.rules.getOffset(at)) return ""
+        val name = DateTimeFormatter.ofPattern("zzz", Locale.ENGLISH).format(at.atZone(place))
+        // Where the platform has no short name it prints "GMT+13:00"; show the shorter "UTC+13".
+        if (name.isEmpty() || name.startsWith("GMT") || name.startsWith("UTC") || name.contains(':')) return offsetLabel(offset.totalSeconds)
+        return name
+    }
+
+    /** "UTC+13", "UTC-3:30", "UTC" for a UTC offset in seconds. */
+    fun offsetLabel(totalSeconds: Int): String {
+        if (totalSeconds == 0) return "UTC"
+        val sign = if (totalSeconds < 0) "-" else "+"
+        val m = kotlin.math.abs(totalSeconds) / 60
+        return if (m % 60 == 0) "UTC$sign${m / 60}" else "UTC$sign${m / 60}:${"%02d".format(m % 60)}"
     }
 
     /** "14:05" or "14:05 NZDT": a moment shown in the place's time, labelled when the watch differs. */

@@ -64,6 +64,13 @@ class UnitsAndRulesTest {
         assertEquals("14:05 $label", Units.clockAt(at.toEpochMilli(), akl, ZoneId.of("Europe/London"), ClockFormat.H24))
     }
 
+    @Test fun compactOffsetLabels() {
+        assertEquals("UTC+13", Units.offsetLabel(13 * 3600))
+        assertEquals("UTC-3:30", Units.offsetLabel(-(3 * 3600 + 1800)))
+        assertEquals("UTC+5:45", Units.offsetLabel(5 * 3600 + 45 * 60))
+        assertEquals("UTC", Units.offsetLabel(0))
+    }
+
     @Test fun refreshOnlyWhenOldAndNotTooOften() {
         val min = 60_000L; val now = 10_000_000_000L
         assertFalse(RefreshRule.shouldRequest(30 * min, null, now))       // fresh data: no request

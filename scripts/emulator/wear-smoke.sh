@@ -50,7 +50,7 @@ SIZE=$(adb shell wm size | tr -d '\r' | grep -o '[0-9]*x[0-9]*' | tail -1); W=${
 # --- the sky (debug build, no phone data: a labelled sample) ---
 if found "SAMPLE DATA"; then note "SKY: sample-data label visible"; else note "SKY: sample-data label NOT found"; fi
 adb shell input tap $((W / 2)) $((W * 3 / 4)); sleep 2
-if found "2/[0-9]* · "; then note "SKY: tap switched to the next sample"; else note "SKY: tap did NOT switch sample"; fi
+if found "SAMPLE DATA · 2/"; then note "SKY: tap switched to the next sample"; else note "SKY: tap did NOT switch sample"; fi
 
 for S in clear-day partly-cloudy-day rain-night-warnings thunder-warning clear-night snow-northern fog; do
   launch --es sample "$S"; sleep 2; shot "sky-$S"
@@ -87,8 +87,11 @@ done
 
 # --- swipe back from a detail screen returns to the first screen ---
 launch --es sample clear-day --es route day/0; sleep 2
-adb shell input swipe $((W / 8)) $((W / 2)) $((W * 7 / 8)) $((W / 2)) 250; sleep 3
-if found "SAMPLE DATA"; then note "SWIPE BACK: returned to the first screen"; else note "SWIPE BACK: did NOT return"; fi
+adb shell input swipe $((W / 10)) $((W / 2)) $((W * 9 / 10)) $((W / 2)) 300; sleep 3
+shot "after-swipe-back"
+if found "SAMPLE DATA"; then note "SWIPE BACK: returned to the first screen"
+elif front; then note "SWIPE BACK: did NOT return (app still open: $(grep -o 'text="[^"]*"' "$OUT/ui.xml" | head -4 | tr '\n' ' '))"
+else note "SWIPE BACK: did NOT return (the app closed instead)"; fi
 
 # --- touch scrolling: a swipe up from the sky shows the next section ---
 launch --es sample clear-day
@@ -121,10 +124,15 @@ note "ANIMATION: frames rendered while shown: ${F1:-?} after 10 s, ${F2:-?} afte
 if [ -n "$F1" ] && [ -n "$F2" ] && [ "$F2" -gt "$F1" ]; then note "ANIMATION: running while shown"; else note "ANIMATION: NOT running while shown"; fi
 adb shell dumpsys gfxinfo "$PKG" > "$OUT/gfxinfo.txt" 2>&1
 grep -E "Total frames rendered|Janky frames|50th percentile|90th percentile|95th percentile|99th percentile" "$OUT/gfxinfo.txt" | head -8 | sed 's/^/  GFXINFO /' | tee -a "$R"
-launch --es sample thunder-warning --es scrollTo daily; sleep 4
+# About has nothing animated (the forecast rows' icons do animate, like the phone's), so any
+# frames there would be the sky drawing while off screen. One or two may come from the clock.
+launch --es sample thunder-warning --es scrollTo about; sleep 4
 S1=$(frames); sleep 6; S2=$(frames)
-note "ANIMATION: scrolled away from the sky: ${S1:-?} then ${S2:-?} frames"
-if [ "${S1:-0}" = "${S2:-0}" ]; then note "ANIMATION: stopped when scrolled away"; else note "ANIMATION: still drawing when scrolled away"; fi
+note "ANIMATION: scrolled away from the sky (About): ${S1:-?} then ${S2:-?} frames"
+if [ $(( ${S2:-0} - ${S1:-0} )) -le 2 ]; then note "ANIMATION: stopped when scrolled away"; else note "ANIMATION: still drawing when scrolled away"; fi
+launch --es sample thunder-warning --es scrollTo daily; sleep 4
+D1=$(frames); sleep 6; D2=$(frames)
+note "ANIMATION: forecast icons on the daily list: $(( ${D2:-0} - ${D1:-0} )) frames in 6 s (about 12 a second while icons are on screen)"
 launch --es sample thunder-warning
 adb shell input keyevent KEYCODE_HOME; sleep 4
 B1=$(frames); sleep 6; B2=$(frames)

@@ -91,7 +91,7 @@ fun HomeScreen(
     ) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize().testTag("home").rotaryScroll(listState),
+            modifier = Modifier.fillMaxSize().testTag("home").rotaryScroll(listState).edgeFade(enabled = !skyShown),
             contentPadding = PaddingValues(bottom = (LocalConfiguration.current.screenHeightDp * 0.32f).dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -101,7 +101,7 @@ fun HomeScreen(
                         if (warnings.size == 1) onOpen("warning/${android.net.Uri.encode(warnings[0].id)}")
                         else scope.launch { listState.animateScrollToItem(HOME_SECTIONS.indexOf("warnings")) }
                     },
-                    onSkyTap = onSkyTap, modifier = Modifier.fillParentMaxSize())
+                    onSkyTap = onSkyTap, modifier = Modifier.fillMaxWidth().height(LocalConfiguration.current.screenHeightDp.dp))
             }
             section("details", side) {
                 SectionTitle(Rows.nowTitle(snapshot, settings, nowMs))
@@ -143,7 +143,7 @@ fun HomeScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         MoonPicture(moon.phaseAngle, moon.brightLimb, moon.rotation, 56.dp)
                         Column(Modifier.padding(start = 10.dp)) {
-                            Text(moon.name, style = Type.RowBold, maxLines = 1)
+                            Text(moon.name, style = Type.RowBold, maxLines = 2)
                             Text(moon.litLine.substringBefore(" ·"), style = Type.Caption, maxLines = 1)
                         }
                     }
