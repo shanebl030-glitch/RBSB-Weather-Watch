@@ -2,6 +2,7 @@
 package io.github.shanebl030glitch.rbsbweather
 
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.ViewConfiguration
@@ -22,6 +23,13 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         val debug = DebugOptions.from(intent)
         setContent { WatchApp(BuildConfig.VERSION_NAME, debug) }
+        window.callback = BackKeyFirst(window.callback, ::onBackKey)
+    }
+
+    /** Back button released (see BackKeyFirst): close the open detail screen, or leave from the first screen. */
+    private fun onBackKey(event: KeyEvent) {
+        if (BuildConfig.DEBUG) android.util.Log.i("RBSBInput", "KEY back action=${event.action}")
+        if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) onBackPressedDispatcher.onBackPressed()
     }
 
     /** Debug builds: every rotary event that reaches the window is logged, to tell "not delivered" from "not handled". */
@@ -41,4 +49,26 @@ class MainActivity : ComponentActivity() {
         }
         return super.onGenericMotionEvent(event)
     }
+}
+
+/**
+ * Gives the watch's Back button to [onBack] before the screen's input focus sees it; every other
+ * event goes to the activity unchanged. Found on the Wear OS 4 emulator: otherwise the first press
+ * only cleared the scrolling list's focus and did nothing visible. Handling it inside the Compose
+ * screen instead left a blank screen on Wear OS 6, and overriding the activity's own key dispatch
+ * calls a restricted library method (lint RestrictedApi), so it sits on the window callback.
+ */
+internal class BackKeyFirst(
+    private val inner: android.view.Window.Callback,
+    private val onBack: (KeyEvent) -> Unit,
+) : android.view.Window.Callback by inner {
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.keyCode != KeyEvent.KEYCODE_BACK) return inner.dispatchKeyEvent(event)
+        onBack(event)
+        return true
+    }
+    override fun onPointerCaptureChanged(hasCapture: Boolean) = inner.onPointerCaptureChanged(hasCapture)
+    override fun onProvideKeyboardShortcuts(
+        data: MutableList<android.view.KeyboardShortcutGroup>?, menu: android.view.Menu?, deviceId: Int,
+    ) = inner.onProvideKeyboardShortcuts(data, menu, deviceId)
 }
