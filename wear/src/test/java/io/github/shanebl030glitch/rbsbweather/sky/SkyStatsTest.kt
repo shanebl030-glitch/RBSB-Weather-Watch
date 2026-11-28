@@ -12,10 +12,16 @@ class SkyStatsTest {
         val dir = Files.createTempDirectory("skystats").toFile()
         try {
             val f = java.io.File(dir, SkyStats.FILE)
-            repeat(SkyStats.KEEP + 150) { SkyStats.append(f, "line $it") }
+            repeat(SkyStats.KEEP + 150) { i ->
+                SkyStats.append(f, "line $i")
+                val windows = f.readLines().size - 1
+                assertTrue("after append $i the file holds $windows windows", windows <= SkyStats.KEEP)  // never more than 500
+                assertEquals(minOf(i + 1, SkyStats.KEEP), windows)
+            }
             val lines = f.readLines()
             assertEquals(WindowStats.CSV_HEADER, lines.first())
-            assertTrue("bounded: ${lines.size}", lines.size <= SkyStats.KEEP + 101)
+            assertEquals(SkyStats.KEEP + 1, lines.size)                                 // header + exactly the last 500
+            assertEquals("line 150", lines[1])                                          // the oldest 150 were removed
             assertEquals("line ${SkyStats.KEEP + 149}", lines.last())
         } finally { dir.deleteRecursively() }
     }

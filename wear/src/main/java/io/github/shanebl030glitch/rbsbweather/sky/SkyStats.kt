@@ -1,6 +1,6 @@
 // Frame-timing measurements of the live sky (approved Stage 2 decision 3: record them so the
 // quality thresholds can be reviewed and tuned at Stage 7). Each 10-second window is written to
-// logcat (tag RBSBSky) and to app-private storage (sky-frame-timing.csv, last 500 windows; excluded
+// logcat (tag RBSBSky) and to app-private storage (sky-frame-timing.csv, never more than the last 500 windows; excluded
 // from backup like all app data). The latest is shown on the About page. Created By Shane BlackbuRn
 package io.github.shanebl030glitch.rbsbweather.sky
 
@@ -25,11 +25,14 @@ object SkyStats {
         try { append(File(dir, FILE), stats.csv()) } catch (e: Exception) { }
     }
 
-    /** Appends a line, starting the file with its header, and keeps only the last [KEEP] lines. */
+    /**
+     * Appends a window, starting the file with its header. The file never holds more than [KEEP]
+     * windows: as soon as an append takes it over, the oldest are removed (header + last [KEEP]).
+     */
     @Synchronized fun append(f: File, line: String) {
         if (!f.exists()) f.writeText(WindowStats.CSV_HEADER + "\n")
         f.appendText(line + "\n")
         val lines = f.readLines()
-        if (lines.size > KEEP + 100) f.writeText((listOf(lines.first()) + lines.drop(1).takeLast(KEEP)).joinToString("\n", postfix = "\n"))
+        if (lines.size - 1 > KEEP) f.writeText((listOf(lines.first()) + lines.drop(1).takeLast(KEEP)).joinToString("\n", postfix = "\n"))
     }
 }

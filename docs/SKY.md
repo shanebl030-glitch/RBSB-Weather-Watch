@@ -60,7 +60,7 @@ The sky animates only while its page is on screen and the app is in front. It st
 
 **Recorded measurements, for Stage 7.** Every window is recorded:
 - written to logcat with the tag `RBSBSky` (`SKY FRAME WINDOW …`);
-- saved in the app's private storage as `sky-frame-timing.csv` (the last 500 windows; excluded from backup like all app data);
+- saved in the app's private storage as `sky-frame-timing.csv` (never more than the last 500 windows: once it is full, each new window replaces the oldest; excluded from backup like all app data);
 - the latest shown on the About page, for example *Sky: High · 30.0 fps · work p90 1.2 ms · slow 0%*.
 
 The columns are: start time, seconds, frames, fps, work p50/p90/max in ms, slow share, level, power saving, decision, and the next level.

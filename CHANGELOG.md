@@ -22,13 +22,14 @@ The animated sky, from sample data. The version is unchanged. See `docs/SKY.md`.
   - High, Standard and Light change detail only; every effect stays at every level.
   - The level is chosen from measured frame times: the first 3 s, then every 10 s. Step down above 10% slow frames (over 33 ms or late); step up after 30 s with p90 work under 20 ms. Power-saving mode goes one level lower and caps at 20 fps.
   - The thresholds are adjustable (`QualityConfig`).
-- **Frame timing:** each 10-second window is logged (`RBSBSky`) and kept in `sky-frame-timing.csv` (last 500 windows) for Stage 7. The latest is shown on About.
+- **Frame timing:** each 10-second window is logged (`RBSBSky`) and kept in `sky-frame-timing.csv` (never more than the last 500 windows) for Stage 7. The latest is shown on About.
 - **Memory:** one cloud sprite set (a cache of 40; the phone uses 96). 512 px Moon textures, about 147 KB (decision 5); NASA credit on About and in the docs.
 - **Review fixes:**
   - The Sun stays bright: the readability shade is drawn under the Sun, Moon and clouds.
   - Rotary sample switching is confirmed on emulators. The test was sending its command in an old form; the app also passes on rotary events no view took.
   - The Moon was confirmed below the horizon in the clear-night sample.
   - The UseKtx lint warnings are gone.
+- **Fixed in review:** the frame-timing file could grow to 600 windows between clean-ups although documented as 500; it now never holds more than 500, and the test checks this after every append.
 - **Fixed during testing:** the screen opened with a 0.8-second fade from daytime blue (seen on night samples); it now opens directly on the sample's own sky.
 - **Tests (decision 6):**
   - 132 unit tests (75 wear, 57 sync). The phone's scene, Moon (PyEphem reference) and safe-drawing tests are ported, plus new quality, frame-timing, Moon-horizon and sample tests.
