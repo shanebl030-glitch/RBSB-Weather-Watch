@@ -105,4 +105,8 @@ tasks.named("preBuild") { dependsOn(copySampleAssets) }
 // both (ci.yml); Gradle finds 21 through JAVA_HOME_21_X64 (gradle.properties) or the running JDK.
 tasks.withType<Test>().configureEach {
     javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(21)) })
+    testLogging {
+        events("failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
 }

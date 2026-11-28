@@ -79,6 +79,7 @@ class RenderTest {
             for (x in 0 until b.width step 7) for (y in 0 until 60 step 5) { sum += b.getPixel(x, y) and 0xFF; n++ }
             return sum / n
         }
+        println("DAY/NIGHT top-band blue: day ${topBlue(day)}, night ${topBlue(night)}; day pixel ${Integer.toHexString(day.getPixel(216, 20))}, night pixel ${Integer.toHexString(night.getPixel(216, 20))}")
         assertTrue("day ${topBlue(day)} vs night ${topBlue(night)}", topBlue(day) > topBlue(night) + 60)
     }
 
