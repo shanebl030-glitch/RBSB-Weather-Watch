@@ -96,7 +96,7 @@ class RenderTest {
         assertTrue(bright(full) > bright(newMoon) + 40)
         val opts = android.graphics.BitmapFactory.Options()
         val tex = RuntimeEnvironment.getApplication().assets.open("textures/moon_albedo.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, opts) }
-        assertEquals(512, tex.width); assertEquals(512, tex.height)
+        assertEquals(512, tex!!.width); assertEquals(512, tex.height)
     }
 
     @Test fun theSunStaysBrightUnderTheReadabilityShade() {
