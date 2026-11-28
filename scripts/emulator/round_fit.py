@@ -5,6 +5,10 @@ Reads a uiautomator dump of a watch screen and checks that every visible text el
 inside the round display (all four corners of its box within the circle, 2 px tolerance), and
 that no two texts overlap each other (more than 2 px both ways). The overlap check was added
 after a two-line "No update since Sat 10:00" label ran into the place name on 432 px.
+Tappable elements (clickable="true", such as the warnings chip) are left out of the overlap
+test: uiautomator reports their enlarged 48 dp touch area, not the drawn label, so they would
+clash with the text below even when the screenshot shows a clear gap. They are still checked
+against the round edge, and the screenshots are reviewed by eye.
 Used on screens that do not scroll mid-content (the sky in every data state, the no-data
 screens), where nothing should ever be cut by the round edge.
 
@@ -38,7 +42,8 @@ def main(path, width, name):
         if x1 <= x0 or y1 <= y0:
             continue
         n += 1
-        boxes.append((text, x0, y0, x1, y1))
+        if node.get("clickable") != "true":
+            boxes.append((text, x0, y0, x1, y1))
         worst = max(((x - r) ** 2 + (y - r) ** 2) ** 0.5 for x, y in ((x0, y0), (x1, y0), (x0, y1), (x1, y1)))
         if worst > r + 2:
             bad.append(f"'{text[:28]}' [{x0},{y0}][{x1},{y1}] {worst - r:.0f}px out")

@@ -151,3 +151,4 @@ A summary of decisions and work, newest last.
   - The round-screen check only tested the circle's edge, and a failed fit was printed but did not fail the run. Both are fixed: overlapping text now fails the run.
   - The chip now stays on one line, gives only the day when the data is from an earlier day (the age line still gives the hours), and shrinks its text slightly for the longest 12-hour labels.
   - New tests: every sample, both clock formats and every age band stay at 24 characters or fewer. The emulators now also screenshot the 12-hour labels.
+  - On its first run the new overlap check flagged the warnings chip on four emulators. The screenshots show a clear gap: uiautomator reports the chip's enlarged 48 dp touch area, not the drawn label. Tappable elements are now left out of the overlap test (they are still checked against the round edge and reviewed by eye). The old-data chips all fitted on one line, including the 12-hour labels.
