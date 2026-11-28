@@ -45,6 +45,8 @@ dump() { adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1; adb shell c
 found() { dump; grep -q "$1" "$OUT/ui.xml"; }
 launch() { adb shell am start -S -W -n "$PKG/$ACT" "$@" > "$OUT/start.txt" 2>&1; sleep 6; }
 shot() { adb exec-out screencap -p > "$OUT/$1.png"; }
+# Round-screen fit (criterion A8) for screens that don't scroll mid-content.
+fit() { dump; python3 "$(dirname "$0")/round_fit.py" "$OUT/ui.xml" "$W" "$1" | tee -a "$R"; }
 SIZE=$(adb shell wm size | tr -d '\r' | grep -o '[0-9]*x[0-9]*' | tail -1); W=${SIZE%x*}
 
 # --- the sky (debug build, no phone data: a labelled sample) ---
@@ -58,6 +60,7 @@ if found "SAMPLE DATA · 2/"; then note "SKY: tap switched to the next sample"; 
 for S in clear-day partly-cloudy-day rain-night-warnings thunder-warning clear-night snow-northern fog; do
   launch --es sample "$S"; sleep 2; shot "sky-$S"
   if found "SAMPLE DATA"; then note "SKY $S: shown"; else note "SKY $S: label NOT found"; fi
+  fit "sky-$S"
 done
 
 # --- every section of the first screen ---
@@ -80,26 +83,34 @@ launch --es sample rain-night-warnings --es route warning/0; sleep 2; shot "scre
 
 # --- data age and no-data states ---
 for A in 80 300 1200 4400; do
-  launch --es sample clear-day --el ageMinutes "$A"; sleep 2; shot "state-age-$A"; note "STATE age $A min: shown"
+  launch --es sample clear-day --el ageMinutes "$A"; sleep 2; shot "state-age-$A"; note "STATE age $A min: shown"; fit "state-age-$A"
 done
 launch --es sample rain-night-warnings --el ageMinutes 240 --es scrollTo warnings; sleep 2; shot "state-warnings-stale"
 for P in waiting noapp nophone; do
-  launch --es phone "$P"; shot "state-$P"
+  launch --es phone "$P"; shot "state-$P"; fit "state-$P"
   if found "Waiting for your phone\|Phone app update needed\|Phone not connected"; then note "STATE $P: shown"; else note "STATE $P: text NOT found"; fi
 done
 
 # --- back from a detail screen: a swipe right, and the watch's Back button ---
 launch --es sample clear-day --es route day/0; sleep 2
 adb logcat -c || true
-adb shell input swipe $((W / 4)) $((W / 2)) $((W * 15 / 16)) $((W / 2)) 400; sleep 3
+( adb shell screenrecord --time-limit 4 /sdcard/swipe.mp4 > /dev/null 2>&1 ) &
+RECS=$!; sleep 0.5
+adb shell input swipe $((W / 4)) $((W / 2)) $((W * 15 / 16)) $((W / 2)) 400
+wait $RECS; adb pull /sdcard/swipe.mp4 "$OUT/rec-swipe-back.mp4" > /dev/null 2>&1; adb shell rm -f /sdcard/swipe.mp4
+sleep 1
 shot "after-swipe-back"
 adb logcat -d -s RBSBInput:I | grep -o "SCREEN .*" | tail -3 | sed 's/^/  APP /' | tee -a "$R"
 if found "SAMPLE DATA"; then note "SWIPE BACK: returned to the first screen"
 elif front; then note "SWIPE BACK: did NOT return (app still open: $(grep -o 'text="[^"]\+"' "$OUT/ui.xml" | head -3 | tr '\n' ' '))"
 else note "SWIPE BACK: did NOT return (the app closed instead)"; fi
 launch --es sample clear-day --es route day/0; sleep 2
+adb logcat -c || true
 adb shell input keyevent KEYCODE_BACK; sleep 3
-if found "SAMPLE DATA"; then note "BACK BUTTON: returned to the first screen"; else note "BACK BUTTON: did NOT return"; fi
+adb logcat -d -s RBSBInput:I | grep -o "SCREEN .*" | tail -3 | sed 's/^/  APP /' | tee -a "$R"
+if found "SAMPLE DATA"; then note "BACK BUTTON: returned to the first screen"
+elif front; then note "BACK BUTTON: did NOT return (app still open: $(grep -o 'text="[^"]\+"' "$OUT/ui.xml" | head -3 | tr '\n' ' '))"
+else note "BACK BUTTON: did NOT return (the app closed: $(adb shell dumpsys activity activities | grep -m1 -E 'topResumedActivity|mResumedActivity' | tr -d '\r'))"; fi
 
 # --- touch scrolling: a swipe up from the sky shows the next section ---
 launch --es sample clear-day
@@ -113,8 +124,9 @@ if [ "$ROTARY" = "yes" ]; then
           && ! grep -qi "error\|usage\|exception" "$OUT/rotary.txt" \
           || adb shell input rotaryencoder scroll "$1" > "$OUT/rotary.txt" 2>&1; }
   adb logcat -c || true
-  if rot 3; then
-    sleep 1; rot 3; sleep 2
+  # A negative AXIS_SCROLL is a clockwise turn, which scrolls a list down (Wear OS convention).
+  if rot -3; then
+    sleep 1; rot -3; sleep 2
     note "ROTARY: input tool replied: $(tr -d '\r' < "$OUT/rotary.txt" | head -c 160 | tr '\n' ' ')"
     adb logcat -d -s RBSBInput:I | grep -o "ROTARY .*" | tail -6 | sed 's/^/  APP /' | tee -a "$R"
     shot "after-rotary"

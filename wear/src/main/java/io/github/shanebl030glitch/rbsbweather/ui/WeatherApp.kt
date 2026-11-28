@@ -11,6 +11,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.wear.compose.material.MaterialTheme
@@ -28,7 +29,7 @@ import kotlinx.coroutines.delay
 import java.time.ZoneId
 
 /** What the screens show right now. */
-private data class Shown(val snapshot: Snapshot?, val settings: SyncSettings, val nowMs: Long, val sampleLine: String?)
+private data class Shown(val snapshot: Snapshot?, val settings: SyncSettings, val nowMs: Long, val sampleLine: String?, val sampleName: String?)
 
 @Composable
 fun WatchApp(versionName: String, debug: DebugOptions) {
@@ -54,8 +55,14 @@ fun WatchApp(versionName: String, debug: DebugOptions) {
         settings = settings,
         nowMs = sample?.let { it.snapshot.fetchedAt + debug.ageMinutes * 60_000L + (tick - openedAt).coerceAtLeast(0) } ?: tick,
         sampleLine = sample?.let { "${sampleIndex + 1}/${samples.size}" },
+        sampleName = sample?.name,
     )
 
+    // The navigation graph is built once and its screens keep the values they were built with, so
+    // every screen reads the current state through this (found on the emulators: without it, a new
+    // sample, the clock moving on or new phone data would not reach an open screen).
+    val current by rememberUpdatedState(shown)
+    val currentPhone by rememberUpdatedState(phone)
     MaterialTheme {
         val nav = rememberSwipeDismissableNavController()
         LaunchedEffect(debug.route) { debug.route?.let { r -> try { nav.navigate(r) } catch (e: Exception) { } } }
@@ -64,18 +71,18 @@ fun WatchApp(versionName: String, debug: DebugOptions) {
         }
         SwipeDismissableNavHost(navController = nav, startDestination = "home") {
             composable("home") {
-                val s = shown.snapshot
+                val s = current.snapshot
                 if (s == null) {
-                    NoDataHero(debug.noData ?: when (phone) {
+                    NoDataHero(debug.noData ?: when (currentPhone) {
                         PhoneStatus.NO_APP -> NoDataReason.PHONE_APP_NEEDED
                         PhoneStatus.NOT_CONNECTED -> NoDataReason.NO_PHONE
                         else -> NoDataReason.WAITING
                     }, onRetry = null)
                 } else {
                     HomeScreen(
-                        snapshot = s, settings = shown.settings, nowMs = shown.nowMs, sampleLine = shown.sampleLine,
-                        aboutLines = AboutInfo.lines(versionName, statusLines(s, shown.settings, shown.nowMs, phone, sample?.name)),
-                        onSkyTap = if (sample != null) ({
+                        snapshot = s, settings = current.settings, nowMs = current.nowMs, sampleLine = current.sampleLine,
+                        aboutLines = AboutInfo.lines(versionName, statusLines(s, current.settings, current.nowMs, currentPhone, current.sampleName)),
+                        onSkyTap = if (current.sampleName != null) ({
                             android.util.Log.i("RBSBInput", "SKY TAP: next sample")
                             sampleIndex = (sampleIndex + 1) % samples.size
                         }) else null,
@@ -84,17 +91,17 @@ fun WatchApp(versionName: String, debug: DebugOptions) {
                     )
                 }
             }
-            composable("hours") { shown.snapshot?.let { HoursScreen(it, shown.settings, shown.nowMs) } }
+            composable("hours") { current.snapshot?.let { HoursScreen(it, current.settings, current.nowMs) } }
             composable("day/{date}") { e ->
                 val date = e.arguments?.getString("date") ?: ""
-                shown.snapshot?.let { DayScreen(it, shown.settings, shown.nowMs, resolveDay(it, shown.nowMs, date)) }
+                current.snapshot?.let { DayScreen(it, current.settings, current.nowMs, resolveDay(it, current.nowMs, date)) }
             }
             composable("warning/{id}") { e ->
                 val id = e.arguments?.getString("id") ?: ""
-                shown.snapshot?.let { WarningScreen(it, shown.settings, shown.nowMs, resolveWarning(it, shown, id)) }
+                current.snapshot?.let { WarningScreen(it, current.settings, current.nowMs, resolveWarning(it, current, id)) }
             }
-            composable("moon") { shown.snapshot?.let { MoonScreen(it, shown.settings, shown.nowMs, onFullScreen = { nav.navigate("moonFull") }) } }
-            composable("moonFull") { shown.snapshot?.let { MoonFullScreen(it, shown.settings, shown.nowMs, onClose = { nav.popBackStack() }) } }
+            composable("moon") { current.snapshot?.let { MoonScreen(it, current.settings, current.nowMs, onFullScreen = { nav.navigate("moonFull") }) } }
+            composable("moonFull") { current.snapshot?.let { MoonFullScreen(it, current.settings, current.nowMs, onClose = { nav.popBackStack() }) } }
         }
     }
 }
