@@ -32,6 +32,13 @@ class MainActivity : ComponentActivity() {
         return super.dispatchGenericMotionEvent(event)
     }
 
+    /** Debug builds: hardware keys (the Back button) are logged, to tell "not delivered" from "not handled". */
+    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
+        val handled = super.dispatchKeyEvent(event)
+        if (BuildConfig.DEBUG) android.util.Log.i("RBSBInput", "KEY code=${event.keyCode} action=${event.action} handled=$handled")
+        return handled
+    }
+
     /** Rotary (bezel or crown) events that no view used go to the open list (see RotaryInput). */
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_SCROLL && event.isFromSource(InputDevice.SOURCE_ROTARY_ENCODER)) {

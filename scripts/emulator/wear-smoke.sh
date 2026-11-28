@@ -96,7 +96,7 @@ launch --es sample clear-day --es route day/0; sleep 2
 adb logcat -c || true
 ( adb shell screenrecord --time-limit 4 /sdcard/swipe.mp4 > /dev/null 2>&1 ) &
 RECS=$!; sleep 0.5
-adb shell input swipe $((W / 4)) $((W / 2)) $((W * 15 / 16)) $((W / 2)) 400
+adb shell input swipe $((W / 4)) $((W / 2)) $((W * 15 / 16)) $((W / 2)) 150    # a quick flick, as a finger does
 wait $RECS; adb pull /sdcard/swipe.mp4 "$OUT/rec-swipe-back.mp4" > /dev/null 2>&1; adb shell rm -f /sdcard/swipe.mp4
 sleep 1
 shot "after-swipe-back"
@@ -107,7 +107,7 @@ else note "SWIPE BACK: did NOT return (the app closed instead)"; fi
 launch --es sample clear-day --es route day/0; sleep 2
 adb logcat -c || true
 adb shell input keyevent KEYCODE_BACK; sleep 3
-adb logcat -d -s RBSBInput:I | grep -o "SCREEN .*" | tail -3 | sed 's/^/  APP /' | tee -a "$R"
+adb logcat -d -s RBSBInput:I | grep -o "SCREEN .*\|KEY .*" | tail -4 | sed 's/^/  APP /' | tee -a "$R"
 if found "SAMPLE DATA"; then note "BACK BUTTON: returned to the first screen"
 elif front; then note "BACK BUTTON: did NOT return (app still open: $(grep -o 'text="[^"]\+"' "$OUT/ui.xml" | head -3 | tr '\n' ' '))"
 else note "BACK BUTTON: did NOT return (the app closed: $(adb shell dumpsys activity activities | grep -m1 -E 'topResumedActivity|mResumedActivity' | tr -d '\r'))"; fi
