@@ -1,0 +1,197 @@
+# Moon verification (branch claude/moon-verification only; never merged without Shane's approval).
+# 1. Dependency, permission and package-identity report: main against this branch, and the
+#    published RBSB-Weather for Android 0.7.2 APK.
+# 2. The watch Moon drawn by its real Kotlin renderer on Android 16 graphics (Robolectric),
+#    compared with RBSB-Weather Desktop at 25%, 50% and 78% lit, 240 and 480 px.
+# 3. The same on real Wear OS emulator images (Wear OS 4 and 6), plus memory use and proof the
+#    full-size textures are released after downscaling.
+# Pictures are printed into the log as base64 (artifacts are not readable from the review
+# environment). Created By Shane BlackbuRn
+name: Moon verification
+
+on:
+  push:
+    branches: ["claude/moon-verification"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PHONE_APK_URL: https://github.com/shanebl030-glitch/RBSB-Weather-Android/releases/download/v0.7.2/rbsb-weather-android_0.7.2.apk
+
+jobs:
+  report:
+    name: Dependencies, permissions and package identity
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main-src
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            21
+            17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: SDK platform
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+      - name: Build main and this branch (debug and release)
+        run: |
+          ./gradlew --no-daemon :wear:assembleDebug :wear:assembleRelease
+          ./gradlew --no-daemon :wear:dependencies --configuration releaseRuntimeClasspath > deps-branch.txt
+          (cd main-src && ./gradlew --no-daemon :wear:assembleDebug :wear:assembleRelease && ./gradlew --no-daemon :wear:dependencies --configuration releaseRuntimeClasspath > ../deps-main.txt)
+      - name: New libraries in the release build (resolved, including the ones they pull in)
+        run: |
+          python3 - <<'PY'
+          import re
+          def mods(p):
+              s = set()
+              for l in open(p):
+                  m = re.search(r"[+\\]--- ([\w.\-]+:[\w.\-]+)(?::([\w.\-]+))?(?: -> ([\w.\-]+))?", l)
+                  if m and not m.group(1).startswith("project "):
+                      s.add(f"{m.group(1)}:{m.group(3) or m.group(2)}")
+              return s
+          a, b = mods("deps-main.txt"), mods("deps-branch.txt")
+          ga = {x.rsplit(":", 1)[0]: x for x in a}; gb = {x.rsplit(":", 1)[0]: x for x in b}
+          print(f"DEPS main {len(a)} modules, branch {len(b)} modules")
+          for g in sorted(set(gb) - set(ga)): print("DEPS ADDED   " + gb[g])
+          for g in sorted(set(ga) - set(gb)): print("DEPS REMOVED " + ga[g])
+          for g in sorted(set(ga) & set(gb)):
+              if ga[g] != gb[g]: print(f"DEPS CHANGED {ga[g]} -> {gb[g].rsplit(':', 1)[1]}")
+          PY
+      - name: Manifests, permissions, exported components and size
+        run: |
+          AAPT=$(ls -d "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
+          curl -sSfL -o phone-0.7.2.apk "$PHONE_APK_URL"
+          python3 scripts/verification/manifest_report.py "$AAPT" \
+            main-release=main-src/wear/build/outputs/apk/release/wear-release-unsigned.apk \
+            branch-release=wear/build/outputs/apk/release/wear-release-unsigned.apk \
+            main-debug=main-src/wear/build/outputs/apk/debug/wear-debug.apk \
+            branch-debug=wear/build/outputs/apk/debug/wear-debug.apk \
+            phone-0.7.2=phone-0.7.2.apk \
+            --diff main-release:branch-release --diff main-debug:branch-debug
+      - name: Package identity (Data Layer needs the same package name and signing)
+        run: |
+          AAPT=$(ls -d "$ANDROID_HOME"/build-tools/*/aapt2 | sort -V | tail -1)
+          AS=$(ls -d "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          for A in phone-0.7.2.apk wear/build/outputs/apk/release/wear-release-unsigned.apk wear/build/outputs/apk/debug/wear-debug.apk; do
+            echo "IDENTITY $A: $("$AAPT" dump badging "$A" | head -1)"
+            "$AS" verify --print-certs "$A" 2>&1 | grep -E "Signer #1 certificate SHA-256|DOES NOT VERIFY|Missing" | sed "s#^#IDENTITY   #" || true
+          done
+          "$AS" verify --print-certs --verbose phone-0.7.2.apk | grep -iE "lineage|Signer \(minSdkVersion" | sed "s#^#IDENTITY   phone #" || true
+
+  robolectric:
+    name: Real renderer on Android 16 graphics (Robolectric)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            21
+            17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: SDK platform
+        run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+      - name: Moon parity test
+        run: ./gradlew --no-daemon :wear:testDebugUnitTest --tests '*MoonParityTest*' --tests '*RenderTest*'
+      - name: Results and pictures in the log
+        if: always()
+        run: |
+          cat wear/build/moon-parity/results.txt || true
+          for f in wear/build/moon-parity/*.png; do
+            [ -f "$f" ] || continue
+            echo "PNG-BEGIN robolectric_$(basename "$f")"; base64 -w 4000 "$f"; echo "PNG-END"
+          done
+
+  device:
+    name: Real renderer on ${{ matrix.label }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ANDROID_AVD_HOME: /home/runner/.android/avd
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { label: "Wear OS 4 (API 33) 432px", api: "33", px: 432 }
+          - { label: "Wear OS 6 (API 36) 480px", api: "36", px: 480 }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: |
+            21
+            17
+      - uses: gradle/actions/setup-gradle@v4
+      - name: SDK packages
+        run: |
+          SDK="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDK" --licenses > /dev/null || true
+          yes | "$SDK" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+          "$SDK" --list 2>/dev/null | grep -oE "system-images;android-[0-9]+(\.[0-9]+)?(-[a-z0-9]+)?;[a-z0-9_-]*wear[a-z0-9_-]*;x86_64" | sort -u | tee wear-images.txt
+          IMG=$(grep -m1 -E "^system-images;android-${{ matrix.api }}(\.[0-9]+)?;" wear-images.txt || true)
+          [ -n "$IMG" ] || { echo "NO WEAR OS IMAGE for API ${{ matrix.api }}"; exit 1; }
+          echo "IMG=$IMG" >> "$GITHUB_ENV"
+          yes | "$SDK" "emulator" "platform-tools" "$IMG" > /dev/null
+      - name: Build the app and the on-device test APKs
+        run: ./gradlew --no-daemon :wear:assembleDebug :wear:assembleDebugAndroidTest
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Create the watch emulator
+        run: |
+          AVDM="$ANDROID_HOME/cmdline-tools/latest/bin/avdmanager"
+          mkdir -p "$ANDROID_AVD_HOME"
+          DEV=$("$AVDM" list device -c | grep -m1 -i "wearos_large_round" || "$AVDM" list device -c | grep -i wear | grep -m1 -i round)
+          echo no | "$AVDM" create avd -n watch -k "$IMG" -d "$DEV" --force
+          CFG="$ANDROID_AVD_HOME/watch.avd/config.ini"
+          sed -i '/^hw.lcd.width/d;/^hw.lcd.height/d;/^hw.lcd.density/d;/^hw.ramSize/d' "$CFG"
+          { echo "hw.lcd.width=${{ matrix.px }}"; echo "hw.lcd.height=${{ matrix.px }}"; echo "hw.lcd.density=320"; echo "hw.ramSize=2048"; } >> "$CFG"
+      - name: Boot and run the on-device Moon test
+        run: |
+          export PATH="$ANDROID_HOME/emulator:$ANDROID_HOME/platform-tools:$PATH"
+          mkdir -p "$HOME/.android"
+          [ -f "$HOME/.android/adbkey" ] || adb keygen "$HOME/.android/adbkey"
+          export ADB_VENDOR_KEYS="$HOME/.android/adbkey"
+          adb kill-server || true; adb start-server
+          emulator -avd watch -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -no-snapshot > emulator.log 2>&1 &
+          for i in $(seq 1 150); do
+            [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] && break
+            sleep 4
+          done
+          [ "$(adb shell getprop sys.boot_completed 2>/dev/null | tr -d '\r')" = "1" ] || { tail -60 emulator.log; echo "Emulator did not boot"; exit 1; }
+          sleep 30
+          echo "DEVICE $(adb shell getprop ro.build.version.release | tr -d '\r') API $(adb shell getprop ro.build.version.sdk | tr -d '\r') $(adb shell wm size | tr -d '\r')"
+          adb install -r -t wear/build/outputs/apk/debug/wear-debug.apk
+          adb install -r -t wear/build/outputs/apk/androidTest/debug/wear-debug-androidTest.apk
+          adb logcat -c
+          adb shell am instrument -w -r -e class io.github.shanebl030glitch.rbsbweather.scene.MoonDeviceTest \
+            io.github.shanebl030glitch.rbsbweather.dev.test/androidx.test.runner.AndroidJUnitRunner | tee instrument.txt
+          adb logcat -d -s RBSBMoon:I | tee moon-logcat.txt
+          mkdir -p moon-out
+          PKG=io.github.shanebl030glitch.rbsbweather.dev
+          for f in $(adb shell run-as $PKG ls files/moon-parity | tr -d '\r'); do
+            adb exec-out run-as $PKG cat "files/moon-parity/$f" > "moon-out/$f"
+          done
+          ls -la moon-out
+          grep -q "OK (1 test)" instrument.txt || { echo "ON-DEVICE MOON TEST FAILED"; exit 1; }
+          echo "ON-DEVICE MOON TEST PASSED"
+      - name: Results and pictures in the log
+        if: always()
+        run: |
+          cat moon-out/results.txt 2>/dev/null || true
+          for f in moon-out/*.png; do
+            [ -f "$f" ] || continue
+            echo "PNG-BEGIN device_api${{ matrix.api }}_$(basename "$f")"; base64 -w 4000 "$f"; echo "PNG-END"
+          done

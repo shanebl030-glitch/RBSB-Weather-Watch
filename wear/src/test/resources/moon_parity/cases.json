@@ -1,0 +1,30 @@
+{
+  "note": "Moon parity reference cases (Shane's Moon review, 28 Nov 2026). Desktop images rendered by RBSB-Weather Desktop's own moon_render.py (rbsb-weather origin/main a99e08a, numpy path, its 2048 px textures) with render_moon(size, phaseAngle, brightLimb, rotation=180). Created By Shane BlackbuRn",
+  "sizes": [
+    240,
+    480
+  ],
+  "cases": [
+    {
+      "name": "crescent",
+      "illumination": 0.25,
+      "phaseAngle": 120.00000000000001,
+      "brightLimb": 270.0,
+      "rotation": 180.0
+    },
+    {
+      "name": "quarter",
+      "illumination": 0.5,
+      "phaseAngle": 90.0,
+      "brightLimb": 270.0,
+      "rotation": 180.0
+    },
+    {
+      "name": "gibbous",
+      "illumination": 0.78,
+      "phaseAngle": 55.94420225743209,
+      "brightLimb": 270.0,
+      "rotation": 180.0
+    }
+  ]
+}

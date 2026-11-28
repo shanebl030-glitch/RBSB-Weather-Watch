@@ -18,6 +18,8 @@ android {
         // phone app's (14 for 0.7.2): 1_000_000 + major*10_000 + minor*100 + patch.
         versionCode = 1_000_100
         versionName = "0.1.0-dev"
+        // Moon verification (branch claude/moon-verification): on-device Moon tests on the emulators.
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -59,6 +61,11 @@ android {
     sourceSets {
         // Stage 2 sample data: the Stage 1 valid snapshots, copied in at build time (one source of truth).
         getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/sampleAssets"))
+        // Moon verification: parity helpers shared by the Robolectric and on-device tests, and the
+        // Desktop reference pictures (test resources) as on-device test assets.
+        getByName("test").java.srcDir("src/sharedTest/java")
+        getByName("androidTest").java.srcDir("src/sharedTest/java")
+        getByName("androidTest").assets.srcDir("src/test/resources")
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true          // Robolectric render tests read the Moon textures
@@ -86,6 +93,21 @@ dependencies {
 
     // Stage 1: the sync format the phone will send (not used by any screen yet; Stage 3 adds the receiver).
     implementation(project(":sync"))
+
+    // Moon verification branch only: the libraries proposed for Stage 3 (decision D6), added so CI can
+    // report exactly what they put in the merged manifest (permissions, exported components, size).
+    // Nothing uses them yet. Not merged without Shane's approval.
+    implementation("com.google.android.gms:play-services-wearable:20.0.1")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
+    implementation("androidx.wear.compose:compose-navigation:1.4.1")
+    testImplementation("androidx.compose.ui:ui-test-junit4")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // On-device Moon tests (emulators): the real renderer on real Android graphics, plus memory.
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test:core:1.6.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("junit:junit:4.13.2")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20250517")          // the real org.json for JVM tests (Android's is a stub there)

@@ -107,7 +107,7 @@ class RenderTest {
         assertEquals(null, drawn.moon)
     }
 
-    @Test fun moonPictureFromTheNasaTexturesAt512px() {
+    @Test fun moonPictureFromTheNasaTexturesAt1024px() {
         MoonRender.init(RuntimeEnvironment.getApplication().assets)
         val full = MoonRender.render(64, 0.0, 270.0)!!
         val newMoon = MoonRender.render(64, 179.0, 270.0)!!
@@ -116,7 +116,7 @@ class RenderTest {
         assertTrue(bright(full) > bright(newMoon) + 40)
         val opts = android.graphics.BitmapFactory.Options()
         val tex = RuntimeEnvironment.getApplication().assets.open("textures/moon_albedo.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, opts) }
-        assertEquals(512, tex!!.width); assertEquals(512, tex.height)
+        assertEquals(1024, tex!!.width); assertEquals(1024, tex.height)   // Moon decision D7
     }
 
     @Test fun theSunStaysBrightUnderTheReadabilityShade() {

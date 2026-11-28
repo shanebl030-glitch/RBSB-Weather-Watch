@@ -121,3 +121,10 @@ A summary of decisions and work, newest last.
   - So every window started at High, and no completed window ran at Standard.
 - TEST_REPORT.md and SKY.md now say exactly that. The quality-control behaviour is unchanged.
 - **For Stage 7:** all three step-downs came in the first seconds after launch, while the app also makes its cloud sprites and Moon picture.
+
+## 28 Nov 2026: Moon review and verification branch
+
+- Shane rejected the hand-drawn Moon in the Stage 3 mock-ups. Claude confirmed that Desktop and Android ship byte-identical NASA 2048 px textures and that the watch used the same imagery at 512 px, and sent matched comparisons (section 2a of the Stage 3 proposal).
+- Shane approved D7 (1024 px textures from the same NASA files), D8 (tap for a full-screen Moon) and D9 (watch-only memory release, with no change to lighting or appearance). He made the Moon an explicit visual acceptance requirement.
+- He asked for the real Kotlin/Android renderer to be tested (not a Python reconstruction) at 25%, 50% and 78% lit, at 240 and 480 px, with memory measured. He also asked for the package identity, Snapshot field coverage and dependency/permission checks before Stage 3 is authorised.
+- He approved a verification-only branch, `claude/moon-verification`: no PR, no merge, version unchanged. The Android and Desktop repositories are not changed. Created By Shane BlackbuRn
