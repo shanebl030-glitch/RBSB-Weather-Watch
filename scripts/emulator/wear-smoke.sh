@@ -68,7 +68,7 @@ adb exec-out screencap -p > "$OUT/about-page.png"
 if found "Created By Shane BlackbuRn"; then
   note "ABOUT SCREEN: credit visible"
 else
-  adb shell input rotaryencoder scroll 2 > /dev/null 2>&1 || adb shell input swipe 200 380 200 120 300
+  adb shell input rotaryencoder scroll --axis SCROLL,2 > /dev/null 2>&1 || adb shell input swipe 200 380 200 120 300
   sleep 2
   if found "Created By Shane BlackbuRn"; then note "ABOUT SCREEN: credit visible after scrolling"; else note "ABOUT SCREEN: credit NOT found"; fi
 fi
@@ -78,8 +78,14 @@ launch                                       # back to the sky for the rotary ch
 sampleline() { found "SAMPLE DATA"; grep -o '[0-9]*/[0-9]* · [a-z +-]*' "$OUT/ui.xml" | head -1; }
 if [ "$ROTARY" = "yes" ]; then
   BEFORE=$(sampleline)
-  if adb shell input rotaryencoder scroll 3 > "$OUT/rotary.txt" 2>&1; then
+  # Android 12+ syntax first (an axis and a value); older images take "scroll <value>".
+  rot() { adb shell input rotaryencoder scroll --axis SCROLL,"$1" > "$OUT/rotary.txt" 2>&1 \
+          && ! grep -qi "error\|usage\|exception" "$OUT/rotary.txt" \
+          || adb shell input rotaryencoder scroll "$1" > "$OUT/rotary.txt" 2>&1; }
+  if rot 3; then
+    note "ROTARY: input tool replied: $(tr -d '\r' < "$OUT/rotary.txt" | head -c 160 | tr '\n' ' ')"
     sleep 2; adb exec-out screencap -p > "$OUT/after-rotary.png"
+    adb logcat -d -s RBSBInput:I | grep -o "ROTARY .*" | tail -3 | sed 's/^/  APP /' | tee -a "$R"
     AFTER=$(sampleline)
     note "ROTARY: scroll event sent (before: $BEFORE; after: $AFTER)"
     if [ -n "$AFTER" ] && [ "$BEFORE" != "$AFTER" ]; then note "ROTARY: sample switched"; else note "ROTARY: sample did NOT switch"; fi

@@ -10,7 +10,15 @@ object RotaryInput {
     /** Scroll amounts in pixels (positive = clockwise / down). */
     val events = Channel<Float>(Channel.UNLIMITED)
 
-    fun send(pixels: Float) { events.trySend(pixels) }
+    fun send(pixels: Float) {
+        try { android.util.Log.i("RBSBInput", "ROTARY activity $pixels px") } catch (e: Throwable) { }
+        events.trySend(pixels)
+    }
+
+    /** A rotary event seen by the sky screen itself (Compose focus path); logged for the emulator test. */
+    fun seen(pixels: Float) {
+        try { android.util.Log.i("RBSBInput", "ROTARY compose $pixels px") } catch (e: Throwable) { }
+    }
 
     /** Pixels of rotation that move one sample. */
     const val STEP_PIXELS = 60f

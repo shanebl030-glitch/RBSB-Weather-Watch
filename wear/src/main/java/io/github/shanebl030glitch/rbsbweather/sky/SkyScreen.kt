@@ -182,7 +182,7 @@ fun SkyScreen(samples: List<Sample>, initialIndex: Int = 0, active: Boolean = tr
             .background(Color.Black)
             .testTag("sky")
             .pointerInput(samples.size) { detectTapGestures(onTap = { step(1) }) }
-            .onRotaryScrollEvent { e -> turn(e.verticalScrollPixels); true }
+            .onRotaryScrollEvent { e -> RotaryInput.seen(e.verticalScrollPixels); turn(e.verticalScrollPixels); true }
             .focusRequester(focus)
             .focusable(),
     ) {
