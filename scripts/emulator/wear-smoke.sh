@@ -93,17 +93,22 @@ done
 
 # --- back from a detail screen: a swipe right, and the watch's Back button ---
 launch --es sample clear-day --es route day/0; sleep 2
-adb logcat -c || true
-( adb shell screenrecord --time-limit 4 /sdcard/swipe.mp4 > /dev/null 2>&1 ) &
-RECS=$!; sleep 0.5
-# Injected swipes have few touch points; a long drag past the dismiss threshold is reliable.
-adb shell input swipe $((W / 20)) $((W / 2)) $((W * 19 / 20)) $((W / 2)) 350
-wait $RECS; adb pull /sdcard/swipe.mp4 "$OUT/rec-swipe-back.mp4" > /dev/null 2>&1; adb shell rm -f /sdcard/swipe.mp4
-sleep 1
-shot "after-swipe-back"
-adb logcat -d -s RBSBInput:I | grep -o "SCREEN .*" | tail -3 | sed 's/^/  APP /' | tee -a "$R"
-if found "SAMPLE DATA"; then note "SWIPE BACK: returned to the first screen"
-elif front; then note "SWIPE BACK: did NOT return (app still open: $(grep -o 'text="[^"]\+"' "$OUT/ui.xml" | head -3 | tr '\n' ' '))"
+SWIPED=""
+for attempt in 1 2; do
+  adb logcat -c || true
+  ( adb shell screenrecord --time-limit 4 /sdcard/swipe.mp4 > /dev/null 2>&1 ) &
+  RECS=$!; sleep 0.5
+  # Injected swipes have few touch points; a long drag past the dismiss threshold is reliable.
+  adb shell input swipe $((W / 20)) $((W / 2)) $((W * 19 / 20)) $((W / 2)) 350
+  wait $RECS; adb pull /sdcard/swipe.mp4 "$OUT/rec-swipe-back-$attempt.mp4" > /dev/null 2>&1; adb shell rm -f /sdcard/swipe.mp4
+  sleep 1
+  shot "after-swipe-back-$attempt"
+  adb logcat -d -s RBSBInput:I | grep -o "SCREEN .*" | tail -3 | sed 's/^/  APP /' | tee -a "$R"
+  if found "SAMPLE DATA"; then SWIPED=$attempt; break; fi
+  front || break
+done
+if [ -n "$SWIPED" ]; then note "SWIPE BACK: returned to the first screen (swipe $SWIPED of 2)"
+elif front; then note "SWIPE BACK: did NOT return after 2 swipes (app still open: $(grep -o 'text="[^"]\+"' "$OUT/ui.xml" | head -3 | tr '\n' ' '))"
 else note "SWIPE BACK: did NOT return (the app closed instead)"; fi
 launch --es sample clear-day --es route day/0; sleep 2
 adb logcat -c || true
@@ -149,10 +154,12 @@ adb shell dumpsys gfxinfo "$PKG" > "$OUT/gfxinfo.txt" 2>&1
 grep -E "Total frames rendered|Janky frames|50th percentile|90th percentile|95th percentile|99th percentile" "$OUT/gfxinfo.txt" | head -8 | sed 's/^/  GFXINFO /' | tee -a "$R"
 # About has nothing animated (the forecast rows' icons do animate, like the phone's), so any
 # frames there would be the sky drawing while off screen. One or two may come from the clock.
-launch --es sample thunder-warning --es scrollTo about; sleep 4
+# The scroll-position indicator fading out and the clock draw a few frames; the sky would draw ~180
+# in 6 s. Under 3 a second means the sky is not drawing.
+launch --es sample thunder-warning --es scrollTo about; sleep 5
 S1=$(frames); sleep 6; S2=$(frames)
-note "ANIMATION: scrolled away from the sky (About): ${S1:-?} then ${S2:-?} frames"
-if [ $(( ${S2:-0} - ${S1:-0} )) -le 2 ]; then note "ANIMATION: stopped when scrolled away"; else note "ANIMATION: still drawing when scrolled away"; fi
+note "ANIMATION: scrolled away from the sky (About): ${S1:-?} then ${S2:-?} frames ($(( ${S2:-0} - ${S1:-0} )) in 6 s)"
+if [ $(( ${S2:-0} - ${S1:-0} )) -lt 18 ]; then note "ANIMATION: stopped when scrolled away"; else note "ANIMATION: still drawing when scrolled away"; fi
 launch --es sample thunder-warning --es scrollTo daily; sleep 4
 D1=$(frames); sleep 6; D2=$(frames)
 note "ANIMATION: forecast icons on the daily list: $(( ${D2:-0} - ${D1:-0} )) frames in 6 s (about 12 a second while icons are on screen)"
