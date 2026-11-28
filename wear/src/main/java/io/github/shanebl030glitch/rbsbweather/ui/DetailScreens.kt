@@ -53,7 +53,7 @@ fun DetailList(tag: String, content: ScalingLazyListScope.() -> Unit) {
     ) {
         ScalingLazyColumn(
             state = state,
-            modifier = Modifier.fillMaxSize().background(Palette.Background).testTag(tag).then(rotaryScroll(state)),
+            modifier = Modifier.fillMaxSize().background(Palette.Background).testTag(tag).rotaryScroll(state),
             contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = side, vertical = 28.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             content = content,

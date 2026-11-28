@@ -91,7 +91,7 @@ fun HomeScreen(
     ) {
         LazyColumn(
             state = listState,
-            modifier = Modifier.fillMaxSize().testTag("home").then(rotaryScroll(listState)),
+            modifier = Modifier.fillMaxSize().testTag("home").rotaryScroll(listState),
             contentPadding = PaddingValues(bottom = (LocalConfiguration.current.screenHeightDp * 0.32f).dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {

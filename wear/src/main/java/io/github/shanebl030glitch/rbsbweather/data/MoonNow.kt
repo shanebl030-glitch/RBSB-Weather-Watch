@@ -8,7 +8,6 @@ package io.github.shanebl030glitch.rbsbweather.data
 
 import io.github.shanebl030glitch.rbsbweather.sync.MoonState
 import java.time.Instant
-import java.time.LocalDate
 import java.time.ZoneId
 import kotlin.math.abs
 import kotlin.math.acos
@@ -74,7 +73,7 @@ object MoonNow {
 
     fun riseSet(t: Instant, lat: Double, lon: Double, zone: ZoneId, snapshot: MoonState?): RiseSet {
         try {
-            val day = Moon.moonDays(lat, lon, zone, LocalDate.ofInstant(t, zone), 1).first()
+            val day = Moon.moonDays(lat, lon, zone, t.atZone(zone).toLocalDate(), 1).first()   // LocalDate.ofInstant needs API 34
             return RiseSet(day.rise?.toInstant(), day.set?.toInstant(), day.alwaysUp, day.alwaysDown, live = true)
         } catch (e: Exception) { }
         val m = snapshot ?: return RiseSet(null, null, false, false, live = false)

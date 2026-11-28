@@ -59,7 +59,7 @@ import kotlin.math.sin
  * one smooth movement, so nothing is lost and the list doesn't jump.
  */
 @Composable
-fun rotaryScroll(state: ScrollableState, active: Boolean = true): Modifier {
+fun Modifier.rotaryScroll(state: ScrollableState, active: Boolean = true): Modifier {
     val focus = remember { FocusRequester() }
     val pending = remember { Channel<Float>(Channel.UNLIMITED) }
     LaunchedEffect(state, active) {
@@ -72,7 +72,7 @@ fun rotaryScroll(state: ScrollableState, active: Boolean = true): Modifier {
             state.animateScrollBy(total, tween(durationMillis = 140, easing = LinearOutSlowInEasing))
         }
     }
-    return Modifier
+    return this
         .onRotaryScrollEvent { e -> RotaryInput.seen(e.verticalScrollPixels); pending.trySend(e.verticalScrollPixels); true }
         .focusRequester(focus)
         .focusable()

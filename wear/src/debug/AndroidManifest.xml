@@ -8,6 +8,7 @@
         <activity
             android:name="androidx.activity.ComponentActivity"
             android:exported="false"
+            android:taskAffinity=""
             tools:replace="android:exported" />
     </application>
 </manifest>
