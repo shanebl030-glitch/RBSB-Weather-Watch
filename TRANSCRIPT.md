@@ -121,3 +121,25 @@ A summary of decisions and work, newest last.
   - So every window started at High, and no completed window ran at Standard.
 - TEST_REPORT.md and SKY.md now say exactly that. The quality-control behaviour is unchanged.
 - **For Stage 7:** all three step-downs came in the first seconds after launch, while the app also makes its cloud sprites and Moon picture.
+
+## 28 Nov 2026: Stage 3 approved and started
+
+- Shane approved the final Stage 3 proposal and decisions D1 to D10, then authorised the Stage 3 branch. His conditions:
+  - keep the verified Moon, and port its tested changes without merging the verification branch;
+  - provide emulator screenshots at each visual milestone, and pause for his review once the main screens work;
+  - smooth scrolling and readable layouts on every round size;
+  - never present missing or stale weather as current;
+  - separate verified results from those awaiting a real watch;
+  - version 0.1.0-dev; Android and Desktop untouched; no production signing, publishing or new permissions; no merge without his final approval.
+- Claude updated the development plan: Stage 2 merged, Stage 3 in progress.
+- Shane added a milestone at the end of Stage 3: a private beta APK (`.dev`, development-signed, sample data clearly labelled), with Linux Mint install and removal steps and a real-watch checklist. Claude added it to the development plan. It is not to be rushed.
+- **Work so far** (branch `claude/stage-3-weather-app`):
+  - the Moon changes ported, D10 live Moon, the data core, all main screens and detail screens, and the no-data screens;
+  - the emulator tests now screenshot every screen and state on all five emulators and check round-screen fit, taps, bezel, touch scrolling, back, animation and the on-device Moon.
+- **Problems the emulator runs found, and their fixes:**
+  - The sky filled only two thirds of the screen. Fixed.
+  - Words over the sky collided with the time on 432 px. They now sit in three bands sized from the screen.
+  - An API 34 call would have crashed the Moon screen on Wear OS 4. Lint caught it, and it's fixed.
+  - Open screens kept the data they were first drawn with, so new data or a new sample never appeared. Fixed.
+  - The first Back-button press did nothing on Wear OS 4. Fixed.
+  - Three test mistakes were corrected: the bezel was turned the wrong way, slow injected swipes didn't count as a swipe, and the scroll-away check counted the forecast icons' own animation. Created By Shane BlackbuRn

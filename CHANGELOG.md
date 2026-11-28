@@ -4,7 +4,23 @@ RBSB-Weather for Galaxy Watch. Created By Shane BlackbuRn
 
 Version codes use their own range: 1_000_000 + major × 10_000 + minor × 100 + patch.
 
-## 0.1.0-dev (Stage 2: animated sky, in review)
+## 0.1.0-dev (Stage 3: the weather app, in progress on `claude/stage-3-weather-app`)
+
+Approved 28 Nov 2026 with decisions D1 to D10. The version is unchanged. Not merged.
+
+- **First screen (D1):** one vertical scroll from the animated sky through Now, Hourly (6 hours, then all 48), Daily (tap a day), Wind, Warnings (tap a warning), Moon (tap for the Moon screen, tap again for full screen, D8) and About. Bezel, crown and touch all scroll; swipe right or Back returns.
+- **Old data is never shown as current:** freshness states (45 min, 3 h, 12 h, end of forecast, D4), "Forecast for 15:00" and "Last known" labels, the age always shown; readings the forecast lacks are left out. The sky follows the place's real local time and, with old data, this hour's forecast.
+- **Moon (D7 to D10):** 1024 px NASA textures; decoded textures released after scaling; phase, illumination and position calculated live with the shared Moon code, the phone's values as cross-check and fallback. Ported from the verification branch with its tests; that branch is not merged.
+- **Data core:** a checked, atomically written cache; units and 12/24 h from the phone's settings; times in the place's zone with a label when the watch differs (D3); the refresh rule (once per 10 min, data over 45 min old).
+- **Sample data (D2):** debug builds only, labelled SAMPLE DATA; release APKs contain none.
+- **Fixed during Stage 3, found by the emulator tests:**
+  - the Moon screen would have crashed on Wear OS 4 (an API 34 call);
+  - open screens did not update after their first draw;
+  - the first Back-button press did nothing on Wear OS 4.
+- **Tests:** 176 unit and render tests (Moon parity, data age, rows, screen text, cache with every Stage 1 sample); on every emulator, every screen and data state is screenshotted, plus round-screen fit, bezel, touch, back, animation stopping and the on-device Moon test.
+- **Libraries (D6):** play-services-wearable 20.0.1, Wear Compose navigation; no new permissions; the debug-only test activity is kept unexported.
+
+## 0.1.0-dev (Stage 2: animated sky, merged 28 Nov 2026, PR #3)
 
 The animated sky, from sample data. The version is unchanged. See `docs/SKY.md`.
 
