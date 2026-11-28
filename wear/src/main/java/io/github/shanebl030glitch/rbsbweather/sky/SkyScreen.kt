@@ -189,6 +189,10 @@ fun SkyScreen(samples: List<Sample>, initialIndex: Int = 0, active: Boolean = tr
         Canvas(Modifier.fillMaxSize()) {
             frame                                            // redraw on each animation frame
             val t0 = System.nanoTime()
+            // First frame: set the weather before the size, so the sky opens as the sample's own sky
+            // (the engine cross-fades only once it has a size; without this a night sky faded in
+            // from the engine's default daytime sky for 0.8 s). Later changes still cross-fade.
+            if (engine.width <= 1 && engine.cond !== cond) engine.setConditions(cond)
             engine.setSize(size.width.toInt(), size.height.toInt())
             if (engine.cond !== cond) engine.setConditions(cond)
             drawScene(engine, scrim = false, underSun = {

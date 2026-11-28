@@ -70,17 +70,29 @@ class RenderTest {
     }
 
     @Test fun dayAndNightLookDifferent() {
-        val day = render(SceneEngine().apply { setSize(432, 432); setConditions(Conditions(Kind.CLEAR, 0.0, daylight = 1.0)) })
-        val night = render(SceneEngine().apply { setSize(432, 432); setConditions(Conditions(Kind.CLEAR, 0.0, daylight = 0.0)) })
-        // Average blue over the top band (the phone test used one pixel; on a 432 px canvas a star or
-        // a Sun ray can land on any single pixel).
-        fun topBlue(b: Bitmap): Double {
-            var sum = 0.0; var n = 0
-            for (x in 0 until b.width step 7) for (y in 0 until 60 step 5) { sum += b.getPixel(x, y) and 0xFF; n++ }
-            return sum / n
-        }
-        println("DAY/NIGHT top-band blue: day ${topBlue(day)}, night ${topBlue(night)}; day pixel ${Integer.toHexString(day.getPixel(216, 20))}, night pixel ${Integer.toHexString(night.getPixel(216, 20))}")
+        // As the phone test: the weather is set before the size, so nothing cross-fades.
+        val day = render(SceneEngine().apply { setConditions(Conditions(Kind.CLEAR, 0.0, daylight = 1.0)); setSize(432, 432) })
+        val night = render(SceneEngine().apply { setConditions(Conditions(Kind.CLEAR, 0.0, daylight = 0.0)); setSize(432, 432) })
         assertTrue("day ${topBlue(day)} vs night ${topBlue(night)}", topBlue(day) > topBlue(night) + 60)
+    }
+
+    /** Average blue over the top band (the phone test used one pixel; a star or Sun ray can land on one). */
+    private fun topBlue(b: Bitmap): Double {
+        var sum = 0.0; var n = 0
+        for (x in 0 until b.width step 7) for (y in 0 until 60 step 5) { sum += b.getPixel(x, y) and 0xFF; n++ }
+        return sum / n
+    }
+
+    @Test fun theSkyOpensAsTheSamplesOwnSkyWithoutFadingFromDay() {
+        // What SkyScreen does on its first frame: conditions before size. A night sky is night at once.
+        val e = SceneEngine()
+        e.setConditions(Conditions(Kind.CLEAR, 0.0, daylight = 0.0))
+        e.setSize(432, 432)
+        assertEquals(1.0, e.cloudFade, 0.0)                                       // no fade in progress
+        assertTrue("night at once: ${topBlue(render(e))}", topBlue(render(e)) < 120)
+        // The order that caused the 0.8 s flash of daytime blue (kept as a check that it was the cause):
+        val wrong = SceneEngine().apply { setSize(432, 432); setConditions(Conditions(Kind.CLEAR, 0.0, daylight = 0.0)) }
+        assertEquals(0.0, wrong.cloudFade, 0.0)
     }
 
     @Test fun sunAndMoonFollowTheirArcs() {
