@@ -4,7 +4,39 @@ RBSB-Weather for Galaxy Watch. Created By Shane BlackbuRn
 
 Version codes use their own range: 1_000_000 + major × 10_000 + minor × 100 + patch.
 
-## 0.1.0-dev (Stage 1: sync format v1, in review)
+## 0.1.0-dev (Stage 2: animated sky, in review)
+
+The animated sky, from sample data. The version is unchanged. See `docs/SKY.md`.
+
+- **Sky first, About second (decision 7):** the sky is the first screen; swipe sideways to About.
+- **The sky:** drawn by the scene code copied from RBSB-Weather for Android v0.7.2 (commit `cdf422d`; each file records its source and the watch's changes). The Android repository is unchanged.
+  - Effects: wind-driven clouds, rain and splashes, drizzle, snow, fog, lightning, the Sun's arc, the Moon's phase and tilt, stars, day/night fades.
+  - It reads the Stage 1 snapshot. The sync format is unchanged.
+- **Moon (decision 1, option C):**
+  - phase and illumination from the snapshot;
+  - live position and tilt calculated on the watch;
+  - rise and set from the snapshot when they span the moment shown.
+- **Sample data (decision 2):** the Stage 1 valid samples are bundled at build time and labelled SAMPLE DATA. Tap or turn the bezel/crown to switch. Names are shortened on screens under 230 dp (432 px).
+- **Animation:** 30 fps, only while the sky is on screen and the app is in front; it stops in the background and when the watch dims.
+- **Quality levels (decision 3):**
+  - High, Standard and Light change detail only; every effect stays at every level.
+  - The level is chosen from measured frame times: the first 3 s, then every 10 s. Step down above 10% slow frames (over 33 ms or late); step up after 30 s with p90 work under 20 ms. Power-saving mode goes one level lower and caps at 20 fps.
+  - The thresholds are adjustable (`QualityConfig`).
+- **Frame timing:** each 10-second window is logged (`RBSBSky`) and kept in `sky-frame-timing.csv` (never more than the last 500 windows) for Stage 7. The latest is shown on About.
+- **Memory:** one cloud sprite set (a cache of 40; the phone uses 96). 512 px Moon textures, about 147 KB (decision 5); NASA credit on About and in the docs.
+- **Review fixes:**
+  - The Sun stays bright: the readability shade is drawn under the Sun, Moon and clouds.
+  - Rotary sample switching is confirmed on emulators. The test was sending its command in an old form; the app also passes on rotary events no view took.
+  - The Moon was confirmed below the horizon in the clear-night sample.
+  - The UseKtx lint warnings are gone.
+- **Fixed in review:** the frame-timing file could grow to 600 windows between clean-ups although documented as 500; it now never holds more than 500, and the test checks this after every append.
+- **Fixed during testing:** the screen opened with a 0.8-second fade from daytime blue (seen on night samples); it now opens directly on the sample's own sky.
+- **Tests (decision 6):**
+  - 132 unit tests (75 wear, 57 sync). The phone's scene, Moon (PyEphem reference) and safe-drawing tests are ported, plus new quality, frame-timing, Moon-horizon and sample tests.
+  - Robolectric 4.18.1 render tests on SDK 36, test-only. Robolectric needs Java 21 for SDK 36, so CI runs the wear unit tests on Java 21; the app is still built for Java 17.
+- **Emulator test:** sample label, tap and rotary switching, 10 sample screenshots, About credit, animation running while shown and stopped in the background, frame-timing windows, and three 6-second recordings.
+
+## 0.1.0-dev (Stage 1: sync format v1, merged 28 Nov 2026)
 
 Defines what RBSB-Weather for Android will send the watch. No weather features, no screen changes, and nothing is sent or received yet (watch receiver: Stage 3; phone side: Android 0.8.0, which needs approval).
 

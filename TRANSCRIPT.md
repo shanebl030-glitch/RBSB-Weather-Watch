@@ -75,3 +75,49 @@ A summary of decisions and work, newest last.
 - Unknown names are `BAD_VALUE`; wrong characters stay `BAD_FORMAT`. The Python check also now uses full pattern matches, as Kotlin does.
 - **Finding for the phone (0.8.0):** Android 0.7.2 stores `auto` for My location, and with MET Norway it reaches `Forecast.timezone`. The phone must send a real zone name; a test documents that `auto` is refused. Nothing in the phone app was changed.
 - Build and test passed at `c9d7128`: 60 of 60 tests, time zones match. Version 0.1.0-dev; no Stage 2; nothing published.
+
+## 28 Nov 2026: Stage 2 approved; milestone 1 (design review)
+
+- Shane merged Stage 1 (PR #2, `fd00950`) and approved the Stage 2 scope with conditions:
+  1. Moon option C.
+  2. Sample data in debug and release builds until Stage 3, clearly labelled, switchable by tap or rotary.
+  3. The proposed quality thresholds, adjustable, with measurements recorded for Stage 7.
+  4. Forecast icons left for Stage 3.
+  5. A 512 px Moon texture with the NASA credit.
+  6. Test-only Robolectric, with SDK 36 compatibility verified in CI first.
+  7. The sky as the first screen, About on the second page.
+- He asked to see the watch design early: a basic sky screen with sample data and emulator screenshots (432, 480 and 498 px) for review before the full effects and animation work.
+- Built milestone 1 on `claude/stage-2-animated-sky`: the copied scene code adapted to the Stage 1 snapshot, the sky and About pages, bundled samples, 512 px Moon textures, the emulator screenshots, and unit tests for sample loading, the text over the sky and the snapshot-to-sky conditions (including the Moon, option C).
+- Note: the CI emulators capture the full square framebuffer; Galaxy Watch screens are round. The layout keeps content inside the circle, and review images have a circular mask applied afterwards, labelled as such.
+
+## 28 Nov 2026: Stage 2 completed (in review)
+
+- Shane approved the milestone 1 design and asked for five fixes: a bright Sun, rotary switching, confirming the missing Moon, shorter sample names at 432 px, and the lint warnings. Then the animation, quality levels, frame timing and remaining tests.
+- **Sun:** the readability shade now sits under the Sun, Moon and clouds.
+- **Rotary:** the emulator test used an old command form with no scroll amount. With `--axis SCROLL,3` the app switches samples, and the logs show the event arriving through Compose. An activity fallback was added too.
+- **Moon:** confirmed below the horizon at 23:00 in Auckland (13° below, the same as the desktop `moon.py`).
+- **Names:** shortened below 230 dp.
+- **Lint:** the UseKtx warnings are fixed.
+- **Built:** 30 fps animation only while shown; High/Standard/Light levels chosen from measured frame times with the approved thresholds (adjustable); frame windows logged and stored for Stage 7; one cloud sprite set; ported scene, Moon and safe-drawing tests; new tests; Robolectric 4.18.1 render tests on SDK 36.
+- **Unexpected problem, reported to Shane before continuing:** Robolectric needs Java 21 for SDK 36. CI now runs the wear unit tests on Java 21; the app is still built for Java 17.
+- **Found by a test:** the screen opened with a 0.8-second fade from daytime blue; it now opens on the sample's own sky.
+- **Milestone media sent to Shane:** a before/after of the Sun, lightning stills, and 6-second recordings at 432, 480 and 498 px.
+- **Results at `0796ed4`:** 132/132 tests, lint 0 errors, 5/5 emulators PASS (rotary included), Signing gate 1 PASS. Version 0.1.0-dev. Android and WeatherDesk untouched; no production key; nothing published.
+
+## 28 Nov 2026: Stage 2 review corrections
+
+- Shane reviewed PR #3 and asked for two corrections before final approval.
+- **TEST_REPORT.md:** the Stage 2 results now name the final code commit (`d8911ef`) with its pull-request and push run IDs, and the emulator measurements come from that pull-request run. `40d7bb5` (before the fix) is recorded as also passing. A commit can't contain its own ID, so the report's update is a documentation-only commit after `d8911ef`, checked by the same workflows.
+- **SkyStats:** the frame-timing file was documented as keeping the last 500 windows but trimmed only above 600. It now never holds more than 500; the test checks this after every append. SKY.md and the CHANGELOG agree.
+- **Results at `d8911ef`:** all six runs passed (132/132 tests, lint 0 errors, 5/5 emulators PASS with rotary, Signing gate 1 PASS).
+
+## 28 Nov 2026: frame-window measurements clarified
+
+- Shane spotted that TEST_REPORT.md said all 82 emulator windows were at High while also recording 3 step-downs, and that SKY.md said the emulators stayed on High.
+- **Checked run `46091229456` window by window:**
+  - 64 windows are the first 3 seconds after a launch and 18 are 10-second windows.
+  - The emulator test restarts the app for every screenshot and recording, so each launch starts at High.
+  - All 3 step-downs happened in a first 3-second window; the next window was always a new launch, about 14–15 seconds later.
+  - So every window started at High, and no completed window ran at Standard.
+- TEST_REPORT.md and SKY.md now say exactly that. The quality-control behaviour is unchanged.
+- **For Stage 7:** all three step-downs came in the first seconds after launch, while the app also makes its cloud sprites and Moon picture.

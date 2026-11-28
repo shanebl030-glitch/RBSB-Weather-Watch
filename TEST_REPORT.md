@@ -4,6 +4,98 @@ RBSB-Weather for Galaxy Watch 0.1.0-dev. Created By Shane BlackbuRn
 
 Results are split into **tested** (run and passed), **inferred** (follows from what was tested, not run directly) and **not yet tested**.
 
+# Stage 2: animated sky (in review)
+
+Code tested: `d8911ef` on `claude/stage-2-animated-sky`, the final Stage 2 code (28 Nov 2026; it includes the review fix that keeps the frame-timing file to 500 windows). All six runs passed:
+
+| Workflow | Pull request run (recorded below) | Push run |
+|---|---|---|
+| Build and test | `46091229437` | `46091226332` |
+| Wear OS emulators | `46091229456` | `46091226326` |
+| Signing gate 1 | `46091229435` | `46091226329` |
+
+The commit before the review fix, `40d7bb5`, also passed all six runs (pull request: Build and test `46089810618`, emulators `46089810652`, Signing gate 1 `46089810649`). This report was then updated in a documentation-only commit, which the pull request shows passing the same workflows.
+
+## Tested (GitHub Actions)
+
+Actual output, Build and test (pull request run `46091229437`):
+
+```
+TEST TOTALS (wear): 75 run, 75 passed, 0 failed, 0 errors, 0 skipped
+TEST TOTALS (sync): 57 run, 57 passed, 0 failed, 0 errors, 0 skipped
+TEST TOTALS: 132 run, 132 passed, 0 failed, 0 errors, 0 skipped
+LINT: 0 errors, 5 warnings   (all "newer library version available"; the UseKtx warnings are fixed)
+```
+
+The wear tests by class:
+- AboutInfoTest 4;
+- MoonTest 13 (ported, PyEphem reference);
+- QualityTest 13;
+- RenderTest 9 (Robolectric, SDK 36);
+- SafeDrawingTest 2 (ported);
+- SceneTest 18 (ported);
+- SnapshotConditionsTest 7;
+- SampleDataTest 3;
+- SkyStatsTest 1;
+- SkyTextTest 5.
+
+All 5 emulators passed (pull request run `46091229456`). Actual lines:
+
+```
+All 5:   SKY SCREEN: sample-data label visible / tap switched to the next sample / ABOUT SCREEN: credit visible / RESULT: PASS
+Rotary:  APP ROTARY compose -384.0 px
+         ROTARY: scroll event sent (before: 1/18 · clear-day; after: 18/18 · largest)   ROTARY: sample switched   (Wear OS 5 and 6, 480 px)
+Frames rendered while shown (after 10 s, after 15 s), then in the background (twice, 6 s apart):
+  432 px (Wear OS 4):          299, 448   background 452, 452
+  438 px (Wear OS 6):          303, 454   background 460, 460
+  480 px rotary (Wear OS 5):   297, 455   background 467, 467
+  480 px rotary (Wear OS 6):   291, 435   background 442, 442
+  498 px (newest image):       301, 452   background 456, 456
+  ANIMATION: running while shown / ANIMATION: stopped in the background   (all 5)
+Frame windows (all 5 emulators): 82 windows, mean 28.6 fps, worst p90 work 16.9 ms; decisions keep 79, step down 3
+```
+
+**How to read the frame windows.** Each `SKY FRAME WINDOW` line records the level the window started at (`quality`) and the level chosen for afterwards (`next`). The emulator test restarts the app for each screenshot and recording (`am start -S`), so each launch is a new process whose quality controller starts again at High. In this run:
+- **82 windows from many short app sessions:** 64 are the first 3-second window after a launch; 18 are 10-second windows, from sessions that ran longer (mainly the 15-second animation check).
+- **The 3 step-downs** (to Standard) each happened in the first 3-second window after a launch: one on the 498 px emulator (12% slow frames) and two on the Wear OS 6 480 px rotary emulator (34% and 20%).
+- **What followed each one:** the next window belongs to a new launch about 14–15 seconds later, which started at High again. So all 82 windows started at High.
+- **No completed window ran at Standard.** The sky did draw at Standard for the few seconds until the test restarted the app, but no window finished in that time.
+- **What this shows:** the controller makes its decisions as designed. It doesn't show how long Standard is kept, or the 30-second step back up, on an emulator; those are covered by QualityTest. The emulator sessions are too short to observe them.
+- **A note for Stage 7:** all three step-downs came in the first 3 seconds after a launch, when the app is also making its cloud sprites and Moon picture in the background. Whether real watches step down then too is something to look at when tuning the thresholds. The behaviour is unchanged here.
+
+The `gfxinfo` 50th/90th percentiles (32 ms) and "janky" percentages are expected for a sky deliberately drawn at 30 fps; see `docs/SKY.md`.
+
+| Approved Stage 2 acceptance criterion | Result |
+|---|---|
+| 1. The sky draws every sample at 432 to 498 px; emulator screenshots | Pass: render tests at 432, 480 and 498 px for 10 samples; emulator screenshots of 10 samples on all 5 setups |
+| 2. Ported desktop scene checks | Pass: SceneTest 18 and MoonTest 13 (PyEphem). Moon phase on known dates, codes, day/night/twilight, wind and hemisphere, cloud ordering, particles bounded over 10 minutes (now at every level), lightning only in storms, rain slant |
+| 3. Quality levels: every effect at every level; level choice | Pass: QualityTest 13 (thresholds, step down, step up after 30 s, no flip-flop, power saving, records) and every code at every level in RenderTest. On the emulators the controller stepped down 3 times, each in the first 3 s after a launch; the test restarted the app each time before another window finished (see "How to read the frame windows") |
+| 4. Frame timing recorded on every emulator | Pass: `SKY FRAME WINDOW` lines and `gfxinfo` in the log. For comparing builds only, not real-watch speed |
+| 5. Memory: one sprite set, 512 px Moon, bounded caches | Pass: sprite cache at most 40 (test), 512 px texture (test), particles bounded (test) |
+| 6. Threading rules | Pass: copied code unchanged (clouds and the Moon made off the main thread with stand-ins); SafeDrawingTest |
+| 7. Animates only while shown | Pass: frames rise while shown, unchanged in the background, on all 5 emulators |
+| 8. Baseline | Pass: 132/132 tests, lint 0 errors, 64-bit, permissions (none added), Signing gate 1 PASS (phone and watch DEVICE IDENTITY OK), 5/5 emulators |
+| 9. Credit and NASA credit | Pass: About page (test and emulator) and docs |
+
+**Problems found and fixed in Stage 2:**
+1. The Sun was dulled by the readability shade (review). The shade is now under the Sun; a test checks the Sun stays bright.
+2. Rotary didn't switch samples (review). The cause was the test's old `input rotaryencoder scroll 3` form, which carried no scroll amount. With `--axis SCROLL,3` the app receives the event and switches. An activity fallback was also added.
+3. Robolectric 4.18.1 can't run SDK 36 on Java 17. CI now runs the wear unit tests on Java 21; the app is still compiled for Java 17. Reported to Shane before continuing.
+4. The screen opened with a 0.8-second fade from daytime blue (found by the day/night render test). It now opens directly on the sample's own sky, and a test covers this.
+5. Review: the frame-timing file was documented as keeping the last 500 windows but trimmed only above 600. It now never holds more than 500, and SkyStatsTest checks this after every append.
+6. Two test compile errors, one test expectation (-3.5° rounds to -3°, as the phone does), and one test that sampled a single pixel were corrected.
+7. Two CI runs hit Maven Central HTTP 429 before building; re-runs passed.
+
+## Inferred, not run directly
+
+- Every effect appears at every level on real watches: tested on emulators and in render tests, with the same code on the watch.
+
+## Not yet tested
+
+- **Real Galaxy Watch frame rates, quality levels and battery:** Stage 7. Emulators use the PC's graphics. `gfxinfo` "janky" percentages are expected at a deliberate 30 fps and aren't meaningful here.
+- **Physical bezel feel and Samsung's power-saving mode:** Stage 7.
+- **Ambient (always-on) still sky:** Stage 4. In Stage 2 the sky simply stops.
+
 # Stage 1: sync format v1 (in review)
 
 ## Review fix: time-zone validation (`c9d7128`)

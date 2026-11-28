@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# Install and launch the RBSB-Weather Watch shell on a running Wear OS emulator, then record
-# what happened: screenshot, UI text, crash check, optional rotary scroll.
+# Install and launch RBSB-Weather Watch on a running Wear OS emulator, then record what happened:
+# the sky screen (sample label, tap and rotary switch samples), a sky screenshot for each of a set
+# of samples, the About page (credit), crash check.
 # Usage: wear-smoke.sh APK OUTDIR LABEL ROTARY(yes|no)
 # Created By Shane BlackbuRn
 set -u
@@ -40,29 +41,83 @@ for attempt in 1 2 3; do
   sleep 3
 done
 front || note "LAUNCH: app NOT in front"
-adb exec-out screencap -p > "$OUT/about.png"
 
 found() { adb shell uiautomator dump /sdcard/ui.xml > /dev/null 2>&1; adb shell cat /sdcard/ui.xml > "$OUT/ui.xml" 2>/dev/null; grep -q "$1" "$OUT/ui.xml"; }
+launch() { adb shell am start -S -W -n "$PKG/$ACT" "$@" > "$OUT/start.txt" 2>&1; sleep 7; }
 
+# --- the sky screen (first page) ---
+if found "SAMPLE DATA"; then note "SKY SCREEN: sample-data label visible"; else note "SKY SCREEN: sample-data label NOT found"; fi
+if found "1/[0-9]* · "; then note "SKY SCREEN: first sample shown ($(grep -o '1/[0-9]* · [a-z-]*' "$OUT/ui.xml" | head -1))"; fi
+# A tap moves to the next sample.
+SIZE=$(adb shell wm size | tr -d '\r' | grep -o '[0-9]*x[0-9]*' | tail -1); W=${SIZE%x*}
+adb shell input tap $((W / 2)) $((W / 2)); sleep 2
+if found "2/[0-9]* · "; then note "SKY SCREEN: tap switched to the next sample"; else note "SKY SCREEN: tap did NOT switch sample"; fi
+
+# --- a sky screenshot for each of these samples (launched directly by name) ---
+for S in clear-day partly-cloudy-day overcast drizzle rain-night-warnings thunder-warning fog snow-northern clear-night polar-night; do
+  launch --es sample "$S"
+  sleep 3                                  # clouds and the Moon picture are made in the background
+  adb exec-out screencap -p > "$OUT/sky-$S.png"
+  if found "SAMPLE DATA"; then note "SKY $S: shown"; else note "SKY $S: label NOT found"; fi
+done
+cp "$OUT/sky-clear-day.png" "$OUT/about.png" 2>/dev/null || true   # kept for older log steps
+
+# --- the About page (second page) ---
+launch --ei page 1
+adb exec-out screencap -p > "$OUT/about-page.png"
 if found "Created By Shane BlackbuRn"; then
   note "ABOUT SCREEN: credit visible"
 else
-  # The list may need scrolling on a small screen: try the rotary encoder, then a swipe.
-  adb shell input rotaryencoder scroll 2 > /dev/null 2>&1 || adb shell input swipe 200 380 200 120 300
+  adb shell input rotaryencoder scroll --axis SCROLL,2 > /dev/null 2>&1 || adb shell input swipe 200 380 200 120 300
   sleep 2
   if found "Created By Shane BlackbuRn"; then note "ABOUT SCREEN: credit visible after scrolling"; else note "ABOUT SCREEN: credit NOT found"; fi
 fi
 if found "RBSB-Weather Watch"; then note "ABOUT SCREEN: title visible"; else note "ABOUT SCREEN: title not on first screen"; fi
+launch                                       # back to the sky for the rotary check
 
+sampleline() { found "SAMPLE DATA"; grep -o '[0-9]*/[0-9]* · [a-z +-]*' "$OUT/ui.xml" | head -1; }
 if [ "$ROTARY" = "yes" ]; then
-  if adb shell input rotaryencoder scroll 3 > "$OUT/rotary.txt" 2>&1; then
+  BEFORE=$(sampleline)
+  # Android 12+ syntax first (an axis and a value); older images take "scroll <value>".
+  rot() { adb shell input rotaryencoder scroll --axis SCROLL,"$1" > "$OUT/rotary.txt" 2>&1 \
+          && ! grep -qi "error\|usage\|exception" "$OUT/rotary.txt" \
+          || adb shell input rotaryencoder scroll "$1" > "$OUT/rotary.txt" 2>&1; }
+  if rot 3; then
+    note "ROTARY: input tool replied: $(tr -d '\r' < "$OUT/rotary.txt" | head -c 160 | tr '\n' ' ')"
     sleep 2; adb exec-out screencap -p > "$OUT/after-rotary.png"
-    note "ROTARY: scroll event sent"
+    adb logcat -d -s RBSBInput:I | grep -o "ROTARY .*" | tail -3 | sed 's/^/  APP /' | tee -a "$R"
+    AFTER=$(sampleline)
+    note "ROTARY: scroll event sent (before: $BEFORE; after: $AFTER)"
+    if [ -n "$AFTER" ] && [ "$BEFORE" != "$AFTER" ]; then note "ROTARY: sample switched"; else note "ROTARY: sample did NOT switch"; fi
   else
     note "ROTARY: the input tool refused the rotary event ($(head -c 200 "$OUT/rotary.txt"))"
   fi
 fi
 
+# --- the animation: frames are drawn while the sky is shown, and stop in the background ---
+launch --es sample thunder-warning
+frames() { adb shell dumpsys gfxinfo "$PKG" 2>/dev/null | tr -d '\r' | grep -m1 "Total frames rendered" | grep -o '[0-9]*$'; }
+adb shell dumpsys gfxinfo "$PKG" reset > /dev/null 2>&1
+sleep 10
+F1=$(frames); sleep 5; F2=$(frames)
+note "ANIMATION: frames rendered while shown: ${F1:-?} after 10 s, ${F2:-?} after 15 s"
+if [ -n "$F1" ] && [ -n "$F2" ] && [ "$F2" -gt "$F1" ]; then note "ANIMATION: running while shown"; else note "ANIMATION: NOT running while shown"; fi
+adb shell dumpsys gfxinfo "$PKG" > "$OUT/gfxinfo.txt" 2>&1
+grep -E "Total frames rendered|Janky frames|50th percentile|90th percentile|95th percentile|99th percentile" "$OUT/gfxinfo.txt" | head -8 | sed 's/^/  GFXINFO /' | tee -a "$R"
+adb shell input keyevent KEYCODE_HOME; sleep 4
+B1=$(frames); sleep 6; B2=$(frames)
+note "ANIMATION: in the background: ${B1:-?} then ${B2:-?} frames"
+if [ "${B1:-0}" = "${B2:-0}" ]; then note "ANIMATION: stopped in the background"; else note "ANIMATION: still drawing in the background"; fi
+adb logcat -d -s RBSBSky:I 2>/dev/null | grep "SKY FRAME WINDOW" | sed 's/.*SKY FRAME WINDOW /  SKY FRAME WINDOW /' | tee -a "$R"
+
+# --- short recordings for review: 3 samples, 6 s each ---
+for S in thunder-warning rain-night-warnings snow-northern; do
+  launch --es sample "$S"
+  sleep 2
+  adb shell screenrecord --time-limit 6 /sdcard/rec.mp4 > /dev/null 2>&1 && adb pull /sdcard/rec.mp4 "$OUT/rec-$S.mp4" > /dev/null 2>&1 \
+    && note "RECORDING $S: $(stat -c %s "$OUT/rec-$S.mp4" 2>/dev/null) bytes" || note "RECORDING $S: screenrecord not available"
+  adb shell rm -f /sdcard/rec.mp4
+done
 sleep 2
 adb logcat -d > "$OUT/logcat.txt" 2>&1 || true
 if grep -q "FATAL EXCEPTION" "$OUT/logcat.txt"; then
@@ -71,5 +126,5 @@ if grep -q "FATAL EXCEPTION" "$OUT/logcat.txt"; then
 fi
 if [ -n "$(adb shell pidof "$PKG" | tr -d '\r')" ]; then note "PROCESS: running"; else note "PROCESS: not running"; fi
 
-grep -q "CRASH: YES\|credit NOT found\|PROCESS: not running\|app NOT in front" "$R" && { note "RESULT: FAIL"; exit 1; }
+grep -q "CRASH: YES\|credit NOT found\|PROCESS: not running\|app NOT in front\|label NOT found\|did NOT switch\|NOT running while shown\|still drawing in the background" "$R" && { note "RESULT: FAIL"; exit 1; }
 note "RESULT: PASS"

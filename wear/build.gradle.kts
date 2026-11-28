@@ -56,6 +56,14 @@ android {
         compose = true
         buildConfig = true
     }
+    sourceSets {
+        // Stage 2 sample data: the Stage 1 valid snapshots, copied in at build time (one source of truth).
+        getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/sampleAssets"))
+    }
+    testOptions {
+        unitTests.isIncludeAndroidResources = true          // Robolectric render tests read the Moon textures
+        unitTests.all { it.systemProperty("rbsb.samples", rootProject.file("sync/samples").absolutePath) }
+    }
     lint {
         abortOnError = true
         warningsAsErrors = false
@@ -71,6 +79,8 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.10.1")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
+    implementation("androidx.compose.foundation:foundation")      // HorizontalPager (sky and About pages)
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")   // the sky animates only while the app is in front
     implementation("androidx.wear.compose:compose-material:1.4.1")
     implementation("androidx.wear.compose:compose-foundation:1.4.1")
 
@@ -78,4 +88,25 @@ dependencies {
     implementation(project(":sync"))
 
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20250517")          // the real org.json for JVM tests (Android's is a stub there)
+    // Test-only (approved Stage 2 decision 6): render tests on Android 16 (SDK 36) without a device.
+    testImplementation("org.robolectric:robolectric:4.18.1")
+}
+
+// Copies sync/samples/snapshot/valid/*.json into the app's assets as samples/*.json (Stage 2 sample data).
+val copySampleAssets by tasks.registering(Sync::class) {
+    from(rootProject.file("sync/samples/snapshot/valid")) { include("*.json") }
+    into(layout.buildDirectory.dir("generated/sampleAssets/samples"))
+}
+tasks.named("preBuild") { dependsOn(copySampleAssets) }
+
+// Robolectric needs Java 21 to run Android 16 (SDK 36) in the render tests (found in CI, Stage 2
+// decision 6). Only the unit tests run on 21; the app is still compiled for Java 17. CI installs
+// both (ci.yml); Gradle finds 21 through JAVA_HOME_21_X64 (gradle.properties) or the running JDK.
+tasks.withType<Test>().configureEach {
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(21)) })
+    testLogging {
+        events("failed")
+        exceptionFormat = org.gradle.api.tasks.testing.logging.TestExceptionFormat.FULL
+    }
 }
