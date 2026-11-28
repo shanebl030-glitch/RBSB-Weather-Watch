@@ -4,6 +4,9 @@
 // sample, else the "waiting for your phone" screen. Created By Shane BlackbuRn
 package io.github.shanebl030glitch.rbsbweather.ui
 
+import androidx.activity.compose.LocalOnBackPressedDispatcherOwner
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -13,6 +16,12 @@ import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onPreviewKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalContext
 import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.navigation.SwipeDismissableNavHost
@@ -63,7 +72,18 @@ fun WatchApp(versionName: String, debug: DebugOptions) {
     // sample, the clock moving on or new phone data would not reach an open screen).
     val current by rememberUpdatedState(shown)
     val currentPhone by rememberUpdatedState(phone)
+    // The watch's Back button goes straight to back handling (close a detail screen, or leave the
+    // app from the first screen). Found on the Wear OS 4 emulator: otherwise the first press only
+    // cleared the scrolling list's input focus and did nothing visible. Previewed at the root, so it
+    // is seen before the focus system takes it.
+    val back = LocalOnBackPressedDispatcherOwner.current?.onBackPressedDispatcher
     MaterialTheme {
+      Box(Modifier.fillMaxSize().onPreviewKeyEvent { e ->
+          if (e.key != Key.Back) return@onPreviewKeyEvent false
+          if (BuildConfig.DEBUG) android.util.Log.i("RBSBInput", "KEY back ${e.type}")
+          if (e.type == KeyEventType.KeyUp) back?.onBackPressed()
+          true
+      }) {
         val nav = rememberSwipeDismissableNavController()
         LaunchedEffect(debug.route) { debug.route?.let { r -> try { nav.navigate(r) } catch (e: Exception) { } } }
         if (BuildConfig.DEBUG) LaunchedEffect(nav) {
@@ -103,6 +123,7 @@ fun WatchApp(versionName: String, debug: DebugOptions) {
             composable("moon") { current.snapshot?.let { MoonScreen(it, current.settings, current.nowMs, onFullScreen = { nav.navigate("moonFull") }) } }
             composable("moonFull") { current.snapshot?.let { MoonFullScreen(it, current.settings, current.nowMs, onClose = { nav.popBackStack() }) } }
         }
+      }
     }
 }
 

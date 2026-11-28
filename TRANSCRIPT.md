@@ -141,5 +141,5 @@ A summary of decisions and work, newest last.
   - Words over the sky collided with the time on 432 px. They now sit in three bands sized from the screen.
   - An API 34 call would have crashed the Moon screen on Wear OS 4. Lint caught it, and it's fixed.
   - Open screens kept the data they were first drawn with, so new data or a new sample never appeared. Fixed.
-  - The first Back-button press did nothing on Wear OS 4. Fixed.
+  - The first Back-button press did nothing on Wear OS 4. Fixed. The first fix overrode an Activity method whose parent call lint marks as restricted (RestrictedApi), so the build check failed although all tests passed; the Back button is now handled in the app's own screen code instead.
   - Three test mistakes were corrected: the bezel was turned the wrong way, slow injected swipes didn't count as a swipe, and the scroll-away check counted the forecast icons' own animation. Created By Shane BlackbuRn

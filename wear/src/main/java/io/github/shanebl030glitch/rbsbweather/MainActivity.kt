@@ -32,23 +32,6 @@ class MainActivity : ComponentActivity() {
         return super.dispatchGenericMotionEvent(event)
     }
 
-    /**
-     * The watch's Back button goes straight to the app's back handling (close a detail screen, or
-     * leave the app from the first screen). Found on the Wear OS 4 emulator: otherwise the first
-     * press only cleared the scrolling list's input focus and did nothing visible. Debug builds
-     * log hardware keys.
-     */
-    override fun dispatchKeyEvent(event: android.view.KeyEvent): Boolean {
-        if (event.keyCode == android.view.KeyEvent.KEYCODE_BACK) {
-            if (BuildConfig.DEBUG) android.util.Log.i("RBSBInput", "KEY back action=${event.action}")
-            if (event.action == android.view.KeyEvent.ACTION_UP && !event.isCanceled) onBackPressedDispatcher.onBackPressed()
-            return true
-        }
-        val handled = super.dispatchKeyEvent(event)
-        if (BuildConfig.DEBUG) android.util.Log.i("RBSBInput", "KEY code=${event.keyCode} action=${event.action} handled=$handled")
-        return handled
-    }
-
     /** Rotary (bezel or crown) events that no view used go to the open list (see RotaryInput). */
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_SCROLL && event.isFromSource(InputDevice.SOURCE_ROTARY_ENCODER)) {
