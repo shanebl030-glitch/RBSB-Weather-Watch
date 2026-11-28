@@ -13,6 +13,7 @@ Shane approved the Moon design (D7, D8, D9) and asked for real-renderer evidence
 - **Tests:** `MoonParityTest` (Robolectric, Android 16 graphics) and `MoonDeviceTest` (Wear OS 4 and 6 emulators) draw the Moon with the real renderer at 25%, 50% and 78% lit, 240 and 480 px, and compare with Desktop's own renders. The device test also measures memory. `RenderTest` now expects 1024 px textures.
 - **Dependency report:** the libraries proposed for Stage 3 (D6) are added, unused, so CI can report what they put in the manifest. `scripts/verification/manifest_report.py` and `.github/workflows/moon-verification.yml`.
 - D8 (full-screen Moon view) is a Stage 3 screen and is not built here.
+- **Results at `ce39dda`:** every Moon parity and memory check passed on Robolectric and on the Wear OS 4 and 6 emulators. 133/133 tests passed; lint 0 errors. See TRANSCRIPT.md.
 
 ## 0.1.0-dev (Stage 2: animated sky, in review)
 
