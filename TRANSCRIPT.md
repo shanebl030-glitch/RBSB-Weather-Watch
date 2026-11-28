@@ -89,3 +89,17 @@ A summary of decisions and work, newest last.
 - He asked to see the watch design early: a basic sky screen with sample data and emulator screenshots (432, 480 and 498 px) for review before the full effects and animation work.
 - Built milestone 1 on `claude/stage-2-animated-sky`: the copied scene code adapted to the Stage 1 snapshot, the sky and About pages, bundled samples, 512 px Moon textures, the emulator screenshots, and unit tests for sample loading, the text over the sky and the snapshot-to-sky conditions (including the Moon, option C).
 - Note: the CI emulators capture the full square framebuffer; Galaxy Watch screens are round. The layout keeps content inside the circle, and review images have a circular mask applied afterwards, labelled as such.
+
+## 28 Nov 2026: Stage 2 completed (in review)
+
+- Shane approved the milestone 1 design and asked for five fixes: a bright Sun, rotary switching, confirming the missing Moon, shorter sample names at 432 px, and the lint warnings. Then the animation, quality levels, frame timing and remaining tests.
+- **Sun:** the readability shade now sits under the Sun, Moon and clouds.
+- **Rotary:** the emulator test used an old command form with no scroll amount. With `--axis SCROLL,3` the app switches samples, and the logs show the event arriving through Compose. An activity fallback was added too.
+- **Moon:** confirmed below the horizon at 23:00 in Auckland (13° below, the same as the desktop `moon.py`).
+- **Names:** shortened below 230 dp.
+- **Lint:** the UseKtx warnings are fixed.
+- **Built:** 30 fps animation only while shown; High/Standard/Light levels chosen from measured frame times with the approved thresholds (adjustable); frame windows logged and stored for Stage 7; one cloud sprite set; ported scene, Moon and safe-drawing tests; new tests; Robolectric 4.18.1 render tests on SDK 36.
+- **Unexpected problem, reported to Shane before continuing:** Robolectric needs Java 21 for SDK 36. CI now runs the wear unit tests on Java 21; the app is still built for Java 17.
+- **Found by a test:** the screen opened with a 0.8-second fade from daytime blue; it now opens on the sample's own sky.
+- **Milestone media sent to Shane:** a before/after of the Sun, lightning stills, and 6-second recordings at 432, 480 and 498 px.
+- **Results at `0796ed4`:** 132/132 tests, lint 0 errors, 5/5 emulators PASS (rotary included), Signing gate 1 PASS. Version 0.1.0-dev. Android and WeatherDesk untouched; no production key; nothing published.
