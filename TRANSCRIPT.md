@@ -110,3 +110,14 @@ A summary of decisions and work, newest last.
 - **TEST_REPORT.md:** the Stage 2 results now name the final code commit (`d8911ef`) with its pull-request and push run IDs, and the emulator measurements come from that pull-request run. `40d7bb5` (before the fix) is recorded as also passing. A commit can't contain its own ID, so the report's update is a documentation-only commit after `d8911ef`, checked by the same workflows.
 - **SkyStats:** the frame-timing file was documented as keeping the last 500 windows but trimmed only above 600. It now never holds more than 500; the test checks this after every append. SKY.md and the CHANGELOG agree.
 - **Results at `d8911ef`:** all six runs passed (132/132 tests, lint 0 errors, 5/5 emulators PASS with rotary, Signing gate 1 PASS).
+
+## 28 Nov 2026: frame-window measurements clarified
+
+- Shane spotted that TEST_REPORT.md said all 82 emulator windows were at High while also recording 3 step-downs, and that SKY.md said the emulators stayed on High.
+- **Checked run `46091229456` window by window:**
+  - 64 windows are the first 3 seconds after a launch and 18 are 10-second windows.
+  - The emulator test restarts the app for every screenshot and recording, so each launch starts at High.
+  - All 3 step-downs happened in a first 3-second window; the next window was always a new launch, about 14–15 seconds later.
+  - So every window started at High, and no completed window ran at Standard.
+- TEST_REPORT.md and SKY.md now say exactly that. The quality-control behaviour is unchanged.
+- **For Stage 7:** all three step-downs came in the first seconds after launch, while the app also makes its cloud sprites and Moon picture.

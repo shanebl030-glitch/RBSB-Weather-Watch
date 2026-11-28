@@ -65,7 +65,11 @@ The sky animates only while its page is on screen and the app is in front. It st
 
 The columns are: start time, seconds, frames, fps, work p50/p90/max in ms, slow share, level, power saving, decision, and the next level.
 
-**On the CI emulators** the sky runs at about 30 fps with work around 1–8 ms per frame, and stays on High. Emulators use the computer's graphics, so this says nothing about real watches. The real numbers come at Stage 7.
+**On the CI emulators** the sky runs at about 30 fps, with typical work of about 1–8 ms per frame and a worst 90th percentile of about 17 ms. The emulator test restarts the app for every screenshot and recording, so each launch starts again at High. Most recorded windows are the first 3 seconds after a launch, which is too short to show how long a lower level is kept.
+- In the final run the controller stepped down to Standard 3 times out of 82 windows, each in the first 3 seconds after a launch, while the app was also making its clouds and Moon picture.
+- Each time, the test restarted the app before another window finished, so no completed window ran at Standard.
+
+Emulators use the computer's graphics, so none of this says anything about real watches. The real numbers come at Stage 7. `TEST_REPORT.md` has the details.
 
 `dumpsys gfxinfo` reports most frames as "janky" on the emulators. That's expected: it judges every frame against a 60 Hz deadline, and the sky deliberately draws at 30 fps. The app's own measurements are the ones to use.
 

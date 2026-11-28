@@ -52,8 +52,16 @@ Frames rendered while shown (after 10 s, after 15 s), then in the background (tw
   480 px rotary (Wear OS 6):   291, 435   background 442, 442
   498 px (newest image):       301, 452   background 456, 456
   ANIMATION: running while shown / ANIMATION: stopped in the background   (all 5)
-Frame windows (all 5 emulators): 82 windows, mean 28.6 fps, worst p90 work 16.9 ms; level High in all 82 windows; decisions keep 79, step down 3
+Frame windows (all 5 emulators): 82 windows, mean 28.6 fps, worst p90 work 16.9 ms; decisions keep 79, step down 3
 ```
+
+**How to read the frame windows.** Each `SKY FRAME WINDOW` line records the level the window started at (`quality`) and the level chosen for afterwards (`next`). The emulator test restarts the app for each screenshot and recording (`am start -S`), so each launch is a new process whose quality controller starts again at High. In this run:
+- **82 windows from many short app sessions:** 64 are the first 3-second window after a launch; 18 are 10-second windows, from sessions that ran longer (mainly the 15-second animation check).
+- **The 3 step-downs** (to Standard) each happened in the first 3-second window after a launch: one on the 498 px emulator (12% slow frames) and two on the Wear OS 6 480 px rotary emulator (34% and 20%).
+- **What followed each one:** the next window belongs to a new launch about 14–15 seconds later, which started at High again. So all 82 windows started at High.
+- **No completed window ran at Standard.** The sky did draw at Standard for the few seconds until the test restarted the app, but no window finished in that time.
+- **What this shows:** the controller makes its decisions as designed. It doesn't show how long Standard is kept, or the 30-second step back up, on an emulator; those are covered by QualityTest. The emulator sessions are too short to observe them.
+- **A note for Stage 7:** all three step-downs came in the first 3 seconds after a launch, when the app is also making its cloud sprites and Moon picture in the background. Whether real watches step down then too is something to look at when tuning the thresholds. The behaviour is unchanged here.
 
 The `gfxinfo` 50th/90th percentiles (32 ms) and "janky" percentages are expected for a sky deliberately drawn at 30 fps; see `docs/SKY.md`.
 
@@ -61,7 +69,7 @@ The `gfxinfo` 50th/90th percentiles (32 ms) and "janky" percentages are expected
 |---|---|
 | 1. The sky draws every sample at 432 to 498 px; emulator screenshots | Pass: render tests at 432, 480 and 498 px for 10 samples; emulator screenshots of 10 samples on all 5 setups |
 | 2. Ported desktop scene checks | Pass: SceneTest 18 and MoonTest 13 (PyEphem). Moon phase on known dates, codes, day/night/twilight, wind and hemisphere, cloud ordering, particles bounded over 10 minutes (now at every level), lightning only in storms, rain slant |
-| 3. Quality levels: every effect at every level; level choice | Pass: QualityTest 13 (thresholds, step down, step up after 30 s, no flip-flop, power saving, records) and every code at every level in RenderTest. On the emulators the controller decided to step down 3 times in this run |
+| 3. Quality levels: every effect at every level; level choice | Pass: QualityTest 13 (thresholds, step down, step up after 30 s, no flip-flop, power saving, records) and every code at every level in RenderTest. On the emulators the controller stepped down 3 times, each in the first 3 s after a launch; the test restarted the app each time before another window finished (see "How to read the frame windows") |
 | 4. Frame timing recorded on every emulator | Pass: `SKY FRAME WINDOW` lines and `gfxinfo` in the log. For comparing builds only, not real-watch speed |
 | 5. Memory: one sprite set, 512 px Moon, bounded caches | Pass: sprite cache at most 40 (test), 512 px texture (test), particles bounded (test) |
 | 6. Threading rules | Pass: copied code unchanged (clouds and the Moon made off the main thread with stand-ins); SafeDrawingTest |
