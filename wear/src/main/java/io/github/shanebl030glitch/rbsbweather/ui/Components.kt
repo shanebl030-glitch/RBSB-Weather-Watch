@@ -176,7 +176,7 @@ fun WindCompass(directionFrom: Double?, size: Dp, modifier: Modifier = Modifier)
             }
         }
         // the cardinal points, upright
-        val off = size / 2 - 13.dp
+        val off = size / 2 - 22.dp                      // inside the tick ring
         Text("N", Modifier.padding(bottom = off * 2), style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Palette.TextSoft))
         Text("S", Modifier.padding(top = off * 2), style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Palette.TextSoft))
         Text("E", Modifier.padding(start = off * 2), style = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Bold, color = Palette.TextSoft))

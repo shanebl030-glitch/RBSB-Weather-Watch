@@ -133,7 +133,7 @@ fun MoonScreen(s: Snapshot, st: SyncSettings, nowMs: Long, onFullScreen: () -> U
     }
 }
 
-/** The Moon filling the round screen (decision D8): the shared NASA renderer at full watch resolution. */
+/** The Moon filling the round screen (decision D8): the shared NASA renderer at full watch resolution, on its own. Tap or swipe to close. */
 @Composable
 fun MoonFullScreen(s: Snapshot, st: SyncSettings, nowMs: Long, onClose: () -> Unit) {
     val m = remember(s, st, nowMs / 60_000) { MoonInfoBuilder.build(s, nowMs, st.clock) }
@@ -141,8 +141,5 @@ fun MoonFullScreen(s: Snapshot, st: SyncSettings, nowMs: Long, onClose: () -> Un
     Box(Modifier.fillMaxSize().background(Color.Black).clickable(onClick = onClose).testTag("moonFull"), contentAlignment = Alignment.Center) {
         if (m != null) MoonPicture(m.phaseAngle, m.brightLimb, m.rotation, (screen * 0.86f).dp)
         else Text("Moon not available", style = Type.Body)
-        Column(Modifier.fillMaxSize().padding(bottom = 10.dp), verticalArrangement = Arrangement.Bottom, horizontalAlignment = Alignment.CenterHorizontally) {
-            m?.let { Text(it.name, style = TextStyle(fontSize = 12.sp, color = Palette.TextSoft), modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) }
-        }
     }
 }

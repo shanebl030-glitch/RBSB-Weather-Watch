@@ -96,7 +96,8 @@ launch --es sample clear-day --es route day/0; sleep 2
 adb logcat -c || true
 ( adb shell screenrecord --time-limit 4 /sdcard/swipe.mp4 > /dev/null 2>&1 ) &
 RECS=$!; sleep 0.5
-adb shell input swipe $((W / 4)) $((W / 2)) $((W * 15 / 16)) $((W / 2)) 150    # a quick flick, as a finger does
+# Injected swipes have few touch points; a long drag past the dismiss threshold is reliable.
+adb shell input swipe $((W / 20)) $((W / 2)) $((W * 19 / 20)) $((W / 2)) 350
 wait $RECS; adb pull /sdcard/swipe.mp4 "$OUT/rec-swipe-back.mp4" > /dev/null 2>&1; adb shell rm -f /sdcard/swipe.mp4
 sleep 1
 shot "after-swipe-back"
