@@ -4,7 +4,9 @@
 // faint blue earthshine on the night side, the real phase angle and bright-limb direction, and
 // turned to match the place's sky. Created By Shane BlackbuRn
 // Copied from RBSB-Weather for Android v0.7.2 (commit cdf422d94e78cfc1020db5ac3407c765dd6b6738),
-// app/src/main/java/io/github/shanebl030glitch/rbsbweather/ui/scene/MoonRender.kt. Watch changes: package name only; the bundled textures are 512 px (the phone ships 2048 px).
+// app/src/main/java/io/github/shanebl030glitch/rbsbweather/ui/scene/MoonRender.kt. Watch changes:
+// package name; the bundled textures are 512 px (the phone ships 2048 px); Bitmap calls use the
+// androidx.core KTX forms (same behaviour) so lint has no UseKtx warnings.
 package io.github.shanebl030glitch.rbsbweather.scene
 
 import android.content.res.AssetManager
@@ -13,6 +15,8 @@ import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Matrix
 import android.graphics.Paint
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.scale
 import org.json.JSONObject
 import kotlin.math.cos
 import kotlin.math.pow
@@ -56,8 +60,8 @@ object MoonRender {
             val y = a.open("textures/moon_height.jpg").use { BitmapFactory.decodeStream(it, null, opts) } ?: run { x.recycle(); return null }
             (x to y).also { full = it }
         } catch (e: Exception) { return null }
-        val sa = Bitmap.createScaledBitmap(alb, size, size, true)
-        val sh = Bitmap.createScaledBitmap(hgt, size, size, true)
+        val sa = alb.scale(size, size, filter = true)
+        val sh = hgt.scale(size, size, filter = true)
         val pa = IntArray(size * size); sa.getPixels(pa, 0, size, 0, 0, size, size)
         val ph = IntArray(size * size); sh.getPixels(ph, 0, size, 0, 0, size, size)
         for (i in ph.indices) ph[i] = ph[i] and 0xFF
@@ -183,9 +187,9 @@ object MoonRender {
                 out[row + i] = ((a * 255).toInt() shl 24) or ((rr * 255).toInt() shl 16) or ((gg * 255).toInt() shl 8) or (bb * 255).toInt()
             }
         }
-        var bmp = Bitmap.createBitmap(out, size, size, Bitmap.Config.ARGB_8888)
+        var bmp = createBitmap(size, size).apply { setPixels(out, 0, size, 0, 0, size, size) }
         if (rot != 0) {
-            val turned = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+            val turned = createBitmap(size, size)
             val c = Canvas(turned)
             val m = Matrix().apply { postRotate(rot.toFloat(), size / 2f, size / 2f) }
             c.drawBitmap(bmp, m, Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG))

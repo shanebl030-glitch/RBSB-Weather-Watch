@@ -36,5 +36,14 @@ class SkyTextTest {
     @Test fun sampleLabelAndLine() {
         assertEquals("SAMPLE DATA", SkyText.SAMPLE_LABEL)
         assertEquals("3/18 · overcast", SkyText.sampleLine(2, 18, "overcast"))
+        assertEquals("5/18 · rain-night-warnings", SkyText.sampleLine(4, 18, "rain-night-warnings"))
+    }
+
+    @Test fun sampleNamesAreShortenedOnNarrowScreens() {
+        // 432 px at 320 dpi is 216 dp wide; 480 px is 240 dp.
+        assertTrue(216 < SkyText.NARROW_DP && 240 >= SkyText.NARROW_DP)
+        assertEquals("5/18 · rain + warnings", SkyText.sampleLine(4, 18, "rain-night-warnings", narrow = true))
+        assertEquals("3/18 · overcast", SkyText.sampleLine(2, 18, "overcast", narrow = true))
+        for (name in samples.keys) assertTrue("$name short enough", SkyText.shortName(name).length <= 15)
     }
 }

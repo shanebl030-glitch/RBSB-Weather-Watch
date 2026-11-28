@@ -61,6 +61,7 @@ android {
         getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/sampleAssets"))
     }
     testOptions {
+        unitTests.isIncludeAndroidResources = true          // Robolectric render tests read the Moon textures
         unitTests.all { it.systemProperty("rbsb.samples", rootProject.file("sync/samples").absolutePath) }
     }
     lint {
@@ -79,6 +80,7 @@ dependencies {
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.foundation:foundation")      // HorizontalPager (sky and About pages)
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")   // the sky animates only while the app is in front
     implementation("androidx.wear.compose:compose-material:1.4.1")
     implementation("androidx.wear.compose:compose-foundation:1.4.1")
 
@@ -87,6 +89,8 @@ dependencies {
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20250517")          // the real org.json for JVM tests (Android's is a stub there)
+    // Test-only (approved Stage 2 decision 6): render tests on Android 16 (SDK 36) without a device.
+    testImplementation("org.robolectric:robolectric:4.18.1")
 }
 
 // Copies sync/samples/snapshot/valid/*.json into the app's assets as samples/*.json (Stage 2 sample data).

@@ -5,7 +5,11 @@
 // on by advance(dt) and drawn by SceneDraw.kt, so the app, playback and the home-screen widget
 // all share it. Created By Shane BlackbuRn
 // Copied from RBSB-Weather for Android v0.7.2 (commit cdf422d94e78cfc1020db5ac3407c765dd6b6738),
-// app/src/main/java/io/github/shanebl030glitch/rbsbweather/ui/scene/SceneEngine.kt. Watch changes: package name only.
+// app/src/main/java/io/github/shanebl030glitch/rbsbweather/ui/scene/SceneEngine.kt. Watch changes:
+//  - package name;
+//  - quality levels (Quality.kt): [quality] scales the numbers of clouds, drops, flakes, stars and
+//    splashes (HIGH = the phone's own detail), with minimums so every effect stays at every level;
+//    changing the level rebuilds the scene.
 package io.github.shanebl030glitch.rbsbweather.scene
 
 import androidx.compose.ui.graphics.Color
@@ -40,6 +44,17 @@ class SceneEngine(private val seed: Int = 7, var clock: () -> Long = System::cur
     var height = 0; private set
     /** False: a still picture (fades are instant, nothing moves). */
     var animations = true
+
+    /** Detail level (watch change). Changing it rebuilds clouds and particles for the new detail. */
+    var quality: Quality = Quality.HIGH
+        set(value) {
+            if (value == field) return
+            field = value
+            endFades()
+            if (width > 1) rebuild()
+        }
+
+    private fun particles(n: Int): Int = if (n <= 0) 0 else max(Quality.MIN_PARTICLES, Math.round(n * quality.particles).toInt())
 
     private val rng = Random(seed.toLong())
     val clouds = mutableListOf<Cloud>()
@@ -108,11 +123,11 @@ class SceneEngine(private val seed: Int = 7, var clock: () -> Long = System::cur
         val c = cond
         val area = (w.toDouble() * h) / (600 * 220)
         stars.clear()
-        repeat((70 * area).toInt() + 10) { stars += Star(r.nextDouble() * w, r.nextDouble() * h * 0.75, uniform(r, 0.6, 1.6), uniform(r, 0.0, Math.PI * 2)) }
+        repeat(particles((70 * area).toInt() + 10)) { stars += Star(r.nextDouble() * w, r.nextDouble() * h * 0.75, uniform(r, 0.6, 1.6), uniform(r, 0.0, Math.PI * 2)) }
         val amount = c.cloudAmount
         clouds.clear()
         val layers = listOf(Triple(0.55, 0.35, 0.6), Triple(0.8, 0.6, 0.85), Triple(1.0, 1.0, 1.0))
-        val perLayer = if (amount <= 0.01) 0 else max(1, Math.round(1 + amount * 4 * max(1.0, w / 500.0)).toInt())
+        val perLayer = if (amount <= 0.01) 0 else max(1, Math.round((1 + amount * 4 * max(1.0, w / 500.0)) * quality.clouds).toInt())
         layers.forEachIndexed { li, (scale, speed, opacity) ->
             if (amount < 0.3 && li == 0) return@forEachIndexed
             for (i in 0 until perLayer) {
@@ -125,7 +140,7 @@ class SceneEngine(private val seed: Int = 7, var clock: () -> Long = System::cur
             }
         }
         if (amount >= 0.8) {
-            val nDeck = max(3, (3 * max(1.0, w / 400.0)).toInt())
+            val nDeck = max(2, (3 * max(1.0, w / 400.0) * quality.clouds).toInt())
             for (i in 0 until nDeck) {
                 val cw = (w * uniform(r, 0.45, 0.65)).toInt()
                 val ch = (cw * uniform(r, 0.38, 0.48)).toInt()
@@ -137,11 +152,11 @@ class SceneEngine(private val seed: Int = 7, var clock: () -> Long = System::cur
         val wx = Weather(c)
         if (c.kind == Kind.RAIN || c.kind == Kind.THUNDER || c.kind == Kind.DRIZZLE) {
             val heavy = c.kind != Kind.DRIZZLE
-            val n = if (heavy) ((60 + 200 * c.intensity) * area).toInt() else ((90 + 140 * c.intensity) * area).toInt()
+            val n = particles(if (heavy) ((60 + 200 * c.intensity) * area).toInt() else ((90 + 140 * c.intensity) * area).toInt())
             repeat(n) { wx.drops += Drop(r.nextDouble() * w, r.nextDouble() * h, uniform(r, 0.75, 1.0), r.nextDouble()) }
         }
         if (c.kind == Kind.SNOW) {
-            repeat(((40 + 160 * c.intensity) * area).toInt()) {
+            repeat(particles(((40 + 160 * c.intensity) * area).toInt())) {
                 wx.flakes += Flake(r.nextDouble() * w, r.nextDouble() * h, uniform(r, 1.0, 3.2), uniform(r, 0.0, Math.PI * 2), uniform(r, 0.6, 1.2))
             }
         }
@@ -207,7 +222,7 @@ class SceneEngine(private val seed: Int = 7, var clock: () -> Long = System::cur
                 d.y += fall * d.speed * dt
                 d.x += fall * d.speed * slant * dt
                 if (d.y > h) {
-                    if (heavy && d.splash < 0.5 && wx.splashes.size < 60) wx.splashes.add(Splash(d.x, h - uniform(rng, 2.0, 14.0), 0.0))
+                    if (heavy && d.splash < 0.5 && wx.splashes.size < quality.maxSplashes) wx.splashes.add(Splash(d.x, h - uniform(rng, 2.0, 14.0), 0.0))
                     d.y -= h + 20
                     d.x = rng.nextDouble() * w
                     d.splash = rng.nextDouble()

@@ -2,6 +2,10 @@
 package io.github.shanebl030glitch.rbsbweather
 
 import android.os.Bundle
+import android.view.InputDevice
+import android.view.MotionEvent
+import android.view.ViewConfiguration
+import androidx.core.view.ViewConfigurationCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,7 +26,9 @@ import androidx.wear.compose.material.MaterialTheme
 import androidx.wear.compose.material.Scaffold
 import androidx.wear.compose.material.Text
 import androidx.wear.compose.material.TimeText
+import io.github.shanebl030glitch.rbsbweather.sky.RotaryInput
 import io.github.shanebl030glitch.rbsbweather.sky.SampleData
+import io.github.shanebl030glitch.rbsbweather.sky.SkyStats
 import io.github.shanebl030glitch.rbsbweather.sky.SkyScreen
 
 /**
@@ -35,6 +41,16 @@ class MainActivity : ComponentActivity() {
         val sampleName = intent?.getStringExtra(EXTRA_SAMPLE)
         val page = (intent?.getIntExtra(EXTRA_PAGE, 0) ?: 0).coerceIn(0, 1)
         setContent { WatchApp(BuildConfig.VERSION_NAME, sampleName, page) }
+    }
+
+    /** Rotary (bezel or crown) events that no view used go to the sky screen (see RotaryInput). */
+    override fun onGenericMotionEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_SCROLL && event.isFromSource(InputDevice.SOURCE_ROTARY_ENCODER)) {
+            val factor = ViewConfigurationCompat.getScaledVerticalScrollFactor(ViewConfiguration.get(this), this)
+            RotaryInput.send(-event.getAxisValue(MotionEvent.AXIS_SCROLL) * factor)
+            return true
+        }
+        return super.onGenericMotionEvent(event)
     }
 
     companion object {
@@ -52,7 +68,7 @@ fun WatchApp(versionName: String, sampleName: String?, startPage: Int) {
         val pager = rememberPagerState(initialPage = startPage) { 2 }
         HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
             when (page) {
-                0 -> Scaffold(timeText = { TimeText() }) { SkyScreen(samples, start) }
+                0 -> Scaffold(timeText = { TimeText() }) { SkyScreen(samples, start, active = pager.currentPage == 0) }
                 else -> AboutScreen(versionName)
             }
         }
@@ -67,14 +83,15 @@ fun AboutScreen(versionName: String) {
             modifier = Modifier.fillMaxSize(),
             state = listState,
         ) {
-            AboutInfo.lines(versionName).forEachIndexed { i, line ->
+            val perf = SkyStats.latest.value
+            (AboutInfo.lines(versionName) + listOfNotNull(perf?.let { "Sky: $it" })).forEachIndexed { i, line ->
                 item {
                     Text(
                         text = line,
                         textAlign = TextAlign.Center,
                         fontWeight = if (i == 0) FontWeight.Bold else FontWeight.Normal,
                         style = if (i == 0) MaterialTheme.typography.title3
-                            else if (line == AboutInfo.MOON_CREDIT) MaterialTheme.typography.caption3
+                            else if (line == AboutInfo.MOON_CREDIT || line.startsWith("Sky: ")) MaterialTheme.typography.caption3
                             else MaterialTheme.typography.body2,
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
                     )

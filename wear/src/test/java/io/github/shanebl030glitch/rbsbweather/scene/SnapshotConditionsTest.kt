@@ -78,4 +78,15 @@ class SnapshotConditionsTest {
             assertEquals(3.0 / 8.0, c.moonProgress!!, 1e-9)
         }
     }
+
+    @Test fun moonIsAboveOrBelowTheHorizonAsCalculated() {
+        // Checked against the desktop app's moon.py (which Moon.kt ports line by line):
+        // clear-night (23:00 Auckland) the Moon is 13 degrees below the horizon, so none is drawn;
+        // fog (07:00 Wellington) it is 14 degrees up; polar-night (Tromsø) 9 degrees up.
+        assertTrue("clear-night: below the horizon", !cond("clear-night").moonUp)
+        assertTrue(cond("clear-night").moonAltitude < -10)
+        assertTrue("fog: up", cond("fog").moonUp)
+        assertTrue("polar-night: up", cond("polar-night").moonUp)
+        for (name in listOf("clear-day", "partly-cloudy-day", "rain-night-warnings", "thunder-warning")) assertTrue(name, !cond(name).moonUp)
+    }
 }

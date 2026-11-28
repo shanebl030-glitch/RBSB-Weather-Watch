@@ -4,7 +4,13 @@
 // splashes, drizzle, snow, lightning, the readability shade, then the mini forecast.
 // Created By Shane BlackbuRn
 // Copied from RBSB-Weather for Android v0.7.2 (commit cdf422d94e78cfc1020db5ac3407c765dd6b6738),
-// app/src/main/java/io/github/shanebl030glitch/rbsbweather/ui/scene/SceneDraw.kt. Watch changes: package name only (Stage 2 milestone 1).
+// app/src/main/java/io/github/shanebl030glitch/rbsbweather/ui/scene/SceneDraw.kt. Watch changes:
+//  - package name;
+//  - drawScene(underSun = ...): an optional layer drawn after the sky and stars but before the Sun,
+//    Moon and clouds (the watch's text-readability shade, so it never dulls the Sun);
+//  - one cloud sprite set in memory (plan v1.1 section 4): the cache holds at most 40 sprites
+//    (the clouds of one sky plus those fading out), not the phone's 96;
+//  - LIGHT quality makes cloud sprites at half resolution and draws them at full size.
 package io.github.shanebl030glitch.rbsbweather.scene
 
 import androidx.compose.ui.geometry.CornerRadius
@@ -48,8 +54,14 @@ private fun Color.a(alpha: Int) = copy(alpha = (alpha / 255f).coerceIn(0f, 1f))
 
 // --------------------------------------------------------------- cloud sprites
 private val spriteCache = object : LinkedHashMap<String, ImageBitmap>(32, 0.75f, true) {
-    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ImageBitmap>?) = size > 96
+    override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, ImageBitmap>?) = size > SPRITE_CACHE_MAX
 }
+
+/** Watch change: one sky's clouds (up to about 18 at 498 px) plus a set fading out. */
+const val SPRITE_CACHE_MAX = 40
+
+/** How many cloud sprites are kept now (for the tests). */
+fun spriteCacheSize(): Int = synchronized(spriteCache) { spriteCache.size }
 
 /** The latest sprite made for each cloud (any size or darkness), shown scaled while the exact one is being made. */
 private val lastBySeed = HashMap<Int, ImageBitmap>()
@@ -126,7 +138,7 @@ fun cloudSprite(w: Int, h: Int, darkness: Double, seed: Int): ImageBitmap {
         spriteCache[key] = img
         lastBySeed[seed] = img
         lastMade = img
-        if (lastBySeed.size > 200) lastBySeed.clear()
+        if (lastBySeed.size > SPRITE_CACHE_MAX) lastBySeed.clear()
     }
     return img
 }
@@ -138,6 +150,7 @@ fun cloudSprite(w: Int, h: Int, darkness: Double, seed: Int): ImageBitmap {
  */
 fun DrawScope.drawScene(e: SceneEngine, rounded: Float = 0f, scrim: Boolean = true, drawn: Drawn? = null,
                         moonImage: ((Int, Conditions) -> ImageBitmap?)? = ::defaultMoonImage,
+                        underSun: (DrawScope.() -> Unit)? = null,
                         overlay: (DrawScope.() -> Unit)? = null) {
     val w = size.width; val h = size.height
     if (w < 2 || h < 2) return
@@ -155,6 +168,7 @@ fun DrawScope.drawScene(e: SceneEngine, rounded: Float = 0f, scrim: Boolean = tr
                 drawCircle(Color(255, 255, 240).a((220 * max(0.0, a)).toInt()), (s.size * 0.6).toFloat(), Offset(s.x.toFloat(), s.y.toFloat()))
             }
         }
+        underSun?.invoke(this)
         drawn?.sun = null; drawn?.moon = null
         if (amount < 0.97) {
             val veil = if (amount > 0.4) 1 - max(0.0, amount - 0.4) / 0.6 else 1.0
@@ -166,7 +180,10 @@ fun DrawScope.drawScene(e: SceneEngine, rounded: Float = 0f, scrim: Boolean = tr
             for (cl in clouds.sortedBy { it.layer }) {
                 var dk = darkness * (0.75 + 0.12 * cl.layer)
                 if (c.daylight < 0.5) dk = min(1.0, dk + 0.5 * (1 - c.daylight * 2))
-                val spr = cloudSpriteOrLater(cl.w, cl.h, dk, cl.seed) ?: continue
+                val scale = e.quality.spriteScale
+                val sw = if (scale >= 1.0) cl.w else max(1, (cl.w * scale).roundToInt())
+                val sh = if (scale >= 1.0) cl.h else max(1, (cl.h * scale).roundToInt())
+                val spr = cloudSpriteOrLater(sw, sh, dk, cl.seed) ?: continue
                 val al = (cl.opacity * (if (c.daylight > 0.2) 0.9 else 0.8) * alpha).toFloat().coerceIn(0f, 1f)
                 if (spr.width == max(1, cl.w) && spr.height == max(1, cl.h)) drawImage(spr, Offset(cl.x.toFloat(), cl.y.toFloat()), alpha = al)
                 else drawImage(spr, IntOffset.Zero, IntSize(spr.width, spr.height),            // a stand-in, scaled, until the exact one is ready
