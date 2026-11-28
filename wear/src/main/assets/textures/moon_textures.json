@@ -11,8 +11,8 @@
     "lroc_color_poles_4k.tif",
     "ldem_16_uint.tif"
   ],
-  "size": 512,
+  "size": 1024,
   "relief_span_m": 2214.8,
   "exaggeration": 3.0,
-  "note": "Created By Shane BlackbuRn. Resized from RBSB-Weather for Android v0.7.2 (2048 px) to 512 px for the watch (approved Stage 2 decision 5), Lanczos, JPEG quality 92."
+  "note": "Created By Shane BlackbuRn. Resized for the watch from the NASA textures shipped by RBSB-Weather for Android v0.7.2 and RBSB-Weather Desktop (2048 px, byte-identical in both apps; SHA-256 6e8b38a4... colour, f1504b37... height) to 1024 px (Shane's Moon decision D7, 28 Nov 2026): Lanczos, JPEG quality 95, colour without chroma subsampling."
 }

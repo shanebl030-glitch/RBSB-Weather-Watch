@@ -1,4 +1,5 @@
-// The sky's conditions from Stage 1 snapshots, including the Moon as approved (option C).
+// The sky's conditions from Stage 1 snapshots, including the live Moon (Stage 3 decision D10,
+// which replaced Stage 2's option C).
 // Created By Shane BlackbuRn
 package io.github.shanebl030glitch.rbsbweather.scene
 
@@ -40,14 +41,19 @@ class SnapshotConditionsTest {
         assertTrue(!cond("snow-northern").southern)
     }
 
-    @Test fun moonPhaseAndIlluminationComeFromTheSnapshot() {
-        val s = samples.getValue("clear-day").snapshot                // phase 152, illumination 0.94
-        val c = cond("clear-day")
-        assertEquals(152.0 / 360.0, c.moonAge, 1e-9)
-        assertEquals(phaseAngleFromIllumination(0.94), c.moonPhaseAngle!!, 1e-9)
-        val illumBack = (1 + Math.cos(Math.toRadians(c.moonPhaseAngle!!))) / 2
-        assertEquals(s.moon.illumination, illumBack, 1e-9)
-        assertEquals(0.0, phaseAngleFromIllumination(1.0), 1e-9)       // full
+    @Test fun moonPhaseAndIlluminationAreCalculatedLive() {
+        // Decision D10: the same calculation as Desktop and Android for the moment shown, not the
+        // snapshot's fixed values, so the Moon stays consistent however old the data is.
+        val s = samples.getValue("clear-day").snapshot
+        for (ageH in listOf(0L, 3L, 12L)) {
+            val at = s.fetchedAt + ageH * 3600_000L
+            val live = Moon.phase(Instant.ofEpochMilli(at))
+            val c = conditionsFromSnapshot(s, at)
+            assertEquals("age $ageH h", live.phaseAngle, c.moonPhaseAngle!!, 1e-9)
+            assertEquals("age $ageH h", live.elongation / 360.0, c.moonAge, 1e-9)
+            assertEquals("age $ageH h", live.brightLimb, c.moonLimb, 1e-9)
+        }
+        assertEquals(0.0, phaseAngleFromIllumination(1.0), 1e-9)       // full (kept for the fallback)
         assertEquals(180.0, phaseAngleFromIllumination(0.0), 1e-9)     // new
         assertEquals(90.0, phaseAngleFromIllumination(0.5), 1e-9)      // quarter
     }
@@ -60,10 +66,10 @@ class SnapshotConditionsTest {
         assertEquals(g.altitude, c.moonAltitude, 1e-9)
         assertEquals(g.altitude > g.h0, c.moonUp)
         assertEquals(Moon.phase(Instant.ofEpochMilli(s.fetchedAt)).brightLimb, c.moonLimb, 1e-9)
-        // an hour later the live position has moved, while phase and illumination stay the snapshot's
+        // an hour later the live position and the phase have both moved on (decision D10)
         val later = conditionsFromSnapshot(s, s.fetchedAt + 3600_000L)
         assertTrue(later.moonAltitude != c.moonAltitude)
-        assertEquals(c.moonPhaseAngle!!, later.moonPhaseAngle!!, 0.0)
+        assertTrue(later.moonPhaseAngle!! != c.moonPhaseAngle!!)
     }
 
     @Test fun moonRiseAndSetComeFromTheSnapshotWhenTheyBracketTheMoment() {

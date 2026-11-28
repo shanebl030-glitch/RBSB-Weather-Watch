@@ -6,14 +6,19 @@
 // Copied from RBSB-Weather for Android v0.7.2 (commit cdf422d94e78cfc1020db5ac3407c765dd6b6738),
 // app/src/main/java/io/github/shanebl030glitch/rbsbweather/ui/scene/SceneModel.kt. Watch changes:
 //  - reads the Stage 1 sync Snapshot instead of the phone's Forecast (conditionsFromSnapshot);
-//  - the Moon follows approved Stage 2 decision 1 (plan option C): phase and illumination come from
-//    the snapshot, rise and set from the snapshot when they bracket the moment drawn, and the live
-//    position (up or down, altitude, arc) and tilt (parallactic angle, bright-limb direction) are
-//    calculated here with the copied Moon code, so the sky stays right as the data ages;
-//  - forecast playback (playbackSeconds) is left out: the watch has no playback.
+//  - the Moon (Stage 3 decision D10, replacing Stage 2's option C): phase, illumination, bright
+//    limb, position and tilt are calculated live here with the copied Moon code, exactly as
+//    Desktop and Android do, so the Moon stays right however old the data is; the snapshot's
+//    values are the fallback (MoonNow) and rise and set come from the snapshot when they bracket
+//    the moment drawn;
+//  - forecast playback (playbackSeconds) is left out: the watch has no playback;
+//  - Stage 3: local time comes from the place's time zone (localTime), and with old data the sky
+//    follows the cached forecast for the current hour (forecastHour).
 package io.github.shanebl030glitch.rbsbweather.scene
 
 import io.github.shanebl030glitch.rbsbweather.data.Moon
+import io.github.shanebl030glitch.rbsbweather.data.MoonNow
+import io.github.shanebl030glitch.rbsbweather.data.WeatherView
 import io.github.shanebl030glitch.rbsbweather.sync.SnapDay
 import io.github.shanebl030glitch.rbsbweather.sync.SnapHour
 import io.github.shanebl030glitch.rbsbweather.sync.Snapshot
@@ -138,10 +143,11 @@ fun arcPoint(progress: Double?, left: Float, top: Float, w: Float, h: Float, rad
 }
 
 /** The place's local time now: its observation time moved on by the time since it was fetched (at most 6 hours). */
-fun localTime(s: Snapshot, nowMs: Long = System.currentTimeMillis()): LocalDateTime? {
-    val t = try { LocalDateTime.parse(s.current.time) } catch (e: Exception) { return null }
-    return t.plusSeconds(((nowMs - s.fetchedAt) / 1000).coerceIn(0, 6 * 3600))
-}
+fun localTime(s: Snapshot, nowMs: Long = System.currentTimeMillis()): LocalDateTime? =
+    // Stage 3: the place's real local time (its own time zone), so the sky's day, night and Sun stay
+    // right however old the data is. (The phone moved current.time on by at most 6 hours, which was
+    // enough for its forecast playback but not for a watch whose data may be a day old.)
+    try { WeatherView.localNow(s, nowMs) } catch (e: Exception) { null }
 
 /** The forecast hour that contains a local time. */
 fun hourlyAt(s: Snapshot, local: LocalDateTime?): SnapHour? {
@@ -178,13 +184,14 @@ fun phaseAngleFromIllumination(illumination: Double): Double =
  * the Sun for that day, the Moon at that moment); the wind stays as now.
  */
 fun conditionsFromSnapshot(s: Snapshot, nowMs: Long = System.currentTimeMillis(), offsetS: Double = 0.0,
-                           withMoon: Boolean = true): Conditions {
+                           withMoon: Boolean = true, forecastHour: Boolean = false): Conditions {
     val c = s.current
     val atMs = nowMs + (offsetS * 1000).toLong()
     val localNow = localTime(s, nowMs)?.plusSeconds(offsetS.toLong())
     var code = c.weatherCode
     var cover = c.cloudCover
-    if (offsetS > 0) {
+    // forecastHour (Stage 3, data 3 h old or more): the sky follows the cached forecast for this hour.
+    if (offsetS > 0 || forecastHour) {
         val hp = hourlyAt(s, localNow)
         if (hp?.weatherCode != null) { code = hp.weatherCode; cover = null }
     }
@@ -218,16 +225,16 @@ fun conditionsFromSnapshot(s: Snapshot, nowMs: Long = System.currentTimeMillis()
     var cond = Conditions(kind = kind, intensity = intensity, daylight = daylight, twilight = twilight, sunProgress = sunProg,
         windKmh = c.wind.speed ?: 0.0, windEast = east, fromForecast = true, cloudCover = cover,
         sunRiseMs = riseMs, sunSetMs = setMs, southern = s.place.latitude < 0)
-    // Phase and illumination: from the snapshot (approved decision 1).
+    // Phase and illumination: live for this moment (decision D10), the snapshot's if that fails.
     val m = s.moon
-    cond = cond.copy(moonAge = (m.phase / 360.0).coerceIn(0.0, 1.0), moonPhaseAngle = phaseAngleFromIllumination(m.illumination))
+    val ph = MoonNow.phase(Instant.ofEpochMilli(atMs), m)
+    if (ph != null) cond = cond.copy(moonAge = (ph.elongation / 360.0).coerceIn(0.0, 1.0), moonPhaseAngle = ph.phaseAngle, moonLimb = ph.brightLimb)
     if (withMoon) try {
         // Live position and tilt: calculated here with the copied Moon code.
         val at = Instant.ofEpochMilli(atMs)
-        val live = Moon.phase(at)
         val g = Moon.skyGeometry(Moon.julianDay(at), s.place.latitude, s.place.longitude)
         val up = g.altitude > g.h0
-        cond = cond.copy(moonLimb = live.brightLimb, moonRotation = g.q, moonUp = up, moonAltitude = g.altitude)
+        cond = cond.copy(moonRotation = g.q, moonUp = up, moonAltitude = g.altitude)
         if (up) {
             // Rise and set: the snapshot's when they bracket this moment, otherwise calculated.
             val sr = m.rise; val ss = m.set

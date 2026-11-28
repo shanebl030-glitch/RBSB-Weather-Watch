@@ -18,6 +18,8 @@ android {
         // phone app's (14 for 0.7.2): 1_000_000 + major*10_000 + minor*100 + patch.
         versionCode = 1_000_100
         versionName = "0.1.0-dev"
+        // On-device tests on the emulators (Moon parity and memory; Data Layer from Stage 3).
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -57,8 +59,14 @@ android {
         buildConfig = true
     }
     sourceSets {
-        // Stage 2 sample data: the Stage 1 valid snapshots, copied in at build time (one source of truth).
-        getByName("main").assets.srcDir(layout.buildDirectory.dir("generated/sampleAssets"))
+        // Sample data: the Stage 1 valid snapshots, copied in at build time (one source of truth).
+        // Debug builds only (Stage 3 decision D2): a release APK never contains or shows sample weather.
+        getByName("debug").assets.srcDir(layout.buildDirectory.dir("generated/sampleAssets"))
+        // Moon parity helpers shared by the Robolectric and on-device tests, and the Desktop
+        // reference pictures (test resources) as on-device test assets (Moon decisions D7 to D10).
+        getByName("test").java.srcDir("src/sharedTest/java")
+        getByName("androidTest").java.srcDir("src/sharedTest/java")
+        getByName("androidTest").assets.srcDir("src/test/resources")
     }
     testOptions {
         unitTests.isIncludeAndroidResources = true          // Robolectric render tests read the Moon textures
@@ -84,8 +92,22 @@ dependencies {
     implementation("androidx.wear.compose:compose-material:1.4.1")
     implementation("androidx.wear.compose:compose-foundation:1.4.1")
 
-    // Stage 1: the sync format the phone will send (not used by any screen yet; Stage 3 adds the receiver).
+    // Stage 1: the sync format the phone sends; Stage 3 receives it.
     implementation(project(":sync"))
+
+    // Stage 3 (decision D6, verified on claude/moon-verification: no permissions, no exported
+    // components added to the release app; CI keeps checking that).
+    implementation("com.google.android.gms:play-services-wearable:20.0.1")       // Data Layer
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.10.2")
+    implementation("androidx.wear.compose:compose-navigation:1.4.1")             // detail screens, swipe back
+    testImplementation("androidx.compose.ui:ui-test-junit4")                     // screen tests (Robolectric)
+    debugImplementation("androidx.compose.ui:ui-test-manifest")                  // debug only; its activity is kept unexported (src/debug)
+
+    // On-device tests (emulators): real Android graphics, memory and the Data Layer.
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test:core:1.6.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("junit:junit:4.13.2")
 
     testImplementation("junit:junit:4.13.2")
     testImplementation("org.json:json:20250517")          // the real org.json for JVM tests (Android's is a stub there)
@@ -93,7 +115,7 @@ dependencies {
     testImplementation("org.robolectric:robolectric:4.18.1")
 }
 
-// Copies sync/samples/snapshot/valid/*.json into the app's assets as samples/*.json (Stage 2 sample data).
+// Copies sync/samples/snapshot/valid/*.json into the debug build's assets as samples/*.json (decision D2).
 val copySampleAssets by tasks.registering(Sync::class) {
     from(rootProject.file("sync/samples/snapshot/valid")) { include("*.json") }
     into(layout.buildDirectory.dir("generated/sampleAssets/samples"))

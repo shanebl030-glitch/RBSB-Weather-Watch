@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Debug builds only. The Compose UI test library adds androidx.activity.ComponentActivity with
+     exported="true"; tests start it from inside the app, so it is kept unexported here
+     (Stage 3 decision D6 safeguard). Release builds never contain it. Created By Shane BlackbuRn -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <application>
+        <activity
+            android:name="androidx.activity.ComponentActivity"
+            android:exported="false"
+            tools:replace="android:exported" />
+    </application>
+</manifest>

@@ -24,6 +24,6 @@ class SafeDrawingTest {
             f.readLines().mapIndexedNotNull { i, line -> if ("radialGradient(" in line) "${f.name}:${i + 1}" else null }
         }.toList()
         assertTrue("call safeRadial instead: $offenders", offenders.isEmpty())
-        assertTrue(src.walkTopDown().any { it.name == "SkyScreen.kt" && "safeRadial(" in it.readText() })
+        assertTrue(src.walkTopDown().any { it.name == "SkyHero.kt" && "safeRadial(" in it.readText() })   // the sky screen (Stage 3: SkyHero)
     }
 }

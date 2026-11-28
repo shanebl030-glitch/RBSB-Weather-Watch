@@ -5,45 +5,26 @@ import android.os.Bundle
 import android.view.InputDevice
 import android.view.MotionEvent
 import android.view.ViewConfiguration
-import androidx.core.view.ViewConfigurationCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import androidx.wear.compose.foundation.lazy.ScalingLazyColumn
-import androidx.wear.compose.foundation.lazy.rememberScalingLazyListState
-import androidx.wear.compose.material.MaterialTheme
-import androidx.wear.compose.material.Scaffold
-import androidx.wear.compose.material.Text
-import androidx.wear.compose.material.TimeText
+import androidx.core.view.ViewConfigurationCompat
 import io.github.shanebl030glitch.rbsbweather.sky.RotaryInput
-import io.github.shanebl030glitch.rbsbweather.sky.SampleData
-import io.github.shanebl030glitch.rbsbweather.sky.SkyStats
-import io.github.shanebl030glitch.rbsbweather.sky.SkyScreen
+import io.github.shanebl030glitch.rbsbweather.ui.DebugOptions
+import io.github.shanebl030glitch.rbsbweather.ui.WatchApp
 
 /**
- * Two pages: the sky (first, approved Stage 2 decision 7) and About. Swipe sideways between them.
- * Optional launch extras, used by the emulator tests: "sample" (a sample name) and "page" (0 or 1).
+ * The weather app (Stage 3): the first screen scrolls from the animated sky through the forecast
+ * (decision D1). Debug builds accept launch options for the emulator tests (see DebugOptions);
+ * release builds ignore them.
  */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val sampleName = intent?.getStringExtra(EXTRA_SAMPLE)
-        val page = (intent?.getIntExtra(EXTRA_PAGE, 0) ?: 0).coerceIn(0, 1)
-        setContent { WatchApp(BuildConfig.VERSION_NAME, sampleName, page) }
+        val debug = DebugOptions.from(intent)
+        setContent { WatchApp(BuildConfig.VERSION_NAME, debug) }
     }
 
-    /** Rotary (bezel or crown) events that no view used go to the sky screen (see RotaryInput). */
+    /** Rotary (bezel or crown) events that no view used go to the open list (see RotaryInput). */
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_SCROLL && event.isFromSource(InputDevice.SOURCE_ROTARY_ENCODER)) {
             val factor = ViewConfigurationCompat.getScaledVerticalScrollFactor(ViewConfiguration.get(this), this)
@@ -51,52 +32,5 @@ class MainActivity : ComponentActivity() {
             return true
         }
         return super.onGenericMotionEvent(event)
-    }
-
-    companion object {
-        const val EXTRA_SAMPLE = "sample"
-        const val EXTRA_PAGE = "page"
-    }
-}
-
-@Composable
-fun WatchApp(versionName: String, sampleName: String?, startPage: Int) {
-    val ctx = LocalContext.current
-    val samples = remember { SampleData.load(ctx.assets) }
-    val start = remember { samples.indexOfFirst { it.name == sampleName }.coerceAtLeast(0) }
-    MaterialTheme {
-        val pager = rememberPagerState(initialPage = startPage) { 2 }
-        HorizontalPager(state = pager, modifier = Modifier.fillMaxSize()) { page ->
-            when (page) {
-                0 -> Scaffold(timeText = { TimeText() }) { SkyScreen(samples, start, active = pager.currentPage == 0) }
-                else -> AboutScreen(versionName)
-            }
-        }
-    }
-}
-
-@Composable
-fun AboutScreen(versionName: String) {
-    val listState = rememberScalingLazyListState()
-    Scaffold(timeText = { TimeText() }) {
-        ScalingLazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = listState,
-        ) {
-            val perf = SkyStats.latest.value
-            (AboutInfo.lines(versionName) + listOfNotNull(perf?.let { "Sky: $it" })).forEachIndexed { i, line ->
-                item {
-                    Text(
-                        text = line,
-                        textAlign = TextAlign.Center,
-                        fontWeight = if (i == 0) FontWeight.Bold else FontWeight.Normal,
-                        style = if (i == 0) MaterialTheme.typography.title3
-                            else if (line == AboutInfo.MOON_CREDIT || line.startsWith("Sky: ")) MaterialTheme.typography.caption3
-                            else MaterialTheme.typography.body2,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                    )
-                }
-            }
-        }
     }
 }

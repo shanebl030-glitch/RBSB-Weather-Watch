@@ -29,11 +29,13 @@ jobs:
       - name: SDK platform
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-36" "build-tools;36.0.0" > /dev/null
       - name: Build
-        run: ./gradlew --no-daemon :wear:assembleDebug
+        run: ./gradlew --no-daemon :wear:assembleDebug :wear:assembleDebugAndroidTest
       - uses: actions/upload-artifact@v4
         with:
           name: wear-debug-apk
-          path: wear/build/outputs/apk/debug/*.apk
+          path: |
+            wear/build/outputs/apk/debug/*.apk
+            wear/build/outputs/apk/androidTest/debug/*.apk
           retention-days: 3
 
   wear:
@@ -125,7 +127,18 @@ jobs:
           if [ "$booted" != yes ]; then echo "== emulator.log (last 60 lines)"; tail -60 emulator.log; echo "Emulator did not boot"; exit 1; fi
           echo "Booted after about $((i * 4)) s"
           sleep 45          # let first-boot setup settle before launching
-          bash scripts/emulator/wear-smoke.sh "$(ls apk/*.apk | head -1)" emu-out "${{ matrix.label }}" "${{ matrix.rotary }}"
+          APP=$(find apk -name 'wear-debug.apk' | head -1); TEST=$(find apk -name 'wear-debug-androidTest.apk' | head -1)
+          SMOKE=0
+          bash scripts/emulator/wear-smoke.sh "$APP" emu-out "${{ matrix.label }}" "${{ matrix.rotary }}" || SMOKE=$?
+          # On-device tests (Moon parity and memory, Stage 3 decisions D7 to D10) on this emulator.
+          adb install -r -t "$TEST" > /dev/null
+          adb shell am instrument -w -r -e class io.github.shanebl030glitch.rbsbweather.scene.MoonDeviceTest \
+            io.github.shanebl030glitch.rbsbweather.dev.test/androidx.test.runner.AndroidJUnitRunner > emu-out/instrument.txt 2>&1 || true
+          PKG=io.github.shanebl030glitch.rbsbweather.dev
+          adb exec-out run-as $PKG cat files/moon-parity/results.txt > emu-out/moon-results.txt 2>/dev/null || true
+          sed 's/^/MOON DEVICE /' emu-out/moon-results.txt
+          if grep -q "OK (1 test)" emu-out/instrument.txt; then echo "ON-DEVICE MOON TEST: PASS"; else tail -40 emu-out/instrument.txt; echo "ON-DEVICE MOON TEST: FAIL"; SMOKE=1; fi
+          exit $SMOKE
       - name: Screenshots in the log (artifacts are not readable from the review environment)
         if: always()
         run: |
@@ -134,7 +147,7 @@ jobs:
           python3 - <<'PY'
           import base64, glob, io, os
           from PIL import Image
-          for path in sorted(glob.glob("emu-out/sky-*.png")) + ["emu-out/about-page.png"]:
+          for path in sorted(glob.glob("emu-out/*.png")):
               if not os.path.exists(path): continue
               im = Image.open(path).convert("RGB")
               buf = io.BytesIO(); im.save(buf, "JPEG", quality=88)

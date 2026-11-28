@@ -5,8 +5,10 @@
 // turned to match the place's sky. Created By Shane BlackbuRn
 // Copied from RBSB-Weather for Android v0.7.2 (commit cdf422d94e78cfc1020db5ac3407c765dd6b6738),
 // app/src/main/java/io/github/shanebl030glitch/rbsbweather/ui/scene/MoonRender.kt. Watch changes:
-// package name; the bundled textures are 512 px (the phone ships 2048 px); Bitmap calls use the
-// androidx.core KTX forms (same behaviour) so lint has no UseKtx warnings.
+// package name; the bundled textures are 1024 px (the phone ships 2048 px; Moon decision D7);
+// Bitmap calls use the androidx.core KTX forms (same behaviour) so lint has no UseKtx warnings;
+// the decoded full-size textures are released after every downscale (Moon decision D9; the
+// phone keeps them until a picture of 512 px or more). The lighting maths is unchanged.
 package io.github.shanebl030glitch.rbsbweather.scene
 
 import android.content.res.AssetManager
@@ -67,7 +69,11 @@ object MoonRender {
         for (i in ph.indices) ph[i] = ph[i] and 0xFF
         if (sa !== alb) sa.recycle()
         if (sh !== hgt) sh.recycle()
-        if (size >= 512) { full?.first?.recycle(); full?.second?.recycle(); full = null }   // don't keep 32 MB around
+        // Watch (Moon decision D9): always release the decoded full-size textures once they are
+        // scaled (8 MB at 1024 px). The phone keeps them until a picture of 512 px or more, which
+        // the watch sky never draws, so they would stay in memory. The scaled pixels above are
+        // copies, so the picture is identical; a later new size decodes the files again.
+        full?.first?.recycle(); full?.second?.recycle(); full = null
         if (size <= CACHE_MAX_SIZE) {                       // a 2048 export's textures (33 MB) aren't kept
             if (texCache.size > 6) texCache.remove(texCache.keys.first())
             texCache[size] = pa to ph

@@ -32,7 +32,7 @@ import java.io.File
 @Config(sdk = [36])
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class RenderTest {
-    /** The watch's readability shade, as SkyScreen draws it. */
+    /** The watch's readability shade, as the sky screen (SkyHero) draws it. */
     private val shade: DrawScope.() -> Unit = {
         val r = size.minDimension * 0.5f
         drawCircle(safeRadial(0f to Color(0x66000000), 0.6f to Color(0x38000000), 1f to Color(0x00000000), center = center, radius = r), r, center)
@@ -84,7 +84,7 @@ class RenderTest {
     }
 
     @Test fun theSkyOpensAsTheSamplesOwnSkyWithoutFadingFromDay() {
-        // What SkyScreen does on its first frame: conditions before size. A night sky is night at once.
+        // What the sky screen (AnimatedSky) does on its first frame: conditions before size. A night sky is night at once.
         val e = SceneEngine()
         e.setConditions(Conditions(Kind.CLEAR, 0.0, daylight = 0.0))
         e.setSize(432, 432)
@@ -107,7 +107,7 @@ class RenderTest {
         assertEquals(null, drawn.moon)
     }
 
-    @Test fun moonPictureFromTheNasaTexturesAt512px() {
+    @Test fun moonPictureFromTheNasaTexturesAt1024px() {
         MoonRender.init(RuntimeEnvironment.getApplication().assets)
         val full = MoonRender.render(64, 0.0, 270.0)!!
         val newMoon = MoonRender.render(64, 179.0, 270.0)!!
@@ -116,7 +116,7 @@ class RenderTest {
         assertTrue(bright(full) > bright(newMoon) + 40)
         val opts = android.graphics.BitmapFactory.Options()
         val tex = RuntimeEnvironment.getApplication().assets.open("textures/moon_albedo.jpg").use { android.graphics.BitmapFactory.decodeStream(it, null, opts) }
-        assertEquals(512, tex!!.width); assertEquals(512, tex.height)
+        assertEquals(1024, tex!!.width); assertEquals(1024, tex.height)   // Moon decision D7
     }
 
     @Test fun theSunStaysBrightUnderTheReadabilityShade() {
