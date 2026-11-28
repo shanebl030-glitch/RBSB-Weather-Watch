@@ -99,3 +99,10 @@ val copySampleAssets by tasks.registering(Sync::class) {
     into(layout.buildDirectory.dir("generated/sampleAssets/samples"))
 }
 tasks.named("preBuild") { dependsOn(copySampleAssets) }
+
+// Robolectric needs Java 21 to run Android 16 (SDK 36) in the render tests (found in CI, Stage 2
+// decision 6). Only the unit tests run on 21; the app is still compiled for Java 17. CI installs
+// both (ci.yml); Gradle finds 21 through JAVA_HOME_21_X64 (gradle.properties) or the running JDK.
+tasks.withType<Test>().configureEach {
+    javaLauncher.set(javaToolchains.launcherFor { languageVersion.set(JavaLanguageVersion.of(21)) })
+}
