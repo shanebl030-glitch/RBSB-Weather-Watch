@@ -59,6 +59,9 @@ fun WatchApp(versionName: String, debug: DebugOptions) {
     MaterialTheme {
         val nav = rememberSwipeDismissableNavController()
         LaunchedEffect(debug.route) { debug.route?.let { r -> try { nav.navigate(r) } catch (e: Exception) { } } }
+        if (BuildConfig.DEBUG) LaunchedEffect(nav) {
+            nav.currentBackStackEntryFlow.collect { e -> android.util.Log.i("RBSBInput", "SCREEN ${e.destination.route}") }
+        }
         SwipeDismissableNavHost(navController = nav, startDestination = "home") {
             composable("home") {
                 val s = shown.snapshot
@@ -72,7 +75,10 @@ fun WatchApp(versionName: String, debug: DebugOptions) {
                     HomeScreen(
                         snapshot = s, settings = shown.settings, nowMs = shown.nowMs, sampleLine = shown.sampleLine,
                         aboutLines = AboutInfo.lines(versionName, statusLines(s, shown.settings, shown.nowMs, phone, sample?.name)),
-                        onSkyTap = if (sample != null) ({ sampleIndex = (sampleIndex + 1) % samples.size }) else null,
+                        onSkyTap = if (sample != null) ({
+                            android.util.Log.i("RBSBInput", "SKY TAP: next sample")
+                            sampleIndex = (sampleIndex + 1) % samples.size
+                        }) else null,
                         onOpen = { route -> nav.navigate(route) },
                         scrollTo = debug.scrollTo,
                     )

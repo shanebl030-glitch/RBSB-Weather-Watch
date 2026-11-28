@@ -24,6 +24,14 @@ class MainActivity : ComponentActivity() {
         setContent { WatchApp(BuildConfig.VERSION_NAME, debug) }
     }
 
+    /** Debug builds: every rotary event that reaches the window is logged, to tell "not delivered" from "not handled". */
+    override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
+        if (BuildConfig.DEBUG && event.isFromSource(InputDevice.SOURCE_ROTARY_ENCODER)) {
+            android.util.Log.i("RBSBInput", "ROTARY window action=${event.action} scroll=${event.getAxisValue(MotionEvent.AXIS_SCROLL)}")
+        }
+        return super.dispatchGenericMotionEvent(event)
+    }
+
     /** Rotary (bezel or crown) events that no view used go to the open list (see RotaryInput). */
     override fun onGenericMotionEvent(event: MotionEvent): Boolean {
         if (event.action == MotionEvent.ACTION_SCROLL && event.isFromSource(InputDevice.SOURCE_ROTARY_ENCODER)) {

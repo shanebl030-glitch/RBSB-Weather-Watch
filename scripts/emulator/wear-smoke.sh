@@ -49,7 +49,10 @@ SIZE=$(adb shell wm size | tr -d '\r' | grep -o '[0-9]*x[0-9]*' | tail -1); W=${
 
 # --- the sky (debug build, no phone data: a labelled sample) ---
 if found "SAMPLE DATA"; then note "SKY: sample-data label visible"; else note "SKY: sample-data label NOT found"; fi
-adb shell input tap $((W / 2)) $((W * 3 / 4)); sleep 2
+adb logcat -c || true
+adb shell input tap $((W / 2)) $((W * 3 / 5)); sleep 2
+shot "after-tap"
+adb logcat -d -s RBSBInput:I | grep -o "SKY TAP.*\|SCREEN .*" | tail -3 | sed 's/^/  APP /' | tee -a "$R"
 if found "SAMPLE DATA · 2/"; then note "SKY: tap switched to the next sample"; else note "SKY: tap did NOT switch sample"; fi
 
 for S in clear-day partly-cloudy-day rain-night-warnings thunder-warning clear-night snow-northern fog; do
@@ -85,13 +88,18 @@ for P in waiting noapp nophone; do
   if found "Waiting for your phone\|Phone app update needed\|Phone not connected"; then note "STATE $P: shown"; else note "STATE $P: text NOT found"; fi
 done
 
-# --- swipe back from a detail screen returns to the first screen ---
+# --- back from a detail screen: a swipe right, and the watch's Back button ---
 launch --es sample clear-day --es route day/0; sleep 2
-adb shell input swipe $((W / 10)) $((W / 2)) $((W * 9 / 10)) $((W / 2)) 300; sleep 3
+adb logcat -c || true
+adb shell input swipe $((W / 4)) $((W / 2)) $((W * 15 / 16)) $((W / 2)) 400; sleep 3
 shot "after-swipe-back"
+adb logcat -d -s RBSBInput:I | grep -o "SCREEN .*" | tail -3 | sed 's/^/  APP /' | tee -a "$R"
 if found "SAMPLE DATA"; then note "SWIPE BACK: returned to the first screen"
-elif front; then note "SWIPE BACK: did NOT return (app still open: $(grep -o 'text="[^"]*"' "$OUT/ui.xml" | head -4 | tr '\n' ' '))"
+elif front; then note "SWIPE BACK: did NOT return (app still open: $(grep -o 'text="[^"]\+"' "$OUT/ui.xml" | head -3 | tr '\n' ' '))"
 else note "SWIPE BACK: did NOT return (the app closed instead)"; fi
+launch --es sample clear-day --es route day/0; sleep 2
+adb shell input keyevent KEYCODE_BACK; sleep 3
+if found "SAMPLE DATA"; then note "BACK BUTTON: returned to the first screen"; else note "BACK BUTTON: did NOT return"; fi
 
 # --- touch scrolling: a swipe up from the sky shows the next section ---
 launch --es sample clear-day
@@ -104,9 +112,11 @@ if [ "$ROTARY" = "yes" ]; then
   rot() { adb shell input rotaryencoder scroll --axis SCROLL,"$1" > "$OUT/rotary.txt" 2>&1 \
           && ! grep -qi "error\|usage\|exception" "$OUT/rotary.txt" \
           || adb shell input rotaryencoder scroll "$1" > "$OUT/rotary.txt" 2>&1; }
+  adb logcat -c || true
   if rot 3; then
     sleep 1; rot 3; sleep 2
-    adb logcat -d -s RBSBInput:I | grep -o "ROTARY .*" | tail -3 | sed 's/^/  APP /' | tee -a "$R"
+    note "ROTARY: input tool replied: $(tr -d '\r' < "$OUT/rotary.txt" | head -c 160 | tr '\n' ' ')"
+    adb logcat -d -s RBSBInput:I | grep -o "ROTARY .*" | tail -6 | sed 's/^/  APP /' | tee -a "$R"
     shot "after-rotary"
     if found 'text="Now"\|Feels like\|Humidity\|Hourly'; then note "ROTARY: the list scrolled"; else note "ROTARY: the list did NOT scroll"; fi
   else
