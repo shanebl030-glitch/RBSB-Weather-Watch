@@ -6,11 +6,19 @@ Results are split into **tested** (run and passed), **inferred** (follows from w
 
 # Stage 2: animated sky (in review)
 
-Code tested: `0796ed4` on `claude/stage-2-animated-sky` (28 Nov 2026). Runs: Build and test `46088859894`, Wear OS emulators `46088859916`, Signing gate 1 `46088859872`; all passed. The documentation commit after it was checked again by the same workflows (see the pull request).
+Code tested: `d8911ef` on `claude/stage-2-animated-sky`, the final Stage 2 code (28 Nov 2026; it includes the review fix that keeps the frame-timing file to 500 windows). All six runs passed:
+
+| Workflow | Pull request run (recorded below) | Push run |
+|---|---|---|
+| Build and test | `46091229437` | `46091226332` |
+| Wear OS emulators | `46091229456` | `46091226326` |
+| Signing gate 1 | `46091229435` | `46091226329` |
+
+The commit before the review fix, `40d7bb5`, also passed all six runs (pull request: Build and test `46089810618`, emulators `46089810652`, Signing gate 1 `46089810649`). This report was then updated in a documentation-only commit, which the pull request shows passing the same workflows.
 
 ## Tested (GitHub Actions)
 
-Actual output, Build and test (run `46088859894`):
+Actual output, Build and test (pull request run `46091229437`):
 
 ```
 TEST TOTALS (wear): 75 run, 75 passed, 0 failed, 0 errors, 0 skipped
@@ -31,29 +39,34 @@ The wear tests by class:
 - SkyStatsTest 1;
 - SkyTextTest 5.
 
-All 5 emulators passed (run `46088859916`). Actual lines:
+All 5 emulators passed (pull request run `46091229456`). Actual lines:
 
 ```
-All 5:   SKY SCREEN: sample-data label visible / tap switched to the next sample / ABOUT SCREEN: credit visible
+All 5:   SKY SCREEN: sample-data label visible / tap switched to the next sample / ABOUT SCREEN: credit visible / RESULT: PASS
 Rotary:  APP ROTARY compose -384.0 px
-         ROTARY: scroll event sent (before: 1/18 · clear-day; after: 18/18 · largest)   ROTARY: sample switched   (Wear OS 5 and 6)
-432 px:  ANIMATION: frames rendered while shown: 296 after 10 s, 444 after 15 s; in the background: 448 then 448 frames
-438 px:  ANIMATION: 303 after 10 s, 454 after 15 s; in the background 458 then 458
-480 px (Wear OS 5): 300 / 454; background 462 / 462      480 px (Wear OS 6): 297 / 446; background 453 / 453
-498 px:  ANIMATION: 300 after 10 s, 452 after 15 s; in the background 460 then 460
-Frame windows (all emulators): 83 windows, mean 28.8 fps, worst p90 work 22.9 ms; High 81, Standard 2; decisions keep 80, step down 3
+         ROTARY: scroll event sent (before: 1/18 · clear-day; after: 18/18 · largest)   ROTARY: sample switched   (Wear OS 5 and 6, 480 px)
+Frames rendered while shown (after 10 s, after 15 s), then in the background (twice, 6 s apart):
+  432 px (Wear OS 4):          299, 448   background 452, 452
+  438 px (Wear OS 6):          303, 454   background 460, 460
+  480 px rotary (Wear OS 5):   297, 455   background 467, 467
+  480 px rotary (Wear OS 6):   291, 435   background 442, 442
+  498 px (newest image):       301, 452   background 456, 456
+  ANIMATION: running while shown / ANIMATION: stopped in the background   (all 5)
+Frame windows (all 5 emulators): 82 windows, mean 28.6 fps, worst p90 work 16.9 ms; level High in all 82 windows; decisions keep 79, step down 3
 ```
+
+The `gfxinfo` 50th/90th percentiles (32 ms) and "janky" percentages are expected for a sky deliberately drawn at 30 fps; see `docs/SKY.md`.
 
 | Approved Stage 2 acceptance criterion | Result |
 |---|---|
 | 1. The sky draws every sample at 432 to 498 px; emulator screenshots | Pass: render tests at 432, 480 and 498 px for 10 samples; emulator screenshots of 10 samples on all 5 setups |
 | 2. Ported desktop scene checks | Pass: SceneTest 18 and MoonTest 13 (PyEphem). Moon phase on known dates, codes, day/night/twilight, wind and hemisphere, cloud ordering, particles bounded over 10 minutes (now at every level), lightning only in storms, rain slant |
-| 3. Quality levels: every effect at every level; level choice | Pass: QualityTest 13 (thresholds, step down, step up after 30 s, no flip-flop, power saving, records) and every code at every level in RenderTest. The emulators stepped down live 3 times |
+| 3. Quality levels: every effect at every level; level choice | Pass: QualityTest 13 (thresholds, step down, step up after 30 s, no flip-flop, power saving, records) and every code at every level in RenderTest. On the emulators the controller decided to step down 3 times in this run |
 | 4. Frame timing recorded on every emulator | Pass: `SKY FRAME WINDOW` lines and `gfxinfo` in the log. For comparing builds only, not real-watch speed |
 | 5. Memory: one sprite set, 512 px Moon, bounded caches | Pass: sprite cache at most 40 (test), 512 px texture (test), particles bounded (test) |
 | 6. Threading rules | Pass: copied code unchanged (clouds and the Moon made off the main thread with stand-ins); SafeDrawingTest |
 | 7. Animates only while shown | Pass: frames rise while shown, unchanged in the background, on all 5 emulators |
-| 8. Baseline | Pass: 132/132 tests, lint 0 errors, 64-bit, permissions (none added), Signing gate 1 PASS, 5/5 emulators |
+| 8. Baseline | Pass: 132/132 tests, lint 0 errors, 64-bit, permissions (none added), Signing gate 1 PASS (phone and watch DEVICE IDENTITY OK), 5/5 emulators |
 | 9. Credit and NASA credit | Pass: About page (test and emulator) and docs |
 
 **Problems found and fixed in Stage 2:**
@@ -61,8 +74,9 @@ Frame windows (all emulators): 83 windows, mean 28.8 fps, worst p90 work 22.9 ms
 2. Rotary didn't switch samples (review). The cause was the test's old `input rotaryencoder scroll 3` form, which carried no scroll amount. With `--axis SCROLL,3` the app receives the event and switches. An activity fallback was also added.
 3. Robolectric 4.18.1 can't run SDK 36 on Java 17. CI now runs the wear unit tests on Java 21; the app is still compiled for Java 17. Reported to Shane before continuing.
 4. The screen opened with a 0.8-second fade from daytime blue (found by the day/night render test). It now opens directly on the sample's own sky, and a test covers this.
-5. Two test compile errors, one test expectation (-3.5° rounds to -3°, as the phone does), and one test that sampled a single pixel were corrected.
-6. Two CI runs hit Maven Central HTTP 429 before building; re-runs passed.
+5. Review: the frame-timing file was documented as keeping the last 500 windows but trimmed only above 600. It now never holds more than 500, and SkyStatsTest checks this after every append.
+6. Two test compile errors, one test expectation (-3.5° rounds to -3°, as the phone does), and one test that sampled a single pixel were corrected.
+7. Two CI runs hit Maven Central HTTP 429 before building; re-runs passed.
 
 ## Inferred, not run directly
 

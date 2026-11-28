@@ -103,3 +103,10 @@ A summary of decisions and work, newest last.
 - **Found by a test:** the screen opened with a 0.8-second fade from daytime blue; it now opens on the sample's own sky.
 - **Milestone media sent to Shane:** a before/after of the Sun, lightning stills, and 6-second recordings at 432, 480 and 498 px.
 - **Results at `0796ed4`:** 132/132 tests, lint 0 errors, 5/5 emulators PASS (rotary included), Signing gate 1 PASS. Version 0.1.0-dev. Android and WeatherDesk untouched; no production key; nothing published.
+
+## 28 Nov 2026: Stage 2 review corrections
+
+- Shane reviewed PR #3 and asked for two corrections before final approval.
+- **TEST_REPORT.md:** the Stage 2 results now name the final code commit (`d8911ef`) with its pull-request and push run IDs, and the emulator measurements come from that pull-request run. `40d7bb5` (before the fix) is recorded as also passing. A commit can't contain its own ID, so the report's update is a documentation-only commit after `d8911ef`, checked by the same workflows.
+- **SkyStats:** the frame-timing file was documented as keeping the last 500 windows but trimmed only above 600. It now never holds more than 500; the test checks this after every append. SKY.md and the CHANGELOG agree.
+- **Results at `d8911ef`:** all six runs passed (132/132 tests, lint 0 errors, 5/5 emulators PASS with rotary, Signing gate 1 PASS).
